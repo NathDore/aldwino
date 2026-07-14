@@ -1,0 +1,29 @@
+[tools]
+bun = "latest"
+rust = "stable"
+
+[tasks.install]
+description = "Install all JS dependencies"
+run = "bun install"
+
+[tasks.dev]
+description = "Run the full app: Tauri window + Vite dev server + API dev server"
+depends = ["api:compile:host"]
+run = "bunx tauri dev"
+
+[tasks."api:compile:host"]
+description = "Compile app/api to a native sidecar binary for the current host platform"
+run = "bun run --cwd app/api compile:host"
+
+[tasks.build]
+description = "Compile the host sidecar, then produce a Tauri installer/bundle"
+depends = ["api:compile:host"]
+run = "bunx tauri build"
+
+[tasks.typecheck]
+description = "Typecheck both packages"
+run = "bun run typecheck"
+
+[tasks.lint]
+description = "Lint both packages"
+run = "bun run lint"
