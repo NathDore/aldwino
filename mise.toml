@@ -11,6 +11,10 @@ description = "Run the full app: Tauri window + Vite dev server + API dev server
 depends = ["api:compile:host"]
 run = "bunx tauri dev"
 
+[tasks."dev:services"]
+description = "Run just the Vite dev server + API dev server, without the Tauri window"
+run = "bun run dev:services"
+
 [tasks."api:compile:host"]
 description = "Compile app/api to a native sidecar binary for the current host platform"
 run = "bun run --cwd app/api compile:host"

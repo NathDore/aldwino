@@ -45,10 +45,12 @@ Both processes' output is prefixed (`[web]` / `[api]`) and interleaved in the sa
 If you're testing purely in a browser (no native window, no Tauri-specific APIs), you can skip Tauri entirely and run just the two dev servers with:
 
 ```sh
-bun run dev:services
+mise run dev:services
 ```
 
 This runs the same `scripts/dev-services.ts` script described above — Vite on `:1420` and the API on `:4287` — as two concurrent processes under one command, with Ctrl+C stopping both. Open `http://localhost:1420` in a browser; the frontend's `fetch` calls to the API will work because `app/api`'s CORS config (`app/api/src/index.ts`) explicitly allows the `http://localhost:1420` origin.
+
+> **Why `mise run dev:services` and not `bun run dev:services`?** mise installs Bun into its own tool directory rather than your system `PATH`, unless you've run `mise activate` for your shell. Calling `bun` directly in a plain terminal will fail with `bun : The term 'bun' is not recognized...`. `mise run <task>` always resolves the project's pinned tools first, so it works everywhere without extra shell setup — this is why the project convention (see root `CLAUDE.md`) is to use `mise run <task>` for all development commands, not bare `bun`/`bunx` calls.
 
 Use this when:
 - You want faster iteration without waiting on the Rust/Tauri window to rebuild or open
@@ -72,7 +74,7 @@ See [MISE_COMMANDS.md](./MISE_COMMANDS.md) for the complete task list and [BUN_C
 | --- | --- |
 | First-time setup | `mise install` then `mise run install` |
 | Full app with the desktop window | `mise run dev` |
-| Frontend + backend only, in a browser | `bun run dev:services` |
+| Frontend + backend only, in a browser | `mise run dev:services` |
 | Just the frontend | `bun run --cwd app/web dev` |
 | Just the backend | `bun run --cwd app/api dev` |
 | Check types / lint before committing | `mise run typecheck` / `mise run lint` |
