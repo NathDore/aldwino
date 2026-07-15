@@ -81,7 +81,7 @@ src/
 - Domain entities should not contain database logic
 
 **Layer Responsibilities:**
-- **domain/:** Define Course, Event, and Assignment entities with validation rules. Course has no dates (id, name, color). Event carries time blocks (id, startDateTime, endDateTime). Assignment links to both course and event (id, courseId, eventId, title, completed, completedAt). Calendar renders Events; each Event displays its contained Assignments with course metadata.
+- **domain/:** Define Course, Event, and Assignment entities with validation rules. Course has no dates (id, name, color). Event carries time blocks (id, startDateTime, endDateTime). Assignment links to both course and event (id, courseId, eventId, description, dueDate, isCompleted, completedAt, createdAt). Calendar renders Events; each Event displays its contained Assignments with course metadata.
 - **application/:** Use cases like "CreateEvent", "CreateAssignment", "ListUncompleteAssignments", "MarkAssignmentComplete". Orchestrates domain and infrastructure layers.
 - **infrastructure/:** SQLite queries, migrations, HTTP route handlers. Translates between domain entities and database rows.
 

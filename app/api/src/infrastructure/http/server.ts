@@ -14,6 +14,12 @@ import type { ListCoursesUseCase } from "../../application/course/ListCoursesUse
 import type { UpdateCourseUseCase } from "../../application/course/UpdateCourseUseCase";
 import type { DeleteCourseUseCase } from "../../application/course/DeleteCourseUseCase";
 import { registerCourseRoutes } from "./routes/course.route";
+import type { CreateAssignmentUseCase } from "../../application/assignment/CreateAssignmentUseCase";
+import type { GetAssignmentByIdUseCase } from "../../application/assignment/GetAssignmentByIdUseCase";
+import type { ListAssignmentsUseCase } from "../../application/assignment/ListAssignmentsUseCase";
+import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
+import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
+import { registerAssignmentRoutes } from "./routes/assignment.route";
 
 export interface ServerDeps {
   getHealthUseCase: GetHealthUseCase;
@@ -27,6 +33,11 @@ export interface ServerDeps {
   listCoursesUseCase: ListCoursesUseCase;
   updateCourseUseCase: UpdateCourseUseCase;
   deleteCourseUseCase: DeleteCourseUseCase;
+  createAssignmentUseCase: CreateAssignmentUseCase;
+  getAssignmentByIdUseCase: GetAssignmentByIdUseCase;
+  listAssignmentsUseCase: ListAssignmentsUseCase;
+  updateAssignmentUseCase: UpdateAssignmentUseCase;
+  deleteAssignmentUseCase: DeleteAssignmentUseCase;
   allowedOrigins: string[];
 }
 
@@ -36,5 +47,6 @@ export function createServer(deps: ServerDeps): Hono {
   registerHealthRoutes(app, deps);
   registerEventRoutes(app, deps);
   registerCourseRoutes(app, deps);
+  registerAssignmentRoutes(app, deps);
   return app;
 }

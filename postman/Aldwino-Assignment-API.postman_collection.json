@@ -1,0 +1,391 @@
+{
+  "info": {
+    "name": "Aldwino Assignment API",
+    "description": "CRUD requests for testing the Assignment domain (app/api backend)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:4287",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assignmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup - Create Course",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"courseId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "Prerequisite: creates a course and saves its id to {{courseId}} so this collection is runnable standalone."
+      }
+    },
+    {
+      "name": "Setup - Create Event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"eventId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"startTime\": \"2026-07-20T10:00:00.000Z\",\n  \"endTime\": \"2026-07-20T11:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["events"]
+        },
+        "description": "Prerequisite: creates an event and saves its id to {{eventId}} so this collection is runnable standalone."
+      }
+    },
+    {
+      "name": "Create Assignment (valid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"assignmentId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "Creates an assignment and saves its id to the {{assignmentId}} collection variable for use by subsequent requests."
+      }
+    },
+    {
+      "name": "List Assignments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        }
+      }
+    },
+    {
+      "name": "Get Assignment By Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "{{assignmentId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Assignment (valid, mark complete)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1 (Updated)\",\n  \"dueDate\": \"2026-07-26T23:59:00.000Z\",\n  \"isCompleted\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "{{assignmentId}}"]
+        },
+        "description": "isCompleted flips to true -> completedAt should be set in the response."
+      }
+    },
+    {
+      "name": "Delete Assignment",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "{{assignmentId}}"]
+        }
+      }
+    },
+    {
+      "name": "Get Assignment By Id (after delete, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments/{{assignmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "{{assignmentId}}"]
+        }
+      }
+    },
+    {
+      "name": "Validation - Empty CourseId (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "courseId is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - Empty EventId (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "eventId is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - CourseId Not Found (expect 404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"00000000-0000-0000-0000-000000000000\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "courseId does not reference an existing course -> should return 404 CourseNotFoundError"
+      }
+    },
+    {
+      "name": "Validation - EventId Not Found (expect 404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"00000000-0000-0000-0000-000000000000\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "eventId does not reference an existing event -> should return 404 EventNotFoundError"
+      }
+    },
+    {
+      "name": "Validation - Empty Description (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "description is empty -> should return 400 DescriptionEmptyError"
+      }
+    },
+    {
+      "name": "Validation - Description Too Long (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "description exceeds 250 characters -> should return 400 DescriptionTooLongError"
+      }
+    },
+    {
+      "name": "Validation - Missing Fields (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "eventId, description and dueDate missing from body -> should return 400"
+      }
+    },
+    {
+      "name": "Validation - Invalid Due Date (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"not-a-date\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "dueDate is not a valid ISO 8601 date -> should return 400"
+      }
+    },
+    {
+      "name": "Get Assignment By Id (unknown id, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Update Assignment (unknown id, expect 404)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\",\n  \"isCompleted\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Delete Assignment (unknown id, expect 404)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/assignments/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    }
+  ]
+}
