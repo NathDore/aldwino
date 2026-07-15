@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "Aldwino Course API",
+    "description": "CRUD requests for testing the Course domain (app/api backend)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:4287",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create Course (valid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"courseId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "Creates a course and saves its id to the {{courseId}} collection variable for use by subsequent requests."
+      }
+    },
+    {
+      "name": "List Courses",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        }
+      }
+    },
+    {
+      "name": "Get Course By Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses/{{courseId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "{{courseId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Course (valid)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#3A6F9F\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I (Updated)\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses/{{courseId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "{{courseId}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Course",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses/{{courseId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "{{courseId}}"]
+        }
+      }
+    },
+    {
+      "name": "Get Course By Id (after delete, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses/{{courseId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "{{courseId}}"]
+        }
+      }
+    },
+    {
+      "name": "Validation - Empty Color (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "color is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - Color Too Long (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8------------------------------------------------------------------------------------------------------------------------------------------------------\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "color exceeds 150 characters -> should return 400 ColorTooLongError"
+      }
+    },
+    {
+      "name": "Validation - Color Invalid Hex Format (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"not-a-hex-color\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "color is not a valid hex code -> should return 400 ColorInvalidFormatError"
+      }
+    },
+    {
+      "name": "Validation - Color Not Allowed (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#123456\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "color is a valid hex code but not in the allowed palette -> should return 400 ColorNotAllowedError"
+      }
+    },
+    {
+      "name": "Validation - Empty Code (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "code is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - Code Invalid Format (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"mat0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "code is lowercase with no dash -> should return 400 CodeInvalidFormatError"
+      }
+    },
+    {
+      "name": "Validation - Code Too Long (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRST-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "code exceeds 150 characters -> should return 400 CodeTooLongError"
+      }
+    },
+    {
+      "name": "Validation - Duplicate Code (expect 409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I Duplicate\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "Run this after 'Create Course (valid)' without deleting it -> code MAT-0130 already exists -> should return 409 CourseCodeAlreadyExistsError"
+      }
+    },
+    {
+      "name": "Validation - Empty Title (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0131\",\n  \"title\": \"\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "title is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - Title Too Long (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0132\",\n  \"title\": \"Calculus I ------------------------------------------------------------------------------------------------------------------------------------------------------\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "title exceeds 150 characters -> should return 400 TitleTooLongError"
+      }
+    },
+    {
+      "name": "Validation - Missing Fields (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "code and title missing from body -> should return 400"
+      }
+    },
+    {
+      "name": "Get Course By Id (unknown id, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Update Course (unknown id, expect 404)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Delete Course (unknown id, expect 404)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/courses/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    }
+  ]
+}
