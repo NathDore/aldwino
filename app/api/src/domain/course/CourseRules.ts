@@ -15,7 +15,7 @@ const MAX_LENGTH = 150;
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 const CODE_PATTERN = /^[A-Z]{1,10}-\d+$/;
 
-const ALLOWED_COLORS: readonly string[] = [
+export const ALLOWED_COLORS: readonly string[] = [
   // Blues
   "#5B8DB8",
   "#3A6F9F",

@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import { CourseValidationError, CourseCodeAlreadyExistsError } from "../../../domain/course/CourseError";
+import { ALLOWED_COLORS } from "../../../domain/course/CourseRules";
 import type { CreateCourseUseCase } from "../../../application/course/CreateCourseUseCase";
 import type { GetCourseByIdUseCase } from "../../../application/course/GetCourseByIdUseCase";
 import type { ListCoursesUseCase } from "../../../application/course/ListCoursesUseCase";
@@ -28,6 +29,11 @@ function handleCourseError(error: unknown) {
 }
 
 export function registerCourseRoutes(app: Hono, deps: CourseRouteDeps) {
+  app.get("/courses/colors", (c) => {
+    const colors = ALLOWED_COLORS.map((hex) => ({ hex }));
+    return c.json(colors, 200);
+  });
+
   app.post("/courses", async (c) => {
     try {
       const body = (await c.req.json()) as { color?: string; code?: string; title?: string };
