@@ -6,6 +6,7 @@ src-tauri/gen/
 src-tauri/binaries/*
 !src-tauri/binaries/.gitkeep
 *.log
+*.db
 .env
 .DS_Store
 Thumbs.db
