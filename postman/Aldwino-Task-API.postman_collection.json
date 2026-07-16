@@ -1,0 +1,372 @@
+{
+  "info": {
+    "name": "Aldwino Task API",
+    "description": "CRUD requests for testing the Task domain (app/api backend)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:4287",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assignmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup - Create Course",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"courseId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"#5B8DB8\",\n  \"code\": \"MAT-0130\",\n  \"title\": \"Calculus I\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/courses",
+          "host": ["{{baseUrl}}"],
+          "path": ["courses"]
+        },
+        "description": "Prerequisite: creates a course and saves its id to {{courseId}} so this collection is runnable standalone."
+      }
+    },
+    {
+      "name": "Setup - Create Event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"eventId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"startTime\": \"2026-07-20T10:00:00.000Z\",\n  \"endTime\": \"2026-07-20T11:00:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["events"]
+        },
+        "description": "Prerequisite: creates an event and saves its id to {{eventId}} so this collection is runnable standalone."
+      }
+    },
+    {
+      "name": "Setup - Create Assignment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"assignmentId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"courseId\": \"{{courseId}}\",\n  \"eventId\": \"{{eventId}}\",\n  \"description\": \"Homework 1\",\n  \"dueDate\": \"2026-07-25T23:59:00.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/assignments",
+          "host": ["{{baseUrl}}"],
+          "path": ["assignments"]
+        },
+        "description": "Prerequisite: creates an assignment and saves its id to {{assignmentId}} so this collection is runnable standalone."
+      }
+    },
+    {
+      "name": "Create Task (valid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const json = pm.response.json();",
+              "    pm.collectionVariables.set(\"taskId\", json.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\",\n  \"description\": \"Read chapters 1-3\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "Creates a task and saves its id to the {{taskId}} collection variable for use by subsequent requests."
+      }
+    },
+    {
+      "name": "List Tasks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        }
+      }
+    },
+    {
+      "name": "Get Task By Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Task (valid, mark complete)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\",\n  \"description\": \"Read chapters 1-3 (Updated)\",\n  \"isCompleted\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        },
+        "description": "isCompleted flips to true. Unlike Assignment, there is no completedAt to check -> Task never tracks when it was completed."
+      }
+    },
+    {
+      "name": "Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        }
+      }
+    },
+    {
+      "name": "Get Task By Id (after delete, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        }
+      }
+    },
+    {
+      "name": "Validation - Empty AssignmentId (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"\",\n  \"description\": \"Read chapters 1-3\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "assignmentId is empty -> should return 400 (caught by the required-fields check)"
+      }
+    },
+    {
+      "name": "Validation - AssignmentId Not Found (expect 404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"description\": \"Read chapters 1-3\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "assignmentId does not reference an existing assignment -> should return 404 AssignmentNotFoundError"
+      }
+    },
+    {
+      "name": "Validation - Empty Description (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\",\n  \"description\": \"\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "description is empty -> should return 400 DescriptionEmptyError"
+      }
+    },
+    {
+      "name": "Validation - Description Too Long (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\",\n  \"description\": \"----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "description exceeds 250 characters -> should return 400 DescriptionTooLongError"
+      }
+    },
+    {
+      "name": "Validation - Missing Fields (expect 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "description missing from body -> should return 400"
+      }
+    },
+    {
+      "name": "Get Task By Id (unknown id, expect 404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Update Task (unknown id, expect 404)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignmentId\": \"{{assignmentId}}\",\n  \"description\": \"Read chapters 1-3\",\n  \"isCompleted\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    },
+    {
+      "name": "Delete Task (unknown id, expect 404)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/00000000-0000-0000-0000-000000000000",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "00000000-0000-0000-0000-000000000000"]
+        }
+      }
+    }
+  ]
+}

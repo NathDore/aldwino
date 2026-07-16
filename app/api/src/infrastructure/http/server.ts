@@ -20,6 +20,12 @@ import type { ListAssignmentsUseCase } from "../../application/assignment/ListAs
 import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
 import { registerAssignmentRoutes } from "./routes/assignment.route";
+import type { CreateTaskUseCase } from "../../application/task/CreateTaskUseCase";
+import type { GetTaskByIdUseCase } from "../../application/task/GetTaskByIdUseCase";
+import type { ListTasksUseCase } from "../../application/task/ListTasksUseCase";
+import type { UpdateTaskUseCase } from "../../application/task/UpdateTaskUseCase";
+import type { DeleteTaskUseCase } from "../../application/task/DeleteTaskUseCase";
+import { registerTaskRoutes } from "./routes/task.route";
 
 export interface ServerDeps {
   getHealthUseCase: GetHealthUseCase;
@@ -38,6 +44,11 @@ export interface ServerDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
+  createTaskUseCase: CreateTaskUseCase;
+  getTaskByIdUseCase: GetTaskByIdUseCase;
+  listTasksUseCase: ListTasksUseCase;
+  updateTaskUseCase: UpdateTaskUseCase;
+  deleteTaskUseCase: DeleteTaskUseCase;
   allowedOrigins: string[];
 }
 
@@ -48,5 +59,6 @@ export function createServer(deps: ServerDeps): Hono {
   registerEventRoutes(app, deps);
   registerCourseRoutes(app, deps);
   registerAssignmentRoutes(app, deps);
+  registerTaskRoutes(app, deps);
   return app;
 }
