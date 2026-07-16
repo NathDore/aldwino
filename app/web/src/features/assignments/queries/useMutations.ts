@@ -1,0 +1,37 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createAssignment, updateAssignment, deleteAssignment } from "../services/assignmentService";
+import type { AssignmentFormData } from "../types/assignment.types";
+
+export function useCreateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
+export function useUpdateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AssignmentFormData & { isCompleted: boolean } }) =>
+      updateAssignment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
+export function useDeleteAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
