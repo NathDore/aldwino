@@ -3,6 +3,7 @@ import { HomePage } from "@/pages/HomePage";
 import { CoursesPage } from "@/features/courses";
 import { EventsPage } from "@/features/events";
 import { AssignmentsPage } from "@/features/assignments";
+import { TasksPage } from "@/features/tasks";
 
 export const router = createBrowserRouter([
   {
@@ -20,5 +21,9 @@ export const router = createBrowserRouter([
   {
     path: "/assignments",
     element: <AssignmentsPage />,
+  },
+  {
+    path: "/tasks",
+    element: <TasksPage />,
   },
 ]);
