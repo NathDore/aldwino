@@ -1,4 +1,6 @@
 import { Event } from "../../domain/event/Event";
+import { EventOverlapError } from "../../domain/event/EventError";
+import { eventsOverlap } from "../../domain/event/EventRules";
 import type { IEventRepository } from "../../infrastructure/database/repositories/EventRepository";
 import type { Clock } from "../health/ports/Clock";
 
@@ -16,6 +18,12 @@ export class CreateEventUseCase {
       endTime: params.endTime,
       createdAt: this.clock.now(),
     });
+
+    const existingEvents = this.repository.getAll();
+    if (existingEvents.some((existing) => eventsOverlap(existing, event))) {
+      throw new EventOverlapError();
+    }
+
     return this.repository.create(event);
   }
 }

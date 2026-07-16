@@ -25,3 +25,10 @@ export class ZeroDurationViolation extends EventValidationError {
     this.name = "ZeroDurationViolation";
   }
 }
+
+export class EventOverlapError extends Error {
+  constructor() {
+    super("Event overlaps with an existing event");
+    this.name = "EventOverlapError";
+  }
+}

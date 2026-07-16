@@ -1,6 +1,6 @@
 import type { CourseDto } from "../types/course.types";
 import { useCourseStore } from "../store/courseStore";
-import { Button } from "./Button";
+import { Button } from "@/shared/components/Button";
 
 interface CourseListProps {
   courses: CourseDto[];

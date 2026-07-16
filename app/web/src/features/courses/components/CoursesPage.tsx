@@ -4,8 +4,8 @@ import { useDeleteCourseMutation } from "../queries/useMutations";
 import { useCourseStore } from "../store/courseStore";
 import { CourseList } from "./CourseList";
 import { CourseForm } from "./CourseForm";
-import { DeleteConfirmation } from "./DeleteConfirmation";
-import { Button } from "./Button";
+import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
+import { Button } from "@/shared/components/Button";
 
 export function CoursesPage() {
   const queryClient = useQueryClient();
@@ -70,10 +70,19 @@ export function CoursesPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-md shadow-lg">
             <DeleteConfirmation
-              courseCode={courseToDelete.code}
-              courseTitle={courseToDelete.title}
+              title="Delete Course?"
+              description={
+                <>
+                  Are you sure you want to delete{" "}
+                  <span className="font-medium text-slate-900">
+                    {courseToDelete.code} - {courseToDelete.title}
+                  </span>
+                  ? This action cannot be undone.
+                </>
+              }
               isLoading={deleteMutation.isPending}
               onConfirm={handleConfirmDelete}
+              onCancel={() => setShowDeleteConfirm(false)}
             />
           </div>
         </div>

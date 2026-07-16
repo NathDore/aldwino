@@ -2,7 +2,7 @@ import type { CourseDto } from "../types/course.types";
 import { useCourseForm } from "../hooks/useCourseForm";
 import { ColorPicker } from "./ColorPicker";
 import { useCourseStore } from "../store/courseStore";
-import { Button } from "./Button";
+import { Button } from "@/shared/components/Button";
 
 interface CourseFormProps {
   courseToEdit?: CourseDto | null;

@@ -1,5 +1,5 @@
 import type { Hono } from "hono";
-import { EventValidationError } from "../../../domain/event/EventError";
+import { EventValidationError, EventOverlapError } from "../../../domain/event/EventError";
 import type { CreateEventUseCase } from "../../../application/event/CreateEventUseCase";
 import type { GetEventByIdUseCase } from "../../../application/event/GetEventByIdUseCase";
 import type { ListEventsUseCase } from "../../../application/event/ListEventsUseCase";
@@ -41,6 +41,9 @@ export function registerEventRoutes(app: Hono, deps: EventRouteDeps) {
     } catch (error) {
       if (error instanceof EventValidationError) {
         return c.json({ error: error.message }, 400);
+      }
+      if (error instanceof EventOverlapError) {
+        return c.json({ error: error.message }, 409);
       }
       throw error;
     }
@@ -89,6 +92,9 @@ export function registerEventRoutes(app: Hono, deps: EventRouteDeps) {
     } catch (error) {
       if (error instanceof EventValidationError) {
         return c.json({ error: error.message }, 400);
+      }
+      if (error instanceof EventOverlapError) {
+        return c.json({ error: error.message }, 409);
       }
       if (error instanceof Error && error.message.includes("not found")) {
         return c.json({ error: error.message }, 404);

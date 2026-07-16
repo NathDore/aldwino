@@ -1,4 +1,6 @@
 import { Event } from "../../domain/event/Event";
+import { EventOverlapError } from "../../domain/event/EventError";
+import { eventsOverlap } from "../../domain/event/EventRules";
 import type { IEventRepository } from "../../infrastructure/database/repositories/EventRepository";
 
 export class UpdateEventUseCase {
@@ -16,6 +18,11 @@ export class UpdateEventUseCase {
       endTime: params.endTime,
       createdAt: existing.createdAt,
     });
+
+    const otherEvents = this.repository.getAll().filter((e) => e.id !== params.id);
+    if (otherEvents.some((other) => eventsOverlap(other, updated))) {
+      throw new EventOverlapError();
+    }
 
     return this.repository.update(updated);
   }

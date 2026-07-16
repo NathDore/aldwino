@@ -1,4 +1,5 @@
-import { SameDayViolation, TimeOrderViolation, ZeroDurationViolation } from "./EventError";
+import { TimeOrderViolation, ZeroDurationViolation } from "./EventError";
+import { adjustEndDateToStartDay } from "./EventRules";
 
 export class Event {
   private constructor(
@@ -14,17 +15,9 @@ export class Event {
     endTime: Date;
     createdAt: Date;
   }): Event {
-    this.validateSameDay(params.startTime, params.endTime);
-    this.validateTimeOrder(params.startTime, params.endTime);
-    return new Event(params.id, params.startTime, params.endTime, params.createdAt);
-  }
-
-  private static validateSameDay(startTime: Date, endTime: Date): void {
-    const startDate = startTime.toDateString();
-    const endDate = endTime.toDateString();
-    if (startDate !== endDate) {
-      throw new SameDayViolation();
-    }
+    const adjustedEndTime = adjustEndDateToStartDay(params.startTime, params.endTime);
+    this.validateTimeOrder(params.startTime, adjustedEndTime);
+    return new Event(params.id, params.startTime, adjustedEndTime, params.createdAt);
   }
 
   private static validateTimeOrder(startTime: Date, endTime: Date): void {
