@@ -69,7 +69,7 @@ export function AssignmentsPage() {
       />
 
       {isFormOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
             <AssignmentForm assignmentToEdit={assignmentToEdit} />
           </div>
@@ -77,7 +77,7 @@ export function AssignmentsPage() {
       )}
 
       {showDeleteConfirm && assignmentToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-md shadow-lg">
             <DeleteConfirmation
               title="Delete Assignment?"

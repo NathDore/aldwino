@@ -98,7 +98,7 @@ export const TaskFormPanel = ({
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-30 backdrop-blur-sm" onClick={closeForm} />
+        <div className="fixed inset-0 z-40 backdrop-blur-sm" onClick={closeForm} />
       )}
 
       <div
