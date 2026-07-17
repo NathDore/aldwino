@@ -131,7 +131,6 @@ export const TaskFormPanel = ({
                   : "border-slate-300 bg-white"
                 }`}
             >
-              <option value="">Choose an assignment...</option>
               {groupedEvents
                 .map((dayGroup) => ({
                   ...dayGroup,
