@@ -117,15 +117,18 @@ export const TasksPage = () => {
         isLoading={isMutationLoading}
       />
 
-      {deleteTaskId && (
-        <DeleteConfirmation
-          isOpen={showDeleteConfirm}
-          title="Delete Task"
-          description="Are you sure you want to delete this task? This action cannot be undone."
-          onConfirm={handleDeleteTask}
-          onCancel={() => setShowDeleteConfirm(false)}
-          isLoading={deleteTaskMutation.isPending}
-        />
+      {showDeleteConfirm && deleteTaskId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-md shadow-lg">
+            <DeleteConfirmation
+              title="Delete Task"
+              description="Are you sure you want to delete this task? This action cannot be undone."
+              onConfirm={handleDeleteTask}
+              onCancel={() => setShowDeleteConfirm(false)}
+              isLoading={deleteTaskMutation.isPending}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
