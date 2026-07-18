@@ -34,7 +34,7 @@ export const TaskAssignmentCard = ({
             )}
             <div>
               <h4 className="text-sm font-semibold text-slate-900">
-                {course?.code} - {course?.name}
+                {course?.code} - {course?.title}
               </h4>
               <p className="text-sm text-slate-600">
                 {assignment.description}
