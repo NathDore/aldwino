@@ -1,6 +1,6 @@
 import { useCalendarStore } from "../store/calendarStore";
 import { useWeekDays, toISODate } from "../hooks/useWeekDays";
-import { HOUR_ROW_HEIGHT } from "../hooks/useSlotPosition";
+import { useRowLayout } from "../hooks/useRowLayout";
 import { DayColumn } from "./DayColumn";
 import type { CalendarEvent } from "../types/calendar.types";
 
@@ -17,9 +17,10 @@ interface WeekGridProps {
 }
 
 export function WeekGrid({ calendarEvents }: WeekGridProps) {
-  const { currentWeekStart } = useCalendarStore();
+  const { currentWeekStart, expandedEventId, expandedEventContentHeight } = useCalendarStore();
   const days = useWeekDays(currentWeekStart);
   const today = toISODate(new Date());
+  const rowLayout = useRowLayout(calendarEvents, expandedEventId, expandedEventContentHeight);
 
   return (
     <div className="overflow-x-auto border border-slate-200 rounded-lg">
@@ -29,8 +30,8 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
           {HOURS.map((hour) => (
             <div
               key={hour}
-              className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right"
-              style={{ height: HOUR_ROW_HEIGHT }}
+              className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right transition-all duration-300 ease-in-out"
+              style={{ height: rowLayout.rowHeights[hour] }}
             >
               {formatHourLabel(hour)}
             </div>
@@ -47,6 +48,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
               calendarEvents={calendarEvents.filter(
                 (calendarEvent) => toISODate(new Date(calendarEvent.event.startTime)) === dayIso
               )}
+              rowLayout={rowLayout}
             />
           );
         })}

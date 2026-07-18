@@ -1,13 +1,14 @@
 import { useEventStore } from "@/features/events";
 import { useCalendarStore } from "../store/calendarStore";
-import { HOUR_ROW_HEIGHT } from "../hooks/useSlotPosition";
 
 interface HourCellProps {
   date: string;
   hour: number;
+  top: number;
+  height: number;
 }
 
-export function HourCell({ date, hour }: HourCellProps) {
+export function HourCell({ date, hour, top, height }: HourCellProps) {
   const { setSelectedSlot } = useCalendarStore();
   const { openFormForNew } = useEventStore();
 
@@ -21,8 +22,8 @@ export function HourCell({ date, hour }: HourCellProps) {
       type="button"
       onClick={handleClick}
       aria-label={`Add event on ${date} at ${hour}:00`}
-      className="absolute left-0 right-0 border-b border-slate-200 hover:bg-slate-50 transition-colors"
-      style={{ top: hour * HOUR_ROW_HEIGHT, height: HOUR_ROW_HEIGHT }}
+      className="absolute left-0 right-0 border-b border-slate-200 hover:bg-slate-50 transition-all duration-300 ease-in-out"
+      style={{ top, height }}
     />
   );
 }
