@@ -72,8 +72,13 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
             </button>
           )}
         </div>
-        {assignments.map((item) => (
-          <AssignmentBlock key={item.assignment.id} item={item} forceExpanded={isExpanded} />
+        {assignments.map((item, index) => (
+          <AssignmentBlock
+            key={item.assignment.id}
+            item={item}
+            forceExpanded={isExpanded}
+            autoExpand={index === 0}
+          />
         ))}
       </div>
     </div>

@@ -5,17 +5,16 @@ import type { CalendarAssignment } from "../types/calendar.types";
 interface AssignmentBlockProps {
   item: CalendarAssignment;
   forceExpanded?: boolean;
+  autoExpand?: boolean;
 }
 
-export function AssignmentBlock({ item, forceExpanded = false }: AssignmentBlockProps) {
+export function AssignmentBlock({ item, forceExpanded = false, autoExpand = false }: AssignmentBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { assignment, course, tasks } = item;
   const hasTasks = tasks.length > 0;
 
   useEffect(() => {
-    if (forceExpanded) {
-      setIsExpanded(true);
-    }
+    setIsExpanded(forceExpanded && autoExpand);
   }, [forceExpanded]);
 
   return (
