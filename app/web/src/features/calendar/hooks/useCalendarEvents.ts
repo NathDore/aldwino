@@ -34,13 +34,15 @@ export function useCalendarEvents(
       }
     }
 
-    return events.map((event) => ({
-      event,
-      assignments: (assignmentsByEvent.get(event.id) ?? []).map((assignment) => ({
-        assignment,
-        course: courseById.get(assignment.courseId),
-        tasks: tasksByAssignment.get(assignment.id) ?? [],
-      })),
-    }));
+    return events
+      .filter((event) => (assignmentsByEvent.get(event.id) ?? []).length > 0)
+      .map((event) => ({
+        event,
+        assignments: (assignmentsByEvent.get(event.id) ?? []).map((assignment) => ({
+          assignment,
+          course: courseById.get(assignment.courseId),
+          tasks: tasksByAssignment.get(assignment.id) ?? [],
+        })),
+      }));
   }, [events, assignments, courses, tasks]);
 }
