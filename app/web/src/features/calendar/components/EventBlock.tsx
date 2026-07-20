@@ -54,9 +54,8 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
     <div
       data-event-block-id={event.id}
       onClick={handleBlockClick}
-      className={`absolute left-1 right-1 bg-white border border-slate-300 rounded overflow-y-auto p-1.5 transition-all duration-300 ease-in-out cursor-pointer ${
-        isExpanded ? "shadow-lg z-30" : "shadow-sm z-10 hover:shadow-md"
-      }`}
+      className={`absolute left-1 right-1 bg-white border border-slate-300 rounded overflow-y-hidden p-1.5 transition-all duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30" : "shadow-sm z-10 hover:shadow-md"
+        }`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
       <div ref={contentRef} className="space-y-1">
