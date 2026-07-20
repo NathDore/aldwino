@@ -22,7 +22,7 @@ export function CurrentTimeIndicator({ rowLayout }: CurrentTimeIndicatorProps) {
 
   return (
     <div
-      className="absolute left-0 right-0 h-0.5 bg-red-500 z-20 pointer-events-none transition-all duration-300 ease-in-out"
+      className="absolute left-0 right-0 h-0.5 bg-red-500 z-0 pointer-events-none transition-all duration-300 ease-in-out"
       style={{ top: topPx }}
     >
       <div className="w-1.5 h-1.5 rounded-full bg-red-500 -mt-[2px] -ml-0.5" />
