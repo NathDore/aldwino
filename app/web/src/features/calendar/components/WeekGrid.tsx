@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useCalendarStore } from "../store/calendarStore";
 import { useWeekDays, toISODate } from "../hooks/useWeekDays";
 import { useRowLayout } from "../hooks/useRowLayout";
+import { useScrollToNowOnMount } from "../hooks/useScrollToNowOnMount";
 import { DayColumn } from "./DayColumn";
 import { DayHeaderCell } from "./DayHeaderCell";
 import type { CalendarEvent } from "../types/calendar.types";
@@ -26,6 +27,9 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
 
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  const todayInView = days.some((day) => toISODate(day) === today);
+  useScrollToNowOnMount({ headerRef, bodyRef, rowLayout, enabled: todayInView });
 
   const handleBodyScroll = () => {
     if (headerRef.current && bodyRef.current) {
