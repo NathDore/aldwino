@@ -96,7 +96,17 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
               className={index < visibleCount ? undefined : "invisible"}
               aria-hidden={index < visibleCount ? undefined : true}
             >
-              <AssignmentBlock item={item} forceExpanded={isExpanded} autoExpand={index === 0} />
+              <AssignmentBlock
+                item={item}
+                forceExpanded={isExpanded}
+                autoExpand={index === 0}
+                isParentExpanded={isExpanded}
+                onToggle={() => {
+                  if (!isExpanded) {
+                    expandEvent(event.id);
+                  }
+                }}
+              />
             </div>
           </Fragment>
         ))}
