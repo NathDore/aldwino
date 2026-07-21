@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import { useCalendarStore } from "../store/calendarStore";
 import { useWeekDays, toISODate } from "../hooks/useWeekDays";
 import { useRowLayout } from "../hooks/useRowLayout";
 import { DayColumn } from "./DayColumn";
+import { DayHeaderCell } from "./DayHeaderCell";
 import type { CalendarEvent } from "../types/calendar.types";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -22,36 +24,55 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
   const today = toISODate(new Date());
   const rowLayout = useRowLayout(calendarEvents, expandedEventId, expandedEventContentHeight);
 
+  const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  const handleBodyScroll = () => {
+    if (headerRef.current && bodyRef.current) {
+      headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
+    }
+  };
+
   return (
-    <div className="overflow-x-auto border border-slate-200 rounded-lg">
-      <div className="flex min-w-[900px]">
-        <div className="w-16 shrink-0 border-r border-slate-200">
-          <div className="h-12 border-b border-slate-200" />
-          {HOURS.map((hour) => (
-            <div
-              key={hour}
-              className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right transition-all duration-300 ease-in-out"
-              style={{ height: rowLayout.rowHeights[hour] }}
-            >
-              {formatHourLabel(hour)}
-            </div>
+    <div className="border border-slate-200 rounded-lg">
+      <div ref={headerRef} className="overflow-x-hidden sticky top-14 z-40 bg-white border-b border-slate-200">
+        <div className="flex min-w-[900px]">
+          <div className="w-16 shrink-0 border-r border-slate-200" />
+          {days.map((day) => (
+            <DayHeaderCell key={toISODate(day)} date={day} isToday={toISODate(day) === today} />
           ))}
         </div>
+      </div>
 
-        {days.map((day) => {
-          const dayIso = toISODate(day);
-          return (
-            <DayColumn
-              key={dayIso}
-              date={day}
-              isToday={dayIso === today}
-              calendarEvents={calendarEvents.filter(
-                (calendarEvent) => toISODate(new Date(calendarEvent.event.startTime)) === dayIso
-              )}
-              rowLayout={rowLayout}
-            />
-          );
-        })}
+      <div ref={bodyRef} onScroll={handleBodyScroll} className="overflow-x-auto">
+        <div className="flex min-w-[900px]">
+          <div className="w-16 shrink-0 border-r border-slate-200">
+            {HOURS.map((hour) => (
+              <div
+                key={hour}
+                className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right transition-all duration-300 ease-in-out"
+                style={{ height: rowLayout.rowHeights[hour] }}
+              >
+                {formatHourLabel(hour)}
+              </div>
+            ))}
+          </div>
+
+          {days.map((day) => {
+            const dayIso = toISODate(day);
+            return (
+              <DayColumn
+                key={dayIso}
+                date={day}
+                isToday={dayIso === today}
+                calendarEvents={calendarEvents.filter(
+                  (calendarEvent) => toISODate(new Date(calendarEvent.event.startTime)) === dayIso
+                )}
+                rowLayout={rowLayout}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

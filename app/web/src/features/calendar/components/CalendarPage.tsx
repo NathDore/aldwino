@@ -30,10 +30,9 @@ export function CalendarPage() {
 
   return (
     <div className="p-8 max-w-full mx-auto" onClick={handleRootClick}>
-      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">Calendar</h1>
-        <WeekNavigation />
-      </div>
+      <h1 className="mb-4 text-2xl font-bold text-slate-900">Calendar</h1>
+
+      <WeekNavigation />
 
       <WeekGrid calendarEvents={calendarEvents} />
 
