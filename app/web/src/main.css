@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+  --animate-glow: glow 2.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(5, 150, 105, 0.35), 0 0 6px 1px rgba(5, 150, 105, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(5, 150, 105, 0.55), 0 0 12px 3px rgba(5, 150, 105, 0.4);
+  }
+}

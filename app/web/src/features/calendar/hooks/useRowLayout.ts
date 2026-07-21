@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { CalendarEvent } from "../types/calendar.types";
 
-export const HOUR_ROW_HEIGHT = 120;
+export const HOUR_ROW_HEIGHT = 80;
 export const EXPANDED_MIN_HEIGHT = 220;
 export const EXPANDED_MAX_HEIGHT = 640;
 export const EXPANDED_CONTENT_PADDING = 16;

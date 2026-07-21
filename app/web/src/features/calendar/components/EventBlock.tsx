@@ -2,6 +2,7 @@ import { Fragment, useLayoutEffect, useRef, type MouseEvent } from "react";
 import { useSlotPosition } from "../hooks/useSlotPosition";
 import type { RowLayout } from "../hooks/useRowLayout";
 import { useFittingAssignments } from "../hooks/useFittingAssignments";
+import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
 import { AssignmentBlock } from "./AssignmentBlock";
 import { CloseIcon } from "./icons";
@@ -25,6 +26,7 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
   const { topPx, heightPx } = useSlotPosition(event.startTime, event.endTime, rowLayout);
   const { expandedEventId, expandEvent, collapseEvent, setExpandedEventContentHeight } = useCalendarStore();
   const isExpanded = expandedEventId === event.id;
+  const isActive = useIsEventActive(event.startTime, event.endTime);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -61,8 +63,8 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
       ref={containerRef}
       data-event-block-id={event.id}
       onClick={handleBlockClick}
-      className={`absolute left-1 right-1 bg-white border border-slate-300 rounded overflow-y-hidden p-1.5 transition-all duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30" : "shadow-sm z-10 hover:shadow-md"
-        }`}
+      className={`absolute left-1 right-1 bg-white border rounded overflow-y-hidden p-1.5 transition-all duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30" : "shadow-sm z-10 hover:shadow-md"
+        } ${isActive ? "border-emerald-400 animate-glow" : "border-slate-300"}`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
       <div ref={contentRef} className="space-y-1">
