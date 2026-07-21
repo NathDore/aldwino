@@ -4,6 +4,7 @@ import type { RowLayout } from "../hooks/useRowLayout";
 import { useFittingAssignments } from "../hooks/useFittingAssignments";
 import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
+import { createRAFDebounce } from "../utils/createRAFDebounce";
 import { AssignmentBlock } from "./AssignmentBlock";
 import { CloseIcon } from "./icons";
 import type { CalendarEvent } from "../types/calendar.types";
@@ -40,11 +41,17 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
     if (!el) return;
 
     const measure = () => setExpandedEventContentHeight(el.scrollHeight);
+    const { debounced: debouncedMeasure, cancel } = createRAFDebounce(measure);
+
+    // Initial measurement (synchronous)
     measure();
 
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => debouncedMeasure());
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancel();
+    };
   }, [isExpanded, setExpandedEventContentHeight]);
 
   const handleBlockClick = () => {

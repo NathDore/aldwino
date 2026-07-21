@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { TaskList } from "./TaskList";
+import { createRAFDebounce } from "../utils/createRAFDebounce";
 import type { CalendarAssignment } from "../types/calendar.types";
 
 interface AssignmentBlockProps {
@@ -27,11 +28,16 @@ export function AssignmentBlock({ item, forceExpanded = false, autoExpand = fals
     if (!el) return;
 
     const measure = () => setTaskListHeight(el.scrollHeight);
+    const { debounced: debouncedMeasure, cancel } = createRAFDebounce(measure);
+
     measure();
 
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => debouncedMeasure());
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancel();
+    };
   }, [hasTasks]);
 
   const handleToggle = (e: MouseEvent) => {
@@ -49,9 +55,8 @@ export function AssignmentBlock({ item, forceExpanded = false, autoExpand = fals
     >
       <div className="flex items-start justify-between gap-1">
         <p
-          className={`text-xs flex-1 min-w-0 ${forceExpanded ? "whitespace-normal break-words" : "truncate"} ${
-            assignment.isCompleted ? "line-through text-slate-500" : "text-slate-900"
-          }`}
+          className={`text-xs flex-1 min-w-0 ${forceExpanded ? "whitespace-normal break-words" : "truncate"} ${assignment.isCompleted ? "line-through text-slate-500" : "text-slate-900"
+            }`}
           title={forceExpanded ? undefined : assignment.description}
         >
           {assignment.description}
