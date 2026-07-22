@@ -21,8 +21,17 @@ function formatTimeRange(startTime: string, endTime: string): string {
   )}`;
 }
 
+function formatEventDateHeading(startTime: string): { weekday: string; date: string } {
+  const d = new Date(startTime);
+  return {
+    weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
+    date: d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+  };
+}
+
 export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
   const { event, assignments } = calendarEvent;
+  const { weekday, date } = formatEventDateHeading(event.startTime);
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
 
@@ -73,15 +82,21 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
           if (!isVisible && e.propertyName === "opacity") closeNow();
         }}
       >
-        <div className="flex items-start justify-between gap-2 p-6 pb-3 shrink-0">
-          <p className="text-sm font-semibold text-slate-900">{formatTimeRange(event.startTime, event.endTime)}</p>
+        <div className="flex items-start justify-between gap-2 px-6 pt-6 pb-4 border-b border-slate-200 shrink-0">
+          <div className="min-w-0">
+            <p className="text-lg font-bold text-slate-900 truncate">{weekday}</p>
+            <p className="text-sm text-slate-700">{date}</p>
+            <p className="text-sm font-semibold text-slate-900 mt-1">
+              {formatTimeRange(event.startTime, event.endTime)}
+            </p>
+          </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>
             <CloseIcon />
           </Button>
         </div>
 
-        <div className="space-y-2 px-6 pb-6 overflow-y-auto min-h-0">
+        <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0">
           {assignments.map((item, index) => (
             <AssignmentBlock key={item.assignment.id} item={item} forceExpanded autoExpand={index === 0} interactive />
           ))}
