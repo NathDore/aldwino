@@ -1,20 +1,21 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
+import { memo, useEffect, useState, type MouseEvent } from "react";
 import { TaskList } from "./TaskList";
-import { createRAFDebounce } from "../utils/createRAFDebounce";
 import type { CalendarAssignment } from "../types/calendar.types";
 
 interface AssignmentBlockProps {
   item: CalendarAssignment;
   forceExpanded?: boolean;
   autoExpand?: boolean;
-  onToggle?: () => void;
-  isParentExpanded?: boolean;
+  interactive?: boolean;
 }
 
-export function AssignmentBlock({ item, forceExpanded = false, autoExpand = false, onToggle, isParentExpanded }: AssignmentBlockProps) {
+export const AssignmentBlock = memo(function AssignmentBlock({
+  item,
+  forceExpanded = false,
+  autoExpand = false,
+  interactive = true,
+}: AssignmentBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [taskListHeight, setTaskListHeight] = useState(0);
-  const taskListRef = useRef<HTMLDivElement>(null);
   const { assignment, course, tasks } = item;
   const hasTasks = tasks.length > 0;
 
@@ -22,36 +23,19 @@ export function AssignmentBlock({ item, forceExpanded = false, autoExpand = fals
     setIsExpanded(forceExpanded && autoExpand);
   }, [forceExpanded]);
 
-  useLayoutEffect(() => {
-    if (!hasTasks) return;
-    const el = taskListRef.current;
-    if (!el) return;
-
-    const measure = () => setTaskListHeight(el.scrollHeight);
-    const { debounced: debouncedMeasure, cancel } = createRAFDebounce(measure);
-
-    measure();
-
-    const observer = new ResizeObserver(() => debouncedMeasure());
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      cancel();
-    };
-  }, [hasTasks]);
-
   const handleToggle = (e: MouseEvent) => {
     e.stopPropagation();
     if (!hasTasks) return;
-    onToggle?.();
     setIsExpanded((prev) => !prev);
   };
 
+  const canToggle = interactive && hasTasks;
+
   return (
     <div
-      className={`border-l-2 pl-1.5 py-0.5${hasTasks ? " cursor-pointer" : ""}`}
+      className={`border-l-2 pl-1.5 py-0.5${canToggle ? " cursor-pointer" : ""}`}
       style={{ borderLeftColor: course?.color ?? "#cbd5e1" }}
-      onClick={hasTasks ? handleToggle : undefined}
+      onClick={canToggle ? handleToggle : undefined}
     >
       <div className="flex items-start justify-between gap-1">
         <p
@@ -61,7 +45,7 @@ export function AssignmentBlock({ item, forceExpanded = false, autoExpand = fals
         >
           {assignment.description}
         </p>
-        {hasTasks && (
+        {canToggle && (
           <button
             type="button"
             onClick={handleToggle}
@@ -75,13 +59,14 @@ export function AssignmentBlock({ item, forceExpanded = false, autoExpand = fals
       {course && <p className="text-[10px] text-slate-600 truncate">{course.code}</p>}
       {hasTasks && (
         <div
-          ref={taskListRef}
-          className="overflow-hidden transition-all duration-300 ease-in-out"
-          style={{ height: isExpanded ? taskListHeight : 0 }}
+          className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
         >
-          <TaskList tasks={tasks} />
+          <div className="overflow-hidden min-h-0">
+            <TaskList tasks={tasks} />
+          </div>
         </div>
       )}
     </div>
   );
-}
+});

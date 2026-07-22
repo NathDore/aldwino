@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import { createRAFDebounce } from "../utils/createRAFDebounce";
 
 const EPSILON_PX = 0.5;
 const ITEM_GAP_PX = 4;
@@ -7,8 +8,7 @@ const INDICATOR_HEIGHT_PX = 16;
 export function useFittingAssignments(
   containerRef: RefObject<HTMLElement | null>,
   headerRef: RefObject<HTMLElement | null>,
-  itemCount: number,
-  invalidateOn: unknown[]
+  itemCount: number
 ): { getItemRef: (index: number) => (el: HTMLDivElement | null) => void; visibleCount: number } {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visibleCount, setVisibleCount] = useState(itemCount);
@@ -56,14 +56,18 @@ export function useFittingAssignments(
 
     measure();
 
-    const observer = new ResizeObserver(measure);
+    const { debounced: debouncedMeasure, cancel } = createRAFDebounce(measure);
+    const observer = new ResizeObserver(() => debouncedMeasure());
     observer.observe(container);
     for (const el of itemRefs.current) {
       if (el) observer.observe(el);
     }
 
-    return () => observer.disconnect();
-  }, [containerRef, headerRef, itemCount, ...invalidateOn]);
+    return () => {
+      observer.disconnect();
+      cancel();
+    };
+  }, [containerRef, headerRef, itemCount]);
 
   return { getItemRef, visibleCount };
 }

@@ -101,14 +101,6 @@ src/
 
 ---
 
-# Teaching Style
+# Plan mode
 
-I'm learning software architecture.
-
-When introducing a new concept:
-1. **Explain why it exists** — The problem it solves
-2. **Explain when to use it** — Situations where it applies
-3. **Show an example** — Code snippet in this project
-4. **Relate it to my current project** — How it applies here
-
-Don't assume I already know advanced concepts.
+Only include the implementation plan and any risks or trade-offs. Skip background, context, and explanations.

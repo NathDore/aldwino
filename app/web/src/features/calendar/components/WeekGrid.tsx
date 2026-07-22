@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useCalendarStore } from "../store/calendarStore";
 import { useWeekDays, toISODate } from "../hooks/useWeekDays";
 import { useRowLayout } from "../hooks/useRowLayout";
@@ -8,6 +8,7 @@ import { DayHeaderCell } from "./DayHeaderCell";
 import type { CalendarEvent } from "../types/calendar.types";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const EMPTY_EVENTS: CalendarEvent[] = [];
 
 function formatHourLabel(hour: number): string {
   const period = hour < 12 ? "AM" : "PM";
@@ -20,10 +21,10 @@ interface WeekGridProps {
 }
 
 export function WeekGrid({ calendarEvents }: WeekGridProps) {
-  const { currentWeekStart, expandedEventId, expandedEventContentHeight } = useCalendarStore();
+  const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
   const days = useWeekDays(currentWeekStart);
   const today = toISODate(new Date());
-  const rowLayout = useRowLayout(calendarEvents, expandedEventId, expandedEventContentHeight);
+  const rowLayout = useRowLayout();
 
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -36,6 +37,20 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
       headerRef.current.scrollLeft = bodyRef.current.scrollLeft;
     }
   };
+
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const calendarEvent of calendarEvents) {
+      const dayIso = toISODate(new Date(calendarEvent.event.startTime));
+      const existing = map.get(dayIso);
+      if (existing) {
+        existing.push(calendarEvent);
+      } else {
+        map.set(dayIso, [calendarEvent]);
+      }
+    }
+    return map;
+  }, [calendarEvents]);
 
   return (
     <div className="border border-slate-200 rounded-lg">
@@ -54,7 +69,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
             {HOURS.map((hour) => (
               <div
                 key={hour}
-                className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right transition-all duration-300 ease-in-out"
+                className="border-b border-slate-200 text-xs text-slate-600 pr-2 pt-1 text-right"
                 style={{ height: rowLayout.rowHeights[hour] }}
               >
                 {formatHourLabel(hour)}
@@ -69,9 +84,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
                 key={dayIso}
                 date={day}
                 isToday={dayIso === today}
-                calendarEvents={calendarEvents.filter(
-                  (calendarEvent) => toISODate(new Date(calendarEvent.event.startTime)) === dayIso
-                )}
+                calendarEvents={eventsByDay.get(dayIso) ?? EMPTY_EVENTS}
                 rowLayout={rowLayout}
               />
             );

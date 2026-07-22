@@ -10,7 +10,6 @@ interface CalendarStore {
   currentWeekStart: string;
   selectedSlot: SelectedSlot | null;
   expandedEventId: string | null;
-  expandedEventContentHeight: number | null;
   goToNextWeek: () => void;
   goToPrevWeek: () => void;
   goToToday: () => void;
@@ -18,7 +17,6 @@ interface CalendarStore {
   clearSelectedSlot: () => void;
   expandEvent: (id: string) => void;
   collapseEvent: () => void;
-  setExpandedEventContentHeight: (height: number | null) => void;
 }
 
 function shiftWeek(weekStartIso: string, days: number): string {
@@ -31,13 +29,11 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   currentWeekStart: toISODate(getWeekStart(new Date())),
   selectedSlot: null,
   expandedEventId: null,
-  expandedEventContentHeight: null,
   goToNextWeek: () => set({ currentWeekStart: shiftWeek(get().currentWeekStart, 7) }),
   goToPrevWeek: () => set({ currentWeekStart: shiftWeek(get().currentWeekStart, -7) }),
   goToToday: () => set({ currentWeekStart: toISODate(getWeekStart(new Date())) }),
   setSelectedSlot: (date, hour) => set({ selectedSlot: { date, hour } }),
   clearSelectedSlot: () => set({ selectedSlot: null }),
-  expandEvent: (id) => set({ expandedEventId: id, expandedEventContentHeight: null }),
-  collapseEvent: () => set({ expandedEventId: null, expandedEventContentHeight: null }),
-  setExpandedEventContentHeight: (height) => set({ expandedEventContentHeight: height }),
+  expandEvent: (id) => set({ expandedEventId: id }),
+  collapseEvent: () => set({ expandedEventId: null }),
 }));

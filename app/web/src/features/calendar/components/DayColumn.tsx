@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { HourCell } from "./HourCell";
 import { EventBlock } from "./EventBlock";
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
@@ -14,12 +15,12 @@ interface DayColumnProps {
   rowLayout: RowLayout;
 }
 
-export function DayColumn({ date, isToday, calendarEvents, rowLayout }: DayColumnProps) {
+export const DayColumn = memo(function DayColumn({ date, isToday, calendarEvents, rowLayout }: DayColumnProps) {
   const dayIso = toISODate(date);
 
   return (
     <div className="flex-1 min-w-[120px] border-r border-slate-200 last:border-r-0">
-      <div className="relative transition-all duration-300 ease-in-out" style={{ height: rowLayout.totalHeight }}>
+      <div className="relative" style={{ height: rowLayout.totalHeight }}>
         {HOURS.map((hour) => (
           <HourCell
             key={hour}
@@ -38,4 +39,4 @@ export function DayColumn({ date, isToday, calendarEvents, rowLayout }: DayColum
       </div>
     </div>
   );
-}
+});

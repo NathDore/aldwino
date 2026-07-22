@@ -9,7 +9,10 @@ function formatWeekRange(start: Date, end: Date): string {
 }
 
 export function WeekNavigation() {
-  const { currentWeekStart, goToPrevWeek, goToNextWeek, goToToday } = useCalendarStore();
+  const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
+  const goToPrevWeek = useCalendarStore((s) => s.goToPrevWeek);
+  const goToNextWeek = useCalendarStore((s) => s.goToNextWeek);
+  const goToToday = useCalendarStore((s) => s.goToToday);
   const days = useWeekDays(currentWeekStart);
 
   return (

@@ -1,12 +1,11 @@
-import { Fragment, useLayoutEffect, useRef, type MouseEvent } from "react";
+import { Fragment, memo, useRef } from "react";
 import { useSlotPosition } from "../hooks/useSlotPosition";
 import type { RowLayout } from "../hooks/useRowLayout";
 import { useFittingAssignments } from "../hooks/useFittingAssignments";
 import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
-import { createRAFDebounce } from "../utils/createRAFDebounce";
 import { AssignmentBlock } from "./AssignmentBlock";
-import { CloseIcon } from "./icons";
+import { EventPopover } from "./EventPopover";
 import type { CalendarEvent } from "../types/calendar.types";
 
 interface EventBlockProps {
@@ -22,71 +21,38 @@ function formatTimeRange(startTime: string, endTime: string): string {
   )}`;
 }
 
-export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
+export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
   const { event, assignments } = calendarEvent;
   const { topPx, heightPx } = useSlotPosition(event.startTime, event.endTime, rowLayout);
-  const { expandedEventId, expandEvent, collapseEvent, setExpandedEventContentHeight } = useCalendarStore();
+  const expandedEventId = useCalendarStore((s) => s.expandedEventId);
+  const expandEvent = useCalendarStore((s) => s.expandEvent);
+  const collapseEvent = useCalendarStore((s) => s.collapseEvent);
   const isExpanded = expandedEventId === event.id;
   const isActive = useIsEventActive(event.startTime, event.endTime);
-  const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length, [
-    isExpanded,
-  ]);
-
-  useLayoutEffect(() => {
-    if (!isExpanded) return;
-    const el = contentRef.current;
-    if (!el) return;
-
-    const measure = () => setExpandedEventContentHeight(el.scrollHeight);
-    const { debounced: debouncedMeasure, cancel } = createRAFDebounce(measure);
-
-    // Initial measurement (synchronous)
-    measure();
-
-    const observer = new ResizeObserver(() => debouncedMeasure());
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      cancel();
-    };
-  }, [isExpanded, setExpandedEventContentHeight]);
+  const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
 
   const handleBlockClick = () => {
-    if (!isExpanded) {
-      expandEvent(event.id);
-    }
+    if (isExpanded) return;
+    expandEvent(event.id);
   };
 
-  const handleClose = (e: MouseEvent) => {
-    e.stopPropagation();
+  const handleClose = () => {
     collapseEvent();
   };
 
   return (
     <div
       ref={containerRef}
-      data-event-block-id={event.id}
       onClick={handleBlockClick}
-      className={`absolute left-1 right-1 bg-white border rounded overflow-y-hidden p-1.5 transition-all duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30" : "shadow-sm z-10 hover:shadow-md"
+      className={`absolute left-1 right-1 bg-white border rounded overflow-y-hidden p-1.5 transition-[box-shadow,border-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
         } ${isActive ? "border-emerald-400 animate-glow" : "border-slate-300"}`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
-      <div ref={contentRef} className="space-y-1">
+      <div className="space-y-1">
         <div ref={headerRef} className="flex items-start justify-between gap-1">
           <p className="text-xs font-semibold text-slate-900">{formatTimeRange(event.startTime, event.endTime)}</p>
-          {isExpanded && (
-            <button
-              type="button"
-              onClick={handleClose}
-              className="text-slate-600 hover:text-slate-900 shrink-0"
-              aria-label="Close event"
-            >
-              <CloseIcon />
-            </button>
-          )}
         </div>
         {assignments.map((item, index) => (
           <Fragment key={item.assignment.id}>
@@ -103,21 +69,13 @@ export function EventBlock({ calendarEvent, rowLayout }: EventBlockProps) {
               className={index < visibleCount ? undefined : "invisible"}
               aria-hidden={index < visibleCount ? undefined : true}
             >
-              <AssignmentBlock
-                item={item}
-                forceExpanded={isExpanded}
-                autoExpand={index === 0}
-                isParentExpanded={isExpanded}
-                onToggle={() => {
-                  if (!isExpanded) {
-                    expandEvent(event.id);
-                  }
-                }}
-              />
+              <AssignmentBlock item={item} interactive={false} />
             </div>
           </Fragment>
         ))}
       </div>
+
+      {isExpanded && <EventPopover calendarEvent={calendarEvent} onClose={handleClose} />}
     </div>
   );
-}
+});

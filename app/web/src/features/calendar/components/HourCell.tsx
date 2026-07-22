@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useEventStore } from "@/features/events";
 import { useCalendarStore } from "../store/calendarStore";
 
@@ -8,8 +9,8 @@ interface HourCellProps {
   height: number;
 }
 
-export function HourCell({ date, hour, top, height }: HourCellProps) {
-  const { setSelectedSlot } = useCalendarStore();
+export const HourCell = memo(function HourCell({ date, hour, top, height }: HourCellProps) {
+  const setSelectedSlot = useCalendarStore((s) => s.setSelectedSlot);
   const { openFormForNew } = useEventStore();
 
   const handleClick = () => {
@@ -22,8 +23,8 @@ export function HourCell({ date, hour, top, height }: HourCellProps) {
       type="button"
       onClick={handleClick}
       aria-label={`Add event on ${date} at ${hour}:00`}
-      className="absolute left-0 right-0 border-b border-slate-200 hover:bg-slate-50 transition-all duration-300 ease-in-out"
+      className="absolute left-0 right-0 border-b border-slate-200 hover:bg-slate-50"
       style={{ top, height }}
     />
   );
-}
+});
