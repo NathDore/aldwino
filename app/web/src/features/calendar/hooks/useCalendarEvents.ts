@@ -36,13 +36,19 @@ export function useCalendarEvents(
 
     return events
       .filter((event) => (assignmentsByEvent.get(event.id) ?? []).length > 0)
-      .map((event) => ({
-        event,
-        assignments: (assignmentsByEvent.get(event.id) ?? []).map((assignment) => ({
-          assignment,
-          course: courseById.get(assignment.courseId),
-          tasks: tasksByAssignment.get(assignment.id) ?? [],
-        })),
-      }));
+      .map((event) => {
+        const eventAssignments = (assignmentsByEvent.get(event.id) ?? [])
+          .slice()
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+        return {
+          event,
+          assignments: eventAssignments.map((assignment) => ({
+            assignment,
+            course: courseById.get(assignment.courseId),
+            tasks: tasksByAssignment.get(assignment.id) ?? [],
+          })),
+        };
+      });
   }, [events, assignments, courses, tasks]);
 }
