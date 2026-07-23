@@ -1,9 +1,7 @@
-import { useEventsQuery, useEventStore } from "@/features/events";
-import { EventForm } from "@/features/events/components/EventForm";
+import { useEventsQuery } from "@/features/events";
 import { useAssignmentsQuery } from "@/features/assignments";
 import { useTasksQuery } from "@/features/tasks";
 import { useCoursesQuery } from "@/features/courses";
-import { Modal } from "@/shared/components/Modal";
 import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import { WeekNavigation } from "./WeekNavigation";
 import { WeekGrid } from "./WeekGrid";
@@ -13,10 +11,8 @@ export function CalendarPage() {
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: tasks = [] } = useTasksQuery();
   const { data: courses = [] } = useCoursesQuery();
-  const { isFormOpen, selectedEventId } = useEventStore();
 
   const calendarEvents = useCalendarEvents(events, assignments, courses, tasks);
-  const eventToEdit = selectedEventId ? events.find((event) => event.id === selectedEventId) ?? null : null;
 
   return (
     <div className="p-8 max-w-full mx-auto">
@@ -25,12 +21,6 @@ export function CalendarPage() {
       <WeekNavigation />
 
       <WeekGrid calendarEvents={calendarEvents} />
-
-      {isFormOpen && (
-        <Modal>
-          <EventForm eventToEdit={eventToEdit} />
-        </Modal>
-      )}
     </div>
   );
 }

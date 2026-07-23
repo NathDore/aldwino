@@ -1,5 +1,5 @@
 import type { Hono } from "hono";
-import { AssignmentValidationError, CourseNotFoundError, EventNotFoundError } from "../../../domain/assignment/AssignmentError";
+import { AssignmentValidationError, CourseNotFoundError } from "../../../domain/assignment/AssignmentError";
 import type { CreateAssignmentUseCase } from "../../../application/assignment/CreateAssignmentUseCase";
 import type { GetAssignmentByIdUseCase } from "../../../application/assignment/GetAssignmentByIdUseCase";
 import type { ListAssignmentsUseCase } from "../../../application/assignment/ListAssignmentsUseCase";
@@ -18,7 +18,7 @@ function handleAssignmentError(error: unknown) {
   if (error instanceof AssignmentValidationError) {
     return { body: { error: error.message }, status: 400 as const };
   }
-  if (error instanceof CourseNotFoundError || error instanceof EventNotFoundError) {
+  if (error instanceof CourseNotFoundError) {
     return { body: { error: error.message }, status: 404 as const };
   }
   if (error instanceof Error && error.message.includes("not found")) {
@@ -32,13 +32,23 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
     try {
       const body = (await c.req.json()) as {
         courseId?: string;
-        eventId?: string;
         description?: string;
         dueDate?: string;
+        startTime?: string;
+        expectedDurationMinutes?: number;
       };
 
-      if (!body.courseId || !body.eventId || !body.description || !body.dueDate) {
-        return c.json({ error: "courseId, eventId, description and dueDate are required" }, 400);
+      if (
+        !body.courseId ||
+        !body.description ||
+        !body.dueDate ||
+        !body.startTime ||
+        body.expectedDurationMinutes === undefined
+      ) {
+        return c.json(
+          { error: "courseId, description, dueDate, startTime and expectedDurationMinutes are required" },
+          400,
+        );
       }
 
       const dueDate = new Date(body.dueDate);
@@ -46,11 +56,17 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         return c.json({ error: "dueDate must be a valid ISO 8601 date" }, 400);
       }
 
+      const startTime = new Date(body.startTime);
+      if (isNaN(startTime.getTime())) {
+        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
+      }
+
       const assignment = deps.createAssignmentUseCase.execute({
         courseId: body.courseId,
-        eventId: body.eventId,
         description: body.description,
         dueDate,
+        startTime,
+        expectedDurationMinutes: Number(body.expectedDurationMinutes),
       });
       return c.json(assignment.toJSON(), 201);
     } catch (error) {
@@ -81,15 +97,26 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
       const id = c.req.param("id");
       const body = (await c.req.json()) as {
         courseId?: string;
-        eventId?: string;
         description?: string;
         dueDate?: string;
+        startTime?: string;
+        expectedDurationMinutes?: number;
         isCompleted?: boolean;
       };
 
-      if (!body.courseId || !body.eventId || !body.description || !body.dueDate || body.isCompleted === undefined) {
+      if (
+        !body.courseId ||
+        !body.description ||
+        !body.dueDate ||
+        !body.startTime ||
+        body.expectedDurationMinutes === undefined ||
+        body.isCompleted === undefined
+      ) {
         return c.json(
-          { error: "courseId, eventId, description, dueDate and isCompleted are required" },
+          {
+            error:
+              "courseId, description, dueDate, startTime, expectedDurationMinutes and isCompleted are required",
+          },
           400,
         );
       }
@@ -99,12 +126,18 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         return c.json({ error: "dueDate must be a valid ISO 8601 date" }, 400);
       }
 
+      const startTime = new Date(body.startTime);
+      if (isNaN(startTime.getTime())) {
+        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
+      }
+
       const assignment = deps.updateAssignmentUseCase.execute({
         id,
         courseId: body.courseId,
-        eventId: body.eventId,
         description: body.description,
         dueDate,
+        startTime,
+        expectedDurationMinutes: Number(body.expectedDurationMinutes),
         isCompleted: body.isCompleted,
       });
       return c.json(assignment.toJSON(), 200);

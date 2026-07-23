@@ -1,9 +1,7 @@
 import type { AssignmentDto } from "../types/assignment.types";
-import { useAssignmentForm } from "../hooks/useAssignmentForm";
+import { ALLOWED_DURATIONS_MINUTES, useAssignmentForm } from "../hooks/useAssignmentForm";
 import { useAssignmentStore } from "../store/assignmentStore";
-import { EventPicker } from "./EventPicker";
 import { useCoursesQuery } from "@/features/courses";
-import { useEventsQuery } from "@/features/events";
 import { Button } from "@/shared/components/Button";
 
 interface AssignmentFormProps {
@@ -12,9 +10,8 @@ interface AssignmentFormProps {
 
 export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
   const { closeForm } = useAssignmentStore();
-  const { formState, updateField, handleSubmit, isLoading } = useAssignmentForm(assignmentToEdit);
+  const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(assignmentToEdit);
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
-  const { data: events = [], isLoading: eventsLoading } = useEventsQuery();
 
   return (
     <div className="space-y-4">
@@ -93,16 +90,49 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-900 mb-1.5">Event</label>
-        <EventPicker
-          events={events}
-          selectedEventId={formState.eventId}
-          onSelect={(id) => updateField("eventId", id)}
-          isLoading={eventsLoading}
+        <label htmlFor="startTime" className="block text-sm font-semibold text-slate-900 mb-1.5">
+          Start Time
+        </label>
+        <input
+          id="startTime"
+          type="datetime-local"
+          value={formState.startTime}
+          onChange={(e) => updateField("startTime", e.target.value)}
+          className={`w-full px-4 py-2 bg-white border text-slate-900 focus:outline-none transition-colors ${
+            formState.errors.startTime
+              ? "border-red-500 focus:border-red-600"
+              : "border-slate-300 focus:border-emerald-600"
+          }`}
           disabled={isLoading}
         />
-        {formState.errors.eventId && (
-          <p className="text-red-600 text-sm mt-1">{formState.errors.eventId}</p>
+        {formState.errors.startTime && (
+          <p className="text-red-600 text-sm mt-1">{formState.errors.startTime}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="expectedDurationMinutes" className="block text-sm font-semibold text-slate-900 mb-1.5">
+          Duration
+        </label>
+        <select
+          id="expectedDurationMinutes"
+          value={formState.expectedDurationMinutes}
+          onChange={(e) => updateDuration(Number(e.target.value))}
+          className={`w-full px-4 py-2 bg-white border text-slate-900 focus:outline-none transition-colors ${
+            formState.errors.expectedDurationMinutes
+              ? "border-red-500 focus:border-red-600"
+              : "border-slate-300 focus:border-emerald-600"
+          }`}
+          disabled={isLoading}
+        >
+          {ALLOWED_DURATIONS_MINUTES.map((minutes) => (
+            <option key={minutes} value={minutes}>
+              {minutes} minutes
+            </option>
+          ))}
+        </select>
+        {formState.errors.expectedDurationMinutes && (
+          <p className="text-red-600 text-sm mt-1">{formState.errors.expectedDurationMinutes}</p>
         )}
       </div>
 

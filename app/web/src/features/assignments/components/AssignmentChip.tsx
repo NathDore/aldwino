@@ -19,9 +19,10 @@ export function AssignmentChip({ assignment, course, onDelete }: AssignmentChipP
       id: assignment.id,
       data: {
         courseId: assignment.courseId,
-        eventId: assignment.eventId,
         description: assignment.description,
         dueDate: assignment.dueDate,
+        startTime: assignment.startTime,
+        expectedDurationMinutes: assignment.expectedDurationMinutes,
         isCompleted: !assignment.isCompleted,
       },
     });

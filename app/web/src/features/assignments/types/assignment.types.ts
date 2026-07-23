@@ -4,6 +4,8 @@ export interface AssignmentDto {
   eventId: string;
   description: string;
   dueDate: string;
+  startTime: string;
+  expectedDurationMinutes: number;
   isCompleted: boolean;
   completedAt: string | null;
   createdAt: string;
@@ -11,7 +13,8 @@ export interface AssignmentDto {
 
 export interface AssignmentFormData {
   courseId: string;
-  eventId: string;
   description: string;
   dueDate: string;
+  startTime: string;
+  expectedDurationMinutes: number;
 }

@@ -5,6 +5,7 @@ export interface IAssignmentRepository {
   create(assignment: Assignment): Assignment;
   getById(id: string): Assignment | null;
   getAll(): Assignment[];
+  getByEventId(eventId: string): Assignment[];
   update(assignment: Assignment): Assignment;
   delete(id: string): boolean;
 }
@@ -15,7 +16,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   create(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO assignments (id, courseId, eventId, description, dueDate, isCompleted, completedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO assignments (id, courseId, eventId, description, dueDate, startTime, expectedDurationMinutes, isCompleted, completedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -23,6 +24,8 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.eventId,
       json.description,
       json.dueDate,
+      json.startTime,
+      json.expectedDurationMinutes,
       json.isCompleted ? 1 : 0,
       json.completedAt,
       json.createdAt,
@@ -45,16 +48,24 @@ export class AssignmentRepository implements IAssignmentRepository {
     return rows.map((row) => this.rowToAssignment(row));
   }
 
+  getByEventId(eventId: string): Assignment[] {
+    const stmt = this.db.prepare("SELECT * FROM assignments WHERE eventId = ?");
+    const rows = stmt.all(eventId) as Record<string, string | number | null>[];
+    return rows.map((row) => this.rowToAssignment(row));
+  }
+
   update(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE assignments SET courseId = ?, eventId = ?, description = ?, dueDate = ?, isCompleted = ?, completedAt = ? WHERE id = ?",
+      "UPDATE assignments SET courseId = ?, eventId = ?, description = ?, dueDate = ?, startTime = ?, expectedDurationMinutes = ?, isCompleted = ?, completedAt = ? WHERE id = ?",
     );
     stmt.run(
       json.courseId,
       json.eventId,
       json.description,
       json.dueDate,
+      json.startTime,
+      json.expectedDurationMinutes,
       json.isCompleted ? 1 : 0,
       json.completedAt,
       json.id,
@@ -75,6 +86,8 @@ export class AssignmentRepository implements IAssignmentRepository {
       eventId: row.eventId as string,
       description: row.description as string,
       dueDate: new Date(row.dueDate as string),
+      startTime: new Date(row.startTime as string),
+      expectedDurationMinutes: row.expectedDurationMinutes as number,
       isCompleted: Boolean(row.isCompleted),
       completedAt: row.completedAt ? new Date(row.completedAt as string) : null,
       createdAt: new Date(row.createdAt as string),

@@ -4,8 +4,3 @@ export interface EventDto {
   endTime: string;
   createdAt: string;
 }
-
-export interface EventFormData {
-  startTime: string;
-  endTime: string;
-}

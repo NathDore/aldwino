@@ -9,11 +9,14 @@ interface FormState extends AssignmentFormData {
 
 const DESCRIPTION_MAX_LENGTH = 250;
 
+export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
+
 const initialFormState: FormState = {
   courseId: "",
-  eventId: "",
   description: "",
   dueDate: "",
+  startTime: "",
+  expectedDurationMinutes: 25,
   errors: {},
 };
 
@@ -25,12 +28,19 @@ function isoToDateInput(iso: string): string {
     .padStart(2, "0")}`;
 }
 
+function isoToDateTimeLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"> {
   return {
     courseId: assignment.courseId,
-    eventId: assignment.eventId,
     description: assignment.description,
     dueDate: isoToDateInput(assignment.dueDate),
+    startTime: isoToDateTimeLocalInput(assignment.startTime),
+    expectedDurationMinutes: assignment.expectedDurationMinutes,
   };
 }
 
@@ -53,11 +63,19 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
     }
   }, [assignmentToEdit]);
 
-  const updateField = (field: keyof AssignmentFormData, value: string) => {
+  const updateField = (field: keyof Omit<AssignmentFormData, "expectedDurationMinutes">, value: string) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
       errors: { ...prev.errors, [field]: "" },
+    }));
+  };
+
+  const updateDuration = (minutes: number) => {
+    setFormState((prev) => ({
+      ...prev,
+      expectedDurationMinutes: minutes,
+      errors: { ...prev.errors, expectedDurationMinutes: "" },
     }));
   };
 
@@ -66,10 +84,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
 
     if (!formState.courseId) {
       errors.courseId = "Course is required";
-    }
-
-    if (!formState.eventId) {
-      errors.eventId = "Event is required";
     }
 
     if (!formState.description.trim()) {
@@ -82,6 +96,14 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       errors.dueDate = "Due date is required";
     }
 
+    if (!formState.startTime) {
+      errors.startTime = "Start time is required";
+    }
+
+    if (!ALLOWED_DURATIONS_MINUTES.includes(formState.expectedDurationMinutes as (typeof ALLOWED_DURATIONS_MINUTES)[number])) {
+      errors.expectedDurationMinutes = "Duration must be one of the allowed options";
+    }
+
     setFormState((prev) => ({ ...prev, errors }));
     return Object.keys(errors).length === 0;
   };
@@ -92,11 +114,13 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
     }
 
     const dueDate = new Date(`${formState.dueDate}T00:00:00`).toISOString();
+    const startTime = new Date(formState.startTime).toISOString();
     const data: AssignmentFormData = {
       courseId: formState.courseId,
-      eventId: formState.eventId,
       description: formState.description.trim(),
       dueDate,
+      startTime,
+      expectedDurationMinutes: formState.expectedDurationMinutes,
     };
 
     try {
@@ -122,6 +146,7 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
   return {
     formState,
     updateField,
+    updateDuration,
     handleSubmit,
     isLoading,
   };

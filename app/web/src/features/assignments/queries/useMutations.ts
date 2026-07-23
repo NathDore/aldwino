@@ -9,6 +9,7 @@ export function useCreateAssignmentMutation() {
     mutationFn: createAssignment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 }
@@ -21,6 +22,7 @@ export function useUpdateAssignmentMutation() {
       updateAssignment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 }
@@ -32,6 +34,7 @@ export function useDeleteAssignmentMutation() {
     mutationFn: deleteAssignment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 }

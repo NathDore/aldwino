@@ -46,3 +46,24 @@ export class EventNotFoundError extends Error {
     this.name = "EventNotFoundError";
   }
 }
+
+export class StartTimeInvalidError extends AssignmentValidationError {
+  constructor() {
+    super("startTime must be a valid date");
+    this.name = "StartTimeInvalidError";
+  }
+}
+
+export class DurationNotAllowedError extends AssignmentValidationError {
+  constructor() {
+    super("expectedDurationMinutes must be one of 15, 25, 50, 60, 90");
+    this.name = "DurationNotAllowedError";
+  }
+}
+
+export class SessionCrossesMidnightError extends AssignmentValidationError {
+  constructor() {
+    super("startTime plus expectedDurationMinutes must not cross midnight");
+    this.name = "SessionCrossesMidnightError";
+  }
+}

@@ -6,6 +6,7 @@ import { migrate as migrateEvents } from "./infrastructure/database/migrations/0
 import { migrate as migrateCourses } from "./infrastructure/database/migrations/002_create_course_table";
 import { migrate as migrateAssignments } from "./infrastructure/database/migrations/003_create_assignment_table";
 import { migrate as migrateTasks } from "./infrastructure/database/migrations/004_create_task_table";
+import { migrate as migrateAssignmentScheduling } from "./infrastructure/database/migrations/005_add_assignment_scheduling_columns";
 import { EventRepository } from "./infrastructure/database/repositories/EventRepository";
 import { CreateEventUseCase } from "./application/event/CreateEventUseCase";
 import { GetEventByIdUseCase } from "./application/event/GetEventByIdUseCase";
@@ -24,6 +25,7 @@ import { GetAssignmentByIdUseCase } from "./application/assignment/GetAssignment
 import { ListAssignmentsUseCase } from "./application/assignment/ListAssignmentsUseCase";
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
+import { AssignmentSchedulingService } from "./application/assignment/AssignmentSchedulingService";
 import { TaskRepository } from "./infrastructure/database/repositories/TaskRepository";
 import { CreateTaskUseCase } from "./application/task/CreateTaskUseCase";
 import { GetTaskByIdUseCase } from "./application/task/GetTaskByIdUseCase";
@@ -40,12 +42,14 @@ migrateEvents(db);
 migrateCourses(db);
 migrateAssignments(db);
 migrateTasks(db);
+migrateAssignmentScheduling(db);
 
 // Create repositories
 const eventRepository = new EventRepository(db);
 const courseRepository = new CourseRepository(db);
 const assignmentRepository = new AssignmentRepository(db);
 const taskRepository = new TaskRepository(db);
+const assignmentSchedulingService = new AssignmentSchedulingService(eventRepository, assignmentRepository, clock);
 
 // Create app with all dependencies
 const app = createServer({
@@ -60,11 +64,11 @@ const app = createServer({
   listCoursesUseCase: new ListCoursesUseCase(courseRepository),
   updateCourseUseCase: new UpdateCourseUseCase(courseRepository),
   deleteCourseUseCase: new DeleteCourseUseCase(courseRepository),
-  createAssignmentUseCase: new CreateAssignmentUseCase(assignmentRepository, courseRepository, eventRepository, clock),
+  createAssignmentUseCase: new CreateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
-  updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, eventRepository, clock),
-  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository),
+  updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
+  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, db),
   createTaskUseCase: new CreateTaskUseCase(taskRepository, assignmentRepository, clock),
   getTaskByIdUseCase: new GetTaskByIdUseCase(taskRepository),
   listTasksUseCase: new ListTasksUseCase(taskRepository),
