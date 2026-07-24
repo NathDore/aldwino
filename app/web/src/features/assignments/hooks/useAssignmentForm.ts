@@ -2,8 +2,16 @@ import { useState, useEffect } from "react";
 import type { AssignmentDto, AssignmentFormData } from "../types/assignment.types";
 import { useCreateAssignmentMutation, useUpdateAssignmentMutation } from "../queries/useMutations";
 import { useAssignmentStore } from "../store/assignmentStore";
+import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 
-interface FormState extends AssignmentFormData {
+interface FormState {
+  courseId: string;
+  description: string;
+  dueDateDay: string;
+  dueDateTime: string;
+  startDateDay: string;
+  startDateTime: string;
+  expectedDurationMinutes: number;
   errors: Record<string, string>;
 }
 
@@ -14,8 +22,10 @@ export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
 const initialFormState: FormState = {
   courseId: "",
   description: "",
-  dueDate: "",
-  startTime: "",
+  dueDateDay: "",
+  dueDateTime: "",
+  startDateDay: "",
+  startDateTime: "",
   expectedDurationMinutes: 25,
   errors: {},
 };
@@ -28,18 +38,44 @@ function isoToDateInput(iso: string): string {
     .padStart(2, "0")}`;
 }
 
-function isoToDateTimeLocalInput(iso: string): string {
+function isoToTimeInput(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function combineDateAndTime(day: string, time: string): Date {
+  return new Date(`${day}T${time}:00`);
+}
+
+interface FittingDuration {
+  minutes: number | null;
+  clamped: boolean;
+}
+
+function computeFittingDuration(start: Date, requestedMinutes: number): FittingDuration {
+  const midnightNext = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
+  const availableMinutes = Math.floor((midnightNext.getTime() - start.getTime()) / 60000);
+
+  if (requestedMinutes < availableMinutes) {
+    return { minutes: requestedMinutes, clamped: false };
+  }
+
+  const fitting = ALLOWED_DURATIONS_MINUTES.filter((minutes) => minutes < availableMinutes);
+  if (fitting.length === 0) {
+    return { minutes: null, clamped: true };
+  }
+  return { minutes: Math.max(...fitting), clamped: true };
 }
 
 function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"> {
   return {
     courseId: assignment.courseId,
     description: assignment.description,
-    dueDate: isoToDateInput(assignment.dueDate),
-    startTime: isoToDateTimeLocalInput(assignment.startTime),
+    dueDateDay: isoToDateInput(assignment.dueDate),
+    dueDateTime: isoToTimeInput(assignment.dueDate),
+    startDateDay: isoToDateInput(assignment.startTime),
+    startDateTime: isoToTimeInput(assignment.startTime),
     expectedDurationMinutes: assignment.expectedDurationMinutes,
   };
 }
@@ -51,7 +87,7 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
 
   const createMutation = useCreateAssignmentMutation();
   const updateMutation = useUpdateAssignmentMutation();
-  const { closeForm } = useAssignmentStore();
+  const { cancelEdit } = useAssignmentStore();
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
@@ -63,7 +99,10 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
     }
   }, [assignmentToEdit]);
 
-  const updateField = (field: keyof Omit<AssignmentFormData, "expectedDurationMinutes">, value: string) => {
+  const updateField = (
+    field: keyof Omit<FormState, "errors" | "expectedDurationMinutes">,
+    value: string
+  ) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
@@ -79,6 +118,20 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
     }));
   };
 
+  const hasValidStart = formState.startDateDay !== "" && isValidTimeFormat(formState.startDateTime);
+  const startDateTimeValue = hasValidStart
+    ? combineDateAndTime(formState.startDateDay, formState.startDateTime)
+    : null;
+  const fittingDuration: FittingDuration = startDateTimeValue
+    ? computeFittingDuration(startDateTimeValue, formState.expectedDurationMinutes)
+    : { minutes: formState.expectedDurationMinutes, clamped: false };
+  const effectiveEndTime =
+    startDateTimeValue && fittingDuration.minutes !== null
+      ? new Date(startDateTimeValue.getTime() + fittingDuration.minutes * 60000)
+      : null;
+  const wasClamped = fittingDuration.clamped && fittingDuration.minutes !== null;
+  const noFittingDuration = startDateTimeValue !== null && fittingDuration.minutes === null;
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -92,15 +145,29 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       errors.description = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer`;
     }
 
-    if (!formState.dueDate) {
-      errors.dueDate = "Due date is required";
+    if (!formState.dueDateDay) {
+      errors.dueDateDay = "Due date is required";
+    }
+    if (!formState.dueDateTime) {
+      errors.dueDateTime = "Due time is required";
+    } else if (!isValidTimeFormat(formState.dueDateTime)) {
+      errors.dueDateTime = TIME_FORMAT_ERROR;
     }
 
-    if (!formState.startTime) {
-      errors.startTime = "Start time is required";
+    if (!formState.startDateDay) {
+      errors.startDateDay = "Start date is required";
+    }
+    if (!formState.startDateTime) {
+      errors.startDateTime = "Start time is required";
+    } else if (!isValidTimeFormat(formState.startDateTime)) {
+      errors.startDateTime = TIME_FORMAT_ERROR;
     }
 
-    if (!ALLOWED_DURATIONS_MINUTES.includes(formState.expectedDurationMinutes as (typeof ALLOWED_DURATIONS_MINUTES)[number])) {
+    if (
+      !ALLOWED_DURATIONS_MINUTES.includes(
+        formState.expectedDurationMinutes as (typeof ALLOWED_DURATIONS_MINUTES)[number]
+      )
+    ) {
       errors.expectedDurationMinutes = "Duration must be one of the allowed options";
     }
 
@@ -113,14 +180,28 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       return;
     }
 
-    const dueDate = new Date(`${formState.dueDate}T00:00:00`).toISOString();
-    const startTime = new Date(formState.startTime).toISOString();
+    if (fittingDuration.minutes === null) {
+      setFormState((prev) => ({
+        ...prev,
+        errors: {
+          ...prev.errors,
+          expectedDurationMinutes: "No session length fits before midnight — choose an earlier start time.",
+        },
+      }));
+      return;
+    }
+
+    const dueDate = combineDateAndTime(formState.dueDateDay, formState.dueDateTime).toISOString();
+    const startDateTime = combineDateAndTime(formState.startDateDay, formState.startDateTime);
+    const startTime = startDateTime.toISOString();
+    const expectedDurationMinutes = fittingDuration.minutes;
+
     const data: AssignmentFormData = {
       courseId: formState.courseId,
       description: formState.description.trim(),
       dueDate,
       startTime,
-      expectedDurationMinutes: formState.expectedDurationMinutes,
+      expectedDurationMinutes,
     };
 
     try {
@@ -132,7 +213,8 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       } else {
         await createMutation.mutateAsync(data);
       }
-      closeForm();
+      setFormState(initialFormState);
+      cancelEdit();
     } catch (error: unknown) {
       if (error instanceof Error) {
         setFormState((prev) => ({
@@ -149,5 +231,9 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
     updateDuration,
     handleSubmit,
     isLoading,
+    effectiveEndTime,
+    effectiveDurationMinutes: fittingDuration.minutes,
+    wasClamped,
+    noFittingDuration,
   };
 }

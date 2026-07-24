@@ -1,101 +1,80 @@
+import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAssignmentsQuery } from "../queries/useAssignmentsQuery";
 import { useDeleteAssignmentMutation } from "../queries/useMutations";
 import { useAssignmentStore } from "../store/assignmentStore";
-import { AssignmentEventList } from "./AssignmentEventList";
+import { AssignmentDayGrid } from "./AssignmentDayGrid";
 import { AssignmentForm } from "./AssignmentForm";
 import { useCoursesQuery } from "@/features/courses";
-import { useEventsQuery } from "@/features/events";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
-import { Button } from "@/shared/components/Button";
+import { Modal } from "@/shared/components/Modal";
 
 export function AssignmentsPage() {
   const queryClient = useQueryClient();
   const { data: assignments = [], isLoading: assignmentsLoading } = useAssignmentsQuery();
-  const { data: events = [], isLoading: eventsLoading } = useEventsQuery();
   const { data: courses = [] } = useCoursesQuery();
   const deleteMutation = useDeleteAssignmentMutation();
-  const {
-    isFormOpen,
-    selectedAssignmentId,
-    showDeleteConfirm,
-    openFormForNew,
-    setShowDeleteConfirm,
-    closeForm,
-  } = useAssignmentStore();
+  const { selectedAssignmentId, assignmentIdPendingDelete, requestDelete, cancelDelete } = useAssignmentStore();
+  const formSectionRef = useRef<HTMLDivElement>(null);
 
   const assignmentToEdit = selectedAssignmentId
-    ? assignments.find((a) => a.id === selectedAssignmentId)
+    ? assignments.find((a) => a.id === selectedAssignmentId) ?? null
     : null;
-  const assignmentToDelete = selectedAssignmentId
-    ? assignments.find((a) => a.id === selectedAssignmentId)
+  const assignmentToDelete = assignmentIdPendingDelete
+    ? assignments.find((a) => a.id === assignmentIdPendingDelete) ?? null
     : null;
 
-  const handleDeleteClick = (id: string) => {
-    useAssignmentStore.setState({
-      selectedAssignmentId: id,
-      showDeleteConfirm: true,
-    });
-  };
+  useEffect(() => {
+    if (selectedAssignmentId) {
+      formSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedAssignmentId]);
 
   const handleConfirmDelete = async () => {
-    if (selectedAssignmentId) {
-      try {
-        await deleteMutation.mutateAsync(selectedAssignmentId);
-        await queryClient.refetchQueries({ queryKey: ["assignments"], type: "active" });
-        setShowDeleteConfirm(false);
-        useAssignmentStore.setState({ selectedAssignmentId: null });
-      } catch (error) {
-        console.error("Failed to delete assignment:", error);
-      }
+    if (!assignmentIdPendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(assignmentIdPendingDelete);
+      await queryClient.refetchQueries({ queryKey: ["assignments"], type: "active" });
+      cancelDelete();
+    } catch (error) {
+      console.error("Failed to delete assignment:", error);
     }
   };
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Assignment Management</h1>
-        <Button variant="primary" size="md" onClick={openFormForNew}>
-          + Create Assignment
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">Assignments</h1>
+        <p className="text-sm text-slate-600 mt-1">Plan your study time and track upcoming work.</p>
       </div>
 
-      <AssignmentEventList
-        events={events}
+      <div ref={formSectionRef} className="mb-8">
+        <AssignmentForm assignmentToEdit={assignmentToEdit} />
+      </div>
+
+      <AssignmentDayGrid
         assignments={assignments}
         courses={courses}
-        isLoading={assignmentsLoading || eventsLoading}
-        onDeleteAssignment={handleDeleteClick}
+        isLoading={assignmentsLoading}
+        onDeleteAssignment={requestDelete}
       />
 
-      {isFormOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
-            <AssignmentForm assignmentToEdit={assignmentToEdit} />
-          </div>
-        </div>
-      )}
-
-      {showDeleteConfirm && assignmentToDelete && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 rounded-lg p-8 w-full max-w-md shadow-lg">
-            <DeleteConfirmation
-              title="Delete Assignment?"
-              description={
-                <>
-                  Are you sure you want to delete{" "}
-                  <span className="font-medium text-slate-900">
-                    {assignmentToDelete.description}
-                  </span>
-                  ? This action cannot be undone.
-                </>
-              }
-              isLoading={deleteMutation.isPending}
-              onConfirm={handleConfirmDelete}
-              onCancel={() => setShowDeleteConfirm(false)}
-            />
-          </div>
-        </div>
+      {assignmentToDelete && (
+        <Modal maxWidth="max-w-md">
+          <DeleteConfirmation
+            title="Delete Assignment?"
+            description={
+              <>
+                Are you sure you want to delete{" "}
+                <span className="font-medium text-slate-900">{assignmentToDelete.description}</span>? This
+                action cannot be undone.
+              </>
+            }
+            isLoading={deleteMutation.isPending}
+            onConfirm={handleConfirmDelete}
+            onCancel={cancelDelete}
+          />
+        </Modal>
       )}
     </div>
   );
