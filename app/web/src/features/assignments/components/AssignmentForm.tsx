@@ -27,6 +27,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
     noFittingDuration,
   } = useAssignmentForm(assignmentToEdit);
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
+  const selectedCourse = courses.find((course) => course.id === formState.courseId);
 
   return (
     <div className="bg-slate-50 border border-slate-200 rounded p-5 space-y-3">
@@ -42,6 +43,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
           id="courseId"
           value={formState.courseId}
           onChange={(e) => updateField("courseId", e.target.value)}
+          style={selectedCourse ? { color: selectedCourse.color } : undefined}
           className={`w-full px-3 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
             formState.errors.courseId
               ? "border-red-500 focus:border-red-600"
@@ -51,8 +53,8 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
         >
           <option value="">Select a course...</option>
           {courses.map((course) => (
-            <option key={course.id} value={course.id}>
-              {course.code} - {course.title}
+            <option key={course.id} value={course.id} style={{ color: course.color }}>
+              • {course.code} - {course.title}
             </option>
           ))}
         </select>

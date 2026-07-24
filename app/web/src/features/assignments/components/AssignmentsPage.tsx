@@ -5,6 +5,7 @@ import { useDeleteAssignmentMutation } from "../queries/useMutations";
 import { useAssignmentStore } from "../store/assignmentStore";
 import { AssignmentDayGrid } from "./AssignmentDayGrid";
 import { AssignmentForm } from "./AssignmentForm";
+import { ScoreStreakPlaceholder } from "./ScoreStreakPlaceholder";
 import { useCoursesQuery } from "@/features/courses";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { Modal } from "@/shared/components/Modal";
@@ -48,8 +49,13 @@ export function AssignmentsPage() {
         <p className="text-sm text-slate-600 mt-1">Plan your study time and track upcoming work.</p>
       </div>
 
-      <div ref={formSectionRef} className="mb-8">
-        <AssignmentForm assignmentToEdit={assignmentToEdit} />
+      <div className="flex gap-6 mb-8">
+        <div ref={formSectionRef} className="w-3/4">
+          <AssignmentForm assignmentToEdit={assignmentToEdit} />
+        </div>
+        <div className="flex-1">
+          <ScoreStreakPlaceholder />
+        </div>
       </div>
 
       <AssignmentDayGrid
