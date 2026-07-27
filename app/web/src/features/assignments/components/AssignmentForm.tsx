@@ -40,8 +40,8 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
   }, [assignmentToEdit, courses]);
 
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded p-5 space-y-3">
-      <h2 className="text-lg font-bold text-slate-900 mb-2">
+    <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-2">
+      <h2 className="text-lg font-bold text-slate-900 mb-1">
         {assignmentToEdit ? "Edit Assignment" : "Create New Assignment"}
       </h2>
 
@@ -64,7 +64,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
         )}
       </div>
 
-      <div>
+      <div className="mt-3">
         <label htmlFor="description" className="block text-xs font-semibold text-slate-900 mb-1">
           Description
         </label>

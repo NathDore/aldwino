@@ -53,7 +53,7 @@ export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridPro
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold text-slate-900">Study Time</h2>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => setWeekStart((w) => shiftWeek(w, -7))}>

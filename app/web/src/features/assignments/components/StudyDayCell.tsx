@@ -38,17 +38,19 @@ export const StudyDayCell = memo(function StudyDayCell({
   return (
     <button
       onClick={() => onSelect(iso)}
-      className={`relative flex flex-col items-center rounded border p-2 text-center transition-colors ${
+      className={`relative flex flex-col items-center rounded border p-1.5 text-center transition-colors ${
         isSelected
           ? "bg-emerald-600 border-emerald-600 hover:bg-emerald-700"
           : "bg-slate-50 border-slate-200 hover:bg-slate-100"
       } ${isToday ? "ring-2 ring-emerald-400 ring-offset-1" : ""}`}
     >
-      <p className={`text-xs ${isSelected ? "text-emerald-50" : "text-slate-600"}`}>
+      <p className={`text-[10px] leading-tight ${isSelected ? "text-emerald-50" : "text-slate-600"}`}>
         {day.toLocaleDateString(undefined, { weekday: "short" })}
       </p>
-      <p className={`text-sm font-semibold ${isSelected ? "text-white" : "text-slate-900"}`}>{day.getDate()}</p>
-      <div ref={chipRowRef} className="mt-1.5 flex min-h-[14px] w-full items-center justify-center gap-1 overflow-hidden">
+      <p className={`text-sm font-semibold leading-tight ${isSelected ? "text-white" : "text-slate-900"}`}>
+        {day.getDate()}
+      </p>
+      <div ref={chipRowRef} className="mt-1 flex min-h-[14px] w-full items-center justify-center gap-1 overflow-hidden">
         {dayAssignments.slice(0, visibleCount).map((assignment) => (
           <CompactAssignmentChip
             key={assignment.id}

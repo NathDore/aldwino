@@ -43,13 +43,10 @@ export function AssignmentsPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Assignments</h1>
-        <p className="text-sm text-slate-600 mt-1">Plan your study time and track upcoming work.</p>
-      </div>
+    <div className="p-4 max-w-6xl mx-auto">
+      <StudyTimeWeekGrid assignments={assignments} courses={courses} />
 
-      <div className="flex gap-6 mb-8">
+      <div className="flex gap-6 mt-3">
         <div ref={formSectionRef} className="w-3/4">
           <AssignmentForm assignmentToEdit={assignmentToEdit} />
         </div>
@@ -57,8 +54,6 @@ export function AssignmentsPage() {
           <ScoreStreakPlaceholder />
         </div>
       </div>
-
-      <StudyTimeWeekGrid assignments={assignments} courses={courses} />
 
       {assignmentToDelete && (
         <Modal maxWidth="max-w-md">
