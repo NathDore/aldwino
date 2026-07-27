@@ -5,11 +5,21 @@ const CHIP_SIZE_PX = 20; // must match CompactAssignmentChip's h-5/w-5
 const CHIP_GAP_PX = 4; // matches gap-1 on the chip row
 const INDICATOR_WIDTH_PX = 20; // reserved width for the "+N" pill
 
+interface FittingChipsOptions {
+  chipSizePx?: number;
+  gapPx?: number;
+  indicatorWidthPx?: number;
+}
+
 export function useFittingChips(
   containerRef: RefObject<HTMLElement | null>,
-  itemCount: number
+  itemCount: number,
+  options?: FittingChipsOptions
 ): { visibleCount: number } {
   const [visibleCount, setVisibleCount] = useState(itemCount);
+  const chipSizePx = options?.chipSizePx ?? CHIP_SIZE_PX;
+  const gapPx = options?.gapPx ?? CHIP_GAP_PX;
+  const indicatorWidthPx = options?.indicatorWidthPx ?? INDICATOR_WIDTH_PX;
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -17,11 +27,11 @@ export function useFittingChips(
 
     const measure = () => {
       const width = container.clientWidth;
-      const perChip = CHIP_SIZE_PX + CHIP_GAP_PX;
-      const fitAll = Math.floor((width + CHIP_GAP_PX) / perChip);
+      const perChip = chipSizePx + gapPx;
+      const fitAll = Math.floor((width + gapPx) / perChip);
 
       const fit =
-        fitAll >= itemCount ? itemCount : Math.max(0, Math.floor((width - INDICATOR_WIDTH_PX) / perChip));
+        fitAll >= itemCount ? itemCount : Math.max(0, Math.floor((width - indicatorWidthPx) / perChip));
 
       setVisibleCount((prev) => (prev === fit ? prev : fit));
     };
@@ -36,7 +46,7 @@ export function useFittingChips(
       observer.disconnect();
       cancel();
     };
-  }, [containerRef, itemCount]);
+  }, [containerRef, itemCount, chipSizePx, gapPx, indicatorWidthPx]);
 
   return { visibleCount };
 }

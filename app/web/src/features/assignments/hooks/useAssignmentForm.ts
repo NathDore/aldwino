@@ -88,6 +88,7 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
   const createMutation = useCreateAssignmentMutation();
   const updateMutation = useUpdateAssignmentMutation();
   const { cancelEdit } = useAssignmentStore();
+  const selectedStudyDate = useAssignmentStore((s) => s.selectedStudyDate);
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
@@ -98,6 +99,14 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       setFormState(initialFormState);
     }
   }, [assignmentToEdit]);
+
+  useEffect(() => {
+    setFormState((prev) => ({
+      ...prev,
+      startDateDay: selectedStudyDate,
+      errors: { ...prev.errors, startDateDay: "" },
+    }));
+  }, [selectedStudyDate]);
 
   const updateField = (
     field: keyof Omit<FormState, "errors" | "expectedDurationMinutes">,

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAssignmentsQuery } from "../queries/useAssignmentsQuery";
 import { useDeleteAssignmentMutation } from "../queries/useMutations";
 import { useAssignmentStore } from "../store/assignmentStore";
-import { AssignmentDayGrid } from "./AssignmentDayGrid";
+import { StudyTimeWeekGrid } from "./StudyTimeWeekGrid";
 import { AssignmentForm } from "./AssignmentForm";
 import { ScoreStreakPlaceholder } from "./ScoreStreakPlaceholder";
 import { useCoursesQuery } from "@/features/courses";
@@ -12,10 +12,10 @@ import { Modal } from "@/shared/components/Modal";
 
 export function AssignmentsPage() {
   const queryClient = useQueryClient();
-  const { data: assignments = [], isLoading: assignmentsLoading } = useAssignmentsQuery();
+  const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
   const deleteMutation = useDeleteAssignmentMutation();
-  const { selectedAssignmentId, assignmentIdPendingDelete, requestDelete, cancelDelete } = useAssignmentStore();
+  const { selectedAssignmentId, assignmentIdPendingDelete, cancelDelete } = useAssignmentStore();
   const formSectionRef = useRef<HTMLDivElement>(null);
 
   const assignmentToEdit = selectedAssignmentId
@@ -58,12 +58,7 @@ export function AssignmentsPage() {
         </div>
       </div>
 
-      <AssignmentDayGrid
-        assignments={assignments}
-        courses={courses}
-        isLoading={assignmentsLoading}
-        onDeleteAssignment={requestDelete}
-      />
+      <StudyTimeWeekGrid assignments={assignments} courses={courses} />
 
       {assignmentToDelete && (
         <Modal maxWidth="max-w-md">
