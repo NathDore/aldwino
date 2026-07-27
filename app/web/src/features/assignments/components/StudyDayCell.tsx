@@ -42,12 +42,16 @@ export const StudyDayCell = memo(function StudyDayCell({
         isSelected
           ? "bg-emerald-600 border-emerald-600 hover:bg-emerald-700"
           : "bg-slate-50 border-slate-200 hover:bg-slate-100"
-      } ${isToday ? "ring-2 ring-emerald-400 ring-offset-1" : ""}`}
+      }`}
     >
       <p className={`text-[10px] leading-tight ${isSelected ? "text-emerald-50" : "text-slate-600"}`}>
         {day.toLocaleDateString(undefined, { weekday: "short" })}
       </p>
-      <p className={`text-sm font-semibold leading-tight ${isSelected ? "text-white" : "text-slate-900"}`}>
+      <p
+        className={`text-sm font-semibold leading-tight ${
+          isSelected ? "text-white" : isToday ? "text-emerald-600" : "text-slate-900"
+        }`}
+      >
         {day.getDate()}
       </p>
       <div ref={chipRowRef} className="mt-1 flex min-h-[14px] w-full items-center justify-center gap-1 overflow-hidden">
