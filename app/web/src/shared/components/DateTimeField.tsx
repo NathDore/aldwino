@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Button } from "./Button";
+import { useEffect, useState, type ReactNode } from "react";
 
 export const TIME_FORMAT_ERROR = "Enter a time as HH:MM";
 
@@ -87,6 +86,12 @@ interface DateTimeFieldProps {
   dateError?: string;
   timeError?: string;
   disabled?: boolean;
+  renderDateInput?: (props: {
+    id: string;
+    value: string;
+    onChange: (value: string) => void;
+    disabled: boolean;
+  }) => ReactNode;
 }
 
 export function DateTimeField({
@@ -99,6 +104,7 @@ export function DateTimeField({
   dateError,
   timeError,
   disabled = false,
+  renderDateInput,
 }: DateTimeFieldProps) {
   const [digits, setDigits] = useState("");
   const [period, setPeriod] = useState<Period>("AM");
@@ -145,17 +151,21 @@ export function DateTimeField({
       <label htmlFor={id} className="block text-xs font-semibold text-slate-900 mb-1">
         {label}
       </label>
-      <div className="flex gap-1.5">
-        <input
-          id={id}
-          type="date"
-          value={dateValue}
-          onChange={(e) => onDateChange(e.target.value)}
-          className={`w-32 shrink-0 px-2 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
-            dateError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
-          }`}
-          disabled={disabled}
-        />
+      <div className="flex items-end gap-1.5">
+        {renderDateInput ? (
+          renderDateInput({ id, value: dateValue, onChange: onDateChange, disabled })
+        ) : (
+          <input
+            id={id}
+            type="date"
+            value={dateValue}
+            onChange={(e) => onDateChange(e.target.value)}
+            className={`w-32 shrink-0 px-2 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
+              dateError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
+            }`}
+            disabled={disabled}
+          />
+        )}
         <input
           id={`${id}-time`}
           type="text"
@@ -169,28 +179,36 @@ export function DateTimeField({
           }}
           placeholder="HH:MM"
           inputMode="numeric"
-          className={`flex-1 min-w-0 px-3 py-1.5 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
+          className={`h-12 w-20 shrink-0 px-3 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
             timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
           }`}
           disabled={disabled}
         />
-        <div className="flex gap-1 shrink-0">
-          <Button
-            size="sm"
-            variant={period === "AM" ? "primary" : "secondary"}
+        <div className="flex h-12 w-10 shrink-0 flex-col gap-0.5">
+          <button
+            type="button"
             onClick={() => selectPeriod("AM")}
             disabled={disabled}
+            className={`flex-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+              period === "AM"
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "bg-slate-200 text-slate-900 hover:bg-slate-300"
+            }`}
           >
             AM
-          </Button>
-          <Button
-            size="sm"
-            variant={period === "PM" ? "primary" : "secondary"}
+          </button>
+          <button
+            type="button"
             onClick={() => selectPeriod("PM")}
             disabled={disabled}
+            className={`flex-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+              period === "PM"
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "bg-slate-200 text-slate-900 hover:bg-slate-300"
+            }`}
           >
             PM
-          </Button>
+          </button>
         </div>
       </div>
       {dateError && <p className="text-red-600 text-xs mt-1">{dateError}</p>}

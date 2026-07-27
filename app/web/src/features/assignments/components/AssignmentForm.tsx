@@ -4,6 +4,7 @@ import { useAssignmentStore } from "../store/assignmentStore";
 import { useCoursesQuery } from "@/features/courses";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
+import { AssignmentDateCard } from "./AssignmentDateCard";
 
 interface AssignmentFormProps {
   assignmentToEdit?: AssignmentDto | null;
@@ -85,29 +86,41 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
         )}
       </div>
 
-      <DateTimeField
-        label="Due Date"
-        id="dueDate"
-        dateValue={formState.dueDateDay}
-        timeValue={formState.dueDateTime}
-        onDateChange={(v) => updateField("dueDateDay", v)}
-        onTimeChange={(v) => updateField("dueDateTime", v)}
-        dateError={formState.errors.dueDateDay}
-        timeError={formState.errors.dueDateTime}
-        disabled={isLoading}
-      />
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <DateTimeField
+            label="Start Time"
+            id="startTime"
+            dateValue={formState.startDateDay}
+            timeValue={formState.startDateTime}
+            onDateChange={(v) => updateField("startDateDay", v)}
+            onTimeChange={(v) => updateField("startDateTime", v)}
+            dateError={formState.errors.startDateDay}
+            timeError={formState.errors.startDateTime}
+            disabled={isLoading}
+            renderDateInput={({ id, value, onChange, disabled }) => (
+              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+            )}
+          />
+        </div>
 
-      <DateTimeField
-        label="Start Time"
-        id="startTime"
-        dateValue={formState.startDateDay}
-        timeValue={formState.startDateTime}
-        onDateChange={(v) => updateField("startDateDay", v)}
-        onTimeChange={(v) => updateField("startDateTime", v)}
-        dateError={formState.errors.startDateDay}
-        timeError={formState.errors.startDateTime}
-        disabled={isLoading}
-      />
+        <div className="flex-1">
+          <DateTimeField
+            label="Due Date"
+            id="dueDate"
+            dateValue={formState.dueDateDay}
+            timeValue={formState.dueDateTime}
+            onDateChange={(v) => updateField("dueDateDay", v)}
+            onTimeChange={(v) => updateField("dueDateTime", v)}
+            dateError={formState.errors.dueDateDay}
+            timeError={formState.errors.dueDateTime}
+            disabled={isLoading}
+            renderDateInput={({ id, value, onChange, disabled }) => (
+              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+            )}
+          />
+        </div>
+      </div>
 
       <div>
         <label htmlFor="expectedDurationMinutes" className="block text-xs font-semibold text-slate-900 mb-1">
