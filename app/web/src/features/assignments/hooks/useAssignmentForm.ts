@@ -26,7 +26,7 @@ const initialFormState: FormState = {
   dueDateTime: "",
   startDateDay: "",
   startDateTime: "",
-  expectedDurationMinutes: 25,
+  expectedDurationMinutes: 15,
   errors: {},
 };
 

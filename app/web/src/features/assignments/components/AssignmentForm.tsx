@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 import { AssignmentDateCard } from "./AssignmentDateCard";
 import { CourseSelector } from "./CourseSelector";
+import { DurationSelector } from "./DurationSelector";
 
 interface AssignmentFormProps {
   assignmentToEdit?: AssignmentDto | null;
@@ -122,26 +123,13 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
       </div>
 
       <div>
-        <label htmlFor="expectedDurationMinutes" className="block text-xs font-semibold text-slate-900 mb-1">
-          Duration
-        </label>
-        <select
-          id="expectedDurationMinutes"
-          value={formState.expectedDurationMinutes}
-          onChange={(e) => updateDuration(Number(e.target.value))}
-          className={`w-full px-3 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
-            formState.errors.expectedDurationMinutes
-              ? "border-red-500 focus:border-red-600"
-              : "border-slate-300 focus:border-emerald-600"
-          }`}
+        <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
+        <DurationSelector
+          durations={ALLOWED_DURATIONS_MINUTES}
+          selectedMinutes={formState.expectedDurationMinutes}
+          onSelect={updateDuration}
           disabled={isLoading}
-        >
-          {ALLOWED_DURATIONS_MINUTES.map((minutes) => (
-            <option key={minutes} value={minutes}>
-              {minutes} minutes
-            </option>
-          ))}
-        </select>
+        />
         {formState.errors.expectedDurationMinutes && (
           <p className="text-red-600 text-xs mt-1">{formState.errors.expectedDurationMinutes}</p>
         )}
