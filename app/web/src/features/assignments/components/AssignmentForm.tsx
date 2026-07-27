@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { AssignmentDto } from "../types/assignment.types";
 import { ALLOWED_DURATIONS_MINUTES, useAssignmentForm } from "../hooks/useAssignmentForm";
 import { useAssignmentStore } from "../store/assignmentStore";
@@ -5,6 +6,7 @@ import { useCoursesQuery } from "@/features/courses";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 import { AssignmentDateCard } from "./AssignmentDateCard";
+import { CourseSelector } from "./CourseSelector";
 
 interface AssignmentFormProps {
   assignmentToEdit?: AssignmentDto | null;
@@ -28,7 +30,13 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
     noFittingDuration,
   } = useAssignmentForm(assignmentToEdit);
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
-  const selectedCourse = courses.find((course) => course.id === formState.courseId);
+
+  useEffect(() => {
+    if (!assignmentToEdit && !formState.courseId && courses.length > 0) {
+      updateField("courseId", courses[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignmentToEdit, courses]);
 
   return (
     <div className="bg-slate-50 border border-slate-200 rounded p-5 space-y-3">
@@ -37,28 +45,19 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
       </h2>
 
       <div>
-        <label htmlFor="courseId" className="block text-xs font-semibold text-slate-900 mb-1">
-          Course
-        </label>
-        <select
-          id="courseId"
-          value={formState.courseId}
-          onChange={(e) => updateField("courseId", e.target.value)}
-          style={selectedCourse ? { color: selectedCourse.color } : undefined}
-          className={`w-full px-3 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
-            formState.errors.courseId
-              ? "border-red-500 focus:border-red-600"
-              : "border-slate-300 focus:border-emerald-600"
-          }`}
-          disabled={isLoading || coursesLoading}
-        >
-          <option value="">Select a course...</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.id} style={{ color: course.color }}>
-              • {course.code} - {course.title}
-            </option>
-          ))}
-        </select>
+        <label className="block text-xs font-semibold text-slate-900 mb-1">Course</label>
+        {coursesLoading ? (
+          <p className="text-sm text-slate-400">Loading courses...</p>
+        ) : courses.length === 0 ? (
+          <p className="text-sm text-slate-600">No courses yet. Create one to get started.</p>
+        ) : (
+          <CourseSelector
+            courses={courses}
+            selectedCourseId={formState.courseId}
+            onSelect={(id) => updateField("courseId", id)}
+            disabled={isLoading}
+          />
+        )}
         {formState.errors.courseId && (
           <p className="text-red-600 text-xs mt-1">{formState.errors.courseId}</p>
         )}
