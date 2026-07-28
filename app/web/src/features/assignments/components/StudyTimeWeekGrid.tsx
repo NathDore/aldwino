@@ -3,7 +3,7 @@ import type { AssignmentDto } from "../types/assignment.types";
 import type { CourseDto } from "@/features/courses";
 import { useAssignmentStore } from "../store/assignmentStore";
 import { StudyDayCell } from "./StudyDayCell";
-import { Button } from "@/shared/components/Button";
+import { WeekNavigation } from "@/shared/components/WeekNavigation";
 import { getWeekStart, parseISODate, toISODate, useWeekDays } from "@/features/calendar/hooks/useWeekDays";
 
 interface StudyTimeWeekGridProps {
@@ -15,12 +15,6 @@ function shiftWeek(weekStartIso: string, days: number): string {
   const d = parseISODate(weekStartIso);
   d.setDate(d.getDate() + days);
   return toISODate(d);
-}
-
-function formatWeekRange(start: Date, end: Date): string {
-  const startLabel = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  const endLabel = end.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return `${startLabel} – ${endLabel}`;
 }
 
 export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridProps) {
@@ -53,19 +47,13 @@ export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridPro
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold text-slate-900">Study Time</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setWeekStart((w) => shiftWeek(w, -7))}>
-            Previous
-          </Button>
-          <span className="text-sm text-slate-600 min-w-[100px] text-center">
-            {formatWeekRange(days[0], days[6])}
-          </span>
-          <Button variant="ghost" size="sm" onClick={() => setWeekStart((w) => shiftWeek(w, 7))}>
-            Next
-          </Button>
-        </div>
+      <div className="mb-2">
+        <WeekNavigation
+          title="Study Time"
+          weekStart={weekStart}
+          onPrevWeek={() => setWeekStart((w) => shiftWeek(w, -7))}
+          onNextWeek={() => setWeekStart((w) => shiftWeek(w, 7))}
+        />
       </div>
 
       <div className="grid grid-cols-7 gap-2">
