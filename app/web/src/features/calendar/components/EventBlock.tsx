@@ -7,8 +7,13 @@ import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
 import { AssignmentBlock } from "./AssignmentBlock";
 import { CompactAssignmentChip } from "./CompactAssignmentChip";
+import { CompactSingleAssignment } from "./CompactSingleAssignment";
 import { EventPopover } from "./EventPopover";
-import { COMPACT_EVENT_THRESHOLD_MINUTES, getEventDurationMinutes } from "../utils/duration";
+import {
+  COMPACT_EVENT_THRESHOLD_MINUTES,
+  SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES,
+  getEventDurationMinutes,
+} from "../utils/duration";
 import type { CalendarEvent } from "../types/calendar.types";
 
 interface EventBlockProps {
@@ -29,7 +34,10 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
   const chipRowRef = useRef<HTMLDivElement>(null);
   const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
   const { visibleCount: visibleChipCount } = useFittingChips(chipRowRef, assignments.length);
-  const isCompact = getEventDurationMinutes(event.startTime, event.endTime) < COMPACT_EVENT_THRESHOLD_MINUTES;
+  const durationMinutes = getEventDurationMinutes(event.startTime, event.endTime);
+  const isCompact = durationMinutes < COMPACT_EVENT_THRESHOLD_MINUTES;
+  const isSingleCompactAssignment =
+    assignments.length === 1 && durationMinutes <= SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES;
 
   const handleBlockClick = () => {
     if (isExpanded) return;
@@ -45,10 +53,13 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
       ref={containerRef}
       onClick={handleBlockClick}
       className={`absolute left-1 right-1 bg-white border rounded overflow-y-hidden p-1.5 transition-[box-shadow,border-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
-        } ${isActive ? "border-emerald-400 animate-glow" : "border-slate-300"} ${isCompact ? "flex items-center" : ""}`}
+        } ${isActive ? "border-emerald-400 animate-glow" : "border-slate-300"} ${isSingleCompactAssignment || isCompact ? "flex items-center" : ""
+        }`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
-      {isCompact ? (
+      {isSingleCompactAssignment ? (
+        <CompactSingleAssignment item={assignments[0]} />
+      ) : isCompact ? (
         <div ref={chipRowRef} className="flex w-full items-center gap-1 overflow-hidden">
           {assignments.slice(0, visibleChipCount).map((item) => (
             <CompactAssignmentChip key={item.assignment.id} item={item} />
