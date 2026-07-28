@@ -49,7 +49,7 @@ export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridPro
     <div>
       <div className="mb-2">
         <WeekNavigation
-          title="Study Time"
+          title="Assignments"
           weekStart={weekStart}
           onPrevWeek={() => setWeekStart((w) => shiftWeek(w, -7))}
           onNextWeek={() => setWeekStart((w) => shiftWeek(w, 7))}

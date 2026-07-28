@@ -12,6 +12,7 @@ interface FormState {
   startDateDay: string;
   startDateTime: string;
   expectedDurationMinutes: number;
+  dueTouched: boolean;
   errors: Record<string, string>;
 }
 
@@ -27,6 +28,7 @@ const initialFormState: FormState = {
   startDateDay: "",
   startDateTime: "",
   expectedDurationMinutes: 15,
+  dueTouched: false,
   errors: {},
 };
 
@@ -38,10 +40,13 @@ function isoToDateInput(iso: string): string {
     .padStart(2, "0")}`;
 }
 
-function isoToTimeInput(iso: string): string {
-  const d = new Date(iso);
+function dateToTimeInput(d: Date): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function isoToTimeInput(iso: string): string {
+  return dateToTimeInput(new Date(iso));
 }
 
 function combineDateAndTime(day: string, time: string): Date {
@@ -77,6 +82,7 @@ function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"
     startDateDay: isoToDateInput(assignment.startTime),
     startDateTime: isoToTimeInput(assignment.startTime),
     expectedDurationMinutes: assignment.expectedDurationMinutes,
+    dueTouched: true,
   };
 }
 
@@ -109,12 +115,13 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
   }, [selectedStudyDate]);
 
   const updateField = (
-    field: keyof Omit<FormState, "errors" | "expectedDurationMinutes">,
+    field: keyof Omit<FormState, "errors" | "expectedDurationMinutes" | "dueTouched">,
     value: string
   ) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
+      dueTouched: field === "dueDateDay" || field === "dueDateTime" ? true : prev.dueTouched,
       errors: { ...prev.errors, [field]: "" },
     }));
   };
@@ -126,6 +133,32 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       errors: { ...prev.errors, expectedDurationMinutes: "" },
     }));
   };
+
+  useEffect(() => {
+    setFormState((prev) => {
+      if (prev.dueTouched || prev.startDateDay === "") {
+        return prev;
+      }
+
+      let next = prev;
+
+      if (prev.dueDateDay !== prev.startDateDay) {
+        next = { ...next, dueDateDay: prev.startDateDay, errors: { ...next.errors, dueDateDay: "" } };
+      }
+
+      if (isValidTimeFormat(prev.startDateTime)) {
+        const start = combineDateAndTime(prev.startDateDay, prev.startDateTime);
+        const due = new Date(start.getTime() + prev.expectedDurationMinutes * 60000);
+        const midnightNext = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
+        const dueDateTime = due >= midnightNext ? "23:59" : dateToTimeInput(due);
+        if (dueDateTime !== next.dueDateTime) {
+          next = { ...next, dueDateTime, errors: { ...next.errors, dueDateTime: "" } };
+        }
+      }
+
+      return next;
+    });
+  }, [formState.startDateDay, formState.startDateTime, formState.expectedDurationMinutes]);
 
   const hasValidStart = formState.startDateDay !== "" && isValidTimeFormat(formState.startDateTime);
   const startDateTimeValue = hasValidStart

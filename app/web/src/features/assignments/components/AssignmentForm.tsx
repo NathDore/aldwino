@@ -43,7 +43,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
       <div className="flex flex-col gap-6 md:flex-row flex-1">
         <div className="min-w-0 flex-1 flex flex-col justify-between">
           <div>
-            <label className="block text-xs font-semibold text-slate-900 mb-1">Course</label>
+            <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
             {coursesLoading ? (
               <p className="text-sm text-slate-400">Loading courses...</p>
             ) : courses.length === 0 ? (
@@ -59,33 +59,33 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
             {formState.errors.courseId && (
               <p className="text-red-600 text-xs mt-1">{formState.errors.courseId}</p>
             )}
-          </div>
 
-          <div className="mt-3">
-            <label htmlFor="description" className="block text-xs font-semibold text-slate-900 mb-1">
-              Assignment name
-            </label>
-            <textarea
-              id="description"
-              value={formState.description}
-              onChange={(e) => updateField("description", e.target.value)}
-              placeholder="Read chapters 1-3 and submit the exercises"
-              rows={1}
-              className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none flex items-center ${formState.errors.description
-                ? "border-red-500 focus:border-red-600"
-                : "border-slate-300 focus:border-emerald-600"
-                }`}
-              disabled={isLoading}
-            />
-            {formState.errors.description && (
-              <p className="text-red-600 text-xs mt-1">{formState.errors.description}</p>
-            )}
+            <div className="mt-4">
+              <label htmlFor="description" className="block text-xs font-semibold text-slate-900 mb-1">
+                Assignment
+              </label>
+              <textarea
+                id="description"
+                value={formState.description}
+                onChange={(e) => updateField("description", e.target.value)}
+                placeholder="Read chapters 1-3 and submit the exercises"
+                rows={1}
+                className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none flex items-center ${formState.errors.description
+                  ? "border-red-500 focus:border-red-600"
+                  : "border-slate-300 focus:border-emerald-600"
+                  }`}
+                disabled={isLoading}
+              />
+              {formState.errors.description && (
+                <p className="text-red-600 text-xs mt-1">{formState.errors.description}</p>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-1">
               <DateTimeField
-                label="Study Start"
+                label="Start"
                 id="startTime"
                 dateValue={formState.startDateDay}
                 timeValue={formState.startDateTime}
@@ -102,14 +102,11 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
 
             <div className="flex-1">
               <DateTimeField
-                label="Due Date"
+                label="Due"
                 id="dueDate"
                 dateValue={formState.dueDateDay}
                 timeValue={formState.dueDateTime}
-                onDateChange={(v) => {
-                  updateField("dueDateDay", v);
-                  updateField("dueDateTime", "23:59");
-                }}
+                onDateChange={(v) => updateField("dueDateDay", v)}
                 onTimeChange={(v) => updateField("dueDateTime", v)}
                 dateError={formState.errors.dueDateDay}
                 timeError={formState.errors.dueDateTime}
