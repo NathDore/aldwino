@@ -33,6 +33,7 @@ export function AssignmentDateCard({ id, value, onChange, disabled = false }: As
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => e.currentTarget.showPicker?.()}
         disabled={disabled}
         className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
       />

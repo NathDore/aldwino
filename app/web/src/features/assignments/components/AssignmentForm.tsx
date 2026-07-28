@@ -36,7 +36,6 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
     if (!assignmentToEdit && !formState.courseId && courses.length > 0) {
       updateField("courseId", courses[0].id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignmentToEdit, courses]);
 
   return (
@@ -74,11 +73,10 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
           onChange={(e) => updateField("description", e.target.value)}
           placeholder="Read chapters 1-3 and submit the exercises"
           rows={2}
-          className={`w-full px-3 py-1.5 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${
-            formState.errors.description
+          className={`w-full px-3 py-1.5 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.description
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
-          }`}
+            }`}
           disabled={isLoading}
         />
         {formState.errors.description && (
@@ -110,7 +108,10 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
             id="dueDate"
             dateValue={formState.dueDateDay}
             timeValue={formState.dueDateTime}
-            onDateChange={(v) => updateField("dueDateDay", v)}
+            onDateChange={(v) => {
+              updateField("dueDateDay", v);
+              updateField("dueDateTime", "23:59");
+            }}
             onTimeChange={(v) => updateField("dueDateTime", v)}
             dateError={formState.errors.dueDateDay}
             timeError={formState.errors.dueDateTime}
