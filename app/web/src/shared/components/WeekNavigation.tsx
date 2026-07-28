@@ -1,4 +1,5 @@
 import { Button } from "@/shared/components/Button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/shared/components/icons";
 import { useWeekDays } from "@/features/calendar/hooks/useWeekDays";
 
 interface WeekNavigationProps {
@@ -22,13 +23,15 @@ export function WeekNavigation({ title, weekStart, onPrevWeek, onNextWeek }: Wee
       <h2 className="text-xl font-bold text-slate-900">{title}</h2>
       <div className="flex items-center gap-2 flex-wrap">
         <Button variant="ghost" size="sm" onClick={onPrevWeek}>
-          Previous
+          <span className="sr-only">Previous week</span>
+          <ChevronLeftIcon />
         </Button>
         <span className="text-sm text-slate-600 min-w-[100px] text-center">
           {formatWeekRange(days[0], days[6])}
         </span>
         <Button variant="ghost" size="sm" onClick={onNextWeek}>
-          Next
+          <span className="sr-only">Next week</span>
+          <ChevronRightIcon />
         </Button>
       </div>
     </div>
