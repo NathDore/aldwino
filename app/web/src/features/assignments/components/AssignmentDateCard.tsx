@@ -11,21 +11,21 @@ export function AssignmentDateCard({ id, value, onChange, disabled = false }: As
   const day = value ? parseISODate(value) : null;
 
   return (
-    <div className="relative h-12 w-14 shrink-0">
+    <div className="relative h-[38px] w-12 shrink-0">
       <div
-        className={`flex h-full w-full flex-col items-center justify-center rounded border transition-colors ${
+        className={`flex h-full w-full flex-row items-center justify-center gap-1 rounded border transition-colors ${
           day ? "bg-white border-slate-300" : "bg-slate-50 border-dashed border-slate-300"
         }`}
       >
         {day ? (
           <>
-            <p className="text-[10px] leading-tight text-slate-600">
+            <p className="text-[9px] leading-tight text-slate-600">
               {day.toLocaleDateString(undefined, { weekday: "short" })}
             </p>
-            <p className="text-sm font-semibold leading-tight text-slate-900">{day.getDate()}</p>
+            <p className="text-xs font-semibold leading-tight text-slate-900">{day.getDate()}</p>
           </>
         ) : (
-          <p className="text-base font-semibold leading-tight text-slate-400">–</p>
+          <p className="text-xs font-semibold leading-tight text-slate-400">–</p>
         )}
       </div>
       <input

@@ -160,7 +160,7 @@ export function DateTimeField({
             type="date"
             value={dateValue}
             onChange={(e) => onDateChange(e.target.value)}
-            className={`w-32 shrink-0 px-2 py-1.5 text-sm bg-white border text-slate-900 focus:outline-none transition-colors ${
+            className={`w-28 shrink-0 px-2 py-1 text-xs bg-white border text-slate-900 focus:outline-none transition-colors ${
               dateError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
             }`}
             disabled={disabled}
@@ -179,17 +179,17 @@ export function DateTimeField({
           }}
           placeholder="HH:MM"
           inputMode="numeric"
-          className={`h-12 w-20 shrink-0 px-3 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
+          className={`h-[38px] w-16 shrink-0 px-2 text-xs bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
             timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
           }`}
           disabled={disabled}
         />
-        <div className="flex h-12 w-10 shrink-0 flex-col gap-0.5">
+        <div className="flex h-[38px] w-8 shrink-0 flex-col gap-0.5">
           <button
             type="button"
             onClick={() => selectPeriod("AM")}
             disabled={disabled}
-            className={`flex-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+            className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${
               period === "AM"
                 ? "bg-emerald-600 text-white hover:bg-emerald-700"
                 : "bg-slate-200 text-slate-900 hover:bg-slate-300"
@@ -201,7 +201,7 @@ export function DateTimeField({
             type="button"
             onClick={() => selectPeriod("PM")}
             disabled={disabled}
-            className={`flex-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+            className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${
               period === "PM"
                 ? "bg-emerald-600 text-white hover:bg-emerald-700"
                 : "bg-slate-200 text-slate-900 hover:bg-slate-300"

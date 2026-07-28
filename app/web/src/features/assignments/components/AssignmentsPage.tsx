@@ -43,10 +43,10 @@ export function AssignmentsPage() {
   };
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
+    <div className="p-4 max-w-6xl mx-auto min-h-screen flex flex-col">
       <StudyTimeWeekGrid assignments={assignments} courses={courses} />
 
-      <div className="flex gap-6 mt-3">
+      <div className="flex gap-6 mt-6 flex-1 min-h-0">
         <div ref={formSectionRef} className="w-3/4">
           <AssignmentForm assignmentToEdit={assignmentToEdit} />
         </div>

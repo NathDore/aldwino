@@ -27,19 +27,19 @@ export function DurationSelector({ durations, selectedMinutes, onSelect, disable
             onClick={() => onSelect(minutes)}
             disabled={disabled}
             title={`${minutes} minutes`}
-            className={`flex flex-col items-center gap-0.5 rounded border p-1 transition-colors disabled:opacity-50 ${
+            className={`flex h-[38px] flex-row items-center justify-center gap-1 rounded border px-1.5 transition-colors disabled:opacity-50 ${
               isSelected ? "border-emerald-600 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"
             }`}
           >
             <div
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-slate-400 ${
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-slate-400 ${
                 isSelected ? "bg-emerald-600" : "bg-slate-400"
               }`}
             >
-              <ClockIcon className="h-3.5 w-3.5 text-white" />
+              <ClockIcon className="h-2.5 w-2.5 text-white" />
             </div>
             <span
-              className={`w-full truncate text-center text-[9px] leading-tight ${
+              className={`truncate text-center text-[9px] leading-tight ${
                 isSelected ? "font-medium text-emerald-700" : "text-slate-600"
               }`}
             >
