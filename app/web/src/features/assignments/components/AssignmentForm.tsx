@@ -31,6 +31,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
     noFittingDuration,
   } = useAssignmentForm(assignmentToEdit);
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
+  const selectedCourse = courses.find((course) => course.id === formState.courseId);
 
   useEffect(() => {
     if (!assignmentToEdit && !formState.courseId && courses.length > 0) {
@@ -39,7 +40,14 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
   }, [assignmentToEdit, courses]);
 
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-4 h-full flex flex-col">
+    <div
+      className="bg-slate-50 border border-slate-200 rounded p-4 space-y-4 h-full flex flex-col transition-colors duration-300"
+      style={
+        selectedCourse
+          ? { backgroundColor: `color-mix(in srgb, ${selectedCourse.color} 6%, #f8fafc)` }
+          : undefined
+      }
+    >
       <div className="flex flex-col gap-6 md:flex-row flex-1">
         <div className="min-w-0 flex-1 flex flex-col justify-between">
           <div>
