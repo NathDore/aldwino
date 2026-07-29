@@ -75,18 +75,18 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
       onClick={handleBackdropClick}
     >
       <div
-        className={`flex flex-col w-96 max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col w-[30rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
           if (!isVisible && e.propertyName === "opacity") closeNow();
         }}
       >
-        <div className="flex items-start justify-between gap-2 px-6 pt-6 pb-4 border-b border-slate-200 shrink-0">
-          <div className="min-w-0">
-            <p className="text-lg font-bold text-slate-900 truncate">{weekday}</p>
-            <p className="text-sm text-slate-700">{date}</p>
-            <p className="text-sm font-semibold text-slate-900 mt-1">
+        <div className="flex items-start justify-between gap-2 px-6 py-3 border-b border-slate-200 shrink-0">
+          <div className="min-w-0 flex items-baseline gap-2">
+            <p className="text-sm font-bold text-slate-900 truncate">{weekday}</p>
+            <p className="text-xs text-slate-600 truncate">{date}</p>
+            <p className="text-xs font-semibold text-slate-900 shrink-0">
               {formatTimeRange(event.startTime, event.endTime)}
             </p>
           </div>
