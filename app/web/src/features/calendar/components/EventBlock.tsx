@@ -1,4 +1,4 @@
-import { Fragment, memo, useRef } from "react";
+import { memo, useRef } from "react";
 import { useSlotPosition } from "../hooks/useSlotPosition";
 import type { RowLayout } from "../hooks/useRowLayout";
 import { useFittingAssignments } from "../hooks/useFittingAssignments";
@@ -31,8 +31,15 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const chipRowRef = useRef<HTMLDivElement>(null);
+  const overflowChipRowRef = useRef<HTMLDivElement>(null);
   const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
   const { visibleCount: visibleChipCount } = useFittingChips(chipRowRef, assignments.length);
+  const hiddenCount = Math.max(assignments.length - visibleCount, 0);
+  const { visibleCount: visibleOverflowChipCount } = useFittingChips(overflowChipRowRef, hiddenCount, {
+    chipSizePx: 14,
+    gapPx: 4,
+    indicatorWidthPx: 16,
+  });
   const durationMinutes = getEventDurationMinutes(event.startTime, event.endTime);
   const isCompact = durationMinutes < COMPACT_EVENT_THRESHOLD_MINUTES;
   const isSingleCompactAssignment =
@@ -73,24 +80,38 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
         <div className="space-y-1">
           <div ref={headerRef} className="flex items-start justify-between gap-1" />
           {assignments.map((item, index) => (
-            <Fragment key={item.assignment.id}>
-              {index === visibleCount && (
-                <div className="flex items-center gap-1 text-[10px] font-medium text-slate-600">
-                  <span className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-slate-200 px-1 text-slate-700">
-                    +{assignments.length - visibleCount}
-                  </span>
-                  <span>more hidden</span>
-                </div>
-              )}
-              <div
-                ref={getItemRef(index)}
-                className={index < visibleCount ? undefined : "invisible"}
-                aria-hidden={index < visibleCount ? undefined : true}
-              >
-                <AssignmentBlock item={item} state="default" />
-              </div>
-            </Fragment>
+            <div
+              key={item.assignment.id}
+              ref={getItemRef(index)}
+              className={index < visibleCount ? undefined : "invisible"}
+              aria-hidden={index < visibleCount ? undefined : true}
+            >
+              <AssignmentBlock item={item} state="default" />
+            </div>
           ))}
+          {hiddenCount > 0 && (
+            <div
+              ref={overflowChipRowRef}
+              className="absolute inset-x-1.5 bottom-1.5 flex items-center gap-1 overflow-hidden"
+            >
+              {assignments
+                .slice(visibleCount, visibleCount + visibleOverflowChipCount)
+                .map((hiddenItem) => (
+                  <AssignmentChip key={hiddenItem.assignment.id} item={hiddenItem} size="sm" />
+                ))}
+              {visibleOverflowChipCount < hiddenCount && (
+                <span
+                  className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700"
+                  title={assignments
+                    .slice(visibleCount + visibleOverflowChipCount)
+                    .map((hiddenItem) => hiddenItem.assignment.description)
+                    .join("\n")}
+                >
+                  +{hiddenCount - visibleOverflowChipCount}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
