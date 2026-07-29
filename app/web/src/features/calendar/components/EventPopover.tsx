@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
-import { AssignmentBlock } from "./AssignmentBlock";
+import { AssignmentPopoverItem } from "./AssignmentPopoverItem";
 import { CloseIcon } from "./icons";
 import type { CalendarEvent } from "../types/calendar.types";
 
@@ -97,8 +97,8 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
         </div>
 
         <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0">
-          {assignments.map((item, index) => (
-            <AssignmentBlock key={item.assignment.id} item={item} forceExpanded autoExpand={index === 0} interactive />
+          {assignments.map((item) => (
+            <AssignmentPopoverItem key={item.assignment.id} item={item} />
           ))}
         </div>
       </div>

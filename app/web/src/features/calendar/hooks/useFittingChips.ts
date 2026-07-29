@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { createRAFDebounce } from "../utils/createRAFDebounce";
 
-const CHIP_SIZE_PX = 20; // must match CompactAssignmentChip's h-5/w-5
+const CHIP_SIZE_PX = 20; // must match AssignmentChip's h-5/w-5
 const CHIP_GAP_PX = 4; // matches gap-1 on the chip row
 const INDICATOR_WIDTH_PX = 20; // reserved width for the "+N" pill
 

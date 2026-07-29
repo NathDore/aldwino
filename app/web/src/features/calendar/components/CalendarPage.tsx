@@ -1,6 +1,5 @@
 import { useEventsQuery } from "@/features/events";
 import { useAssignmentsQuery } from "@/features/assignments";
-import { useTasksQuery } from "@/features/tasks";
 import { useCoursesQuery } from "@/features/courses";
 import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import { useCalendarStore } from "../store/calendarStore";
@@ -10,10 +9,9 @@ import { WeekGrid } from "./WeekGrid";
 export function CalendarPage() {
   const { data: events = [] } = useEventsQuery();
   const { data: assignments = [] } = useAssignmentsQuery();
-  const { data: tasks = [] } = useTasksQuery();
   const { data: courses = [] } = useCoursesQuery();
 
-  const calendarEvents = useCalendarEvents(events, assignments, courses, tasks);
+  const calendarEvents = useCalendarEvents(events, assignments, courses);
 
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
   const goToPrevWeek = useCalendarStore((s) => s.goToPrevWeek);

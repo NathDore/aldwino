@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { CalendarAssignment } from "../types/calendar.types";
 
-interface CompactAssignmentChipProps {
+interface AssignmentChipProps {
   item: CalendarAssignment;
   size?: "md" | "sm";
 }
@@ -11,17 +11,13 @@ const SIZE_CLASSES: Record<"md" | "sm", string> = {
   sm: "h-3.5 w-3.5 text-[8px]",
 };
 
-export const CompactAssignmentChip = memo(function CompactAssignmentChip({
-  item,
-  size = "md",
-}: CompactAssignmentChipProps) {
+export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }: AssignmentChipProps) {
   const { assignment, course } = item;
   const letter = course?.code?.charAt(0).toUpperCase() ?? "?";
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${assignment.isCompleted ? "opacity-50" : ""
-        }`}
+      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]}`}
       style={{ backgroundColor: course?.color ?? "#cbd5e1" }}
       title={assignment.description}
     >

@@ -6,8 +6,7 @@ import { useFittingChips } from "../hooks/useFittingChips";
 import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
 import { AssignmentBlock } from "./AssignmentBlock";
-import { CompactAssignmentChip } from "./CompactAssignmentChip";
-import { CompactSingleAssignment } from "./CompactSingleAssignment";
+import { AssignmentChip } from "./AssignmentChip";
 import { EventPopover } from "./EventPopover";
 import {
   COMPACT_EVENT_THRESHOLD_MINUTES,
@@ -58,11 +57,11 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
       {isSingleCompactAssignment ? (
-        <CompactSingleAssignment item={assignments[0]} />
+        <AssignmentBlock item={assignments[0]} state="default" />
       ) : isCompact ? (
         <div ref={chipRowRef} className="flex w-full items-center gap-1 overflow-hidden">
           {assignments.slice(0, visibleChipCount).map((item) => (
-            <CompactAssignmentChip key={item.assignment.id} item={item} />
+            <AssignmentChip key={item.assignment.id} item={item} />
           ))}
           {visibleChipCount < assignments.length && (
             <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[10px] font-medium text-slate-700">
@@ -88,7 +87,7 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
                 className={index < visibleCount ? undefined : "invisible"}
                 aria-hidden={index < visibleCount ? undefined : true}
               >
-                <AssignmentBlock item={item} interactive={false} />
+                <AssignmentBlock item={item} state="default" />
               </div>
             </Fragment>
           ))}

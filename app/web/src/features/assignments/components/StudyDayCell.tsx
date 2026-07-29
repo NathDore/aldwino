@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 import type { AssignmentDto } from "../types/assignment.types";
 import type { CourseDto } from "@/features/courses";
-import { CompactAssignmentChip } from "@/features/calendar/components/CompactAssignmentChip";
+import { AssignmentChip } from "@/features/calendar/components/AssignmentChip";
 import { useFittingChips } from "@/features/calendar/hooks/useFittingChips";
 
 const CHIP_SIZE_PX = 14;
@@ -56,9 +56,9 @@ export const StudyDayCell = memo(function StudyDayCell({
       </p>
       <div ref={chipRowRef} className="mt-1 flex min-h-[14px] w-full items-center justify-center gap-1 overflow-hidden">
         {dayAssignments.slice(0, visibleCount).map((assignment) => (
-          <CompactAssignmentChip
+          <AssignmentChip
             key={assignment.id}
-            item={{ assignment, course: coursesById.get(assignment.courseId), tasks: [] }}
+            item={{ assignment, course: coursesById.get(assignment.courseId) }}
             size="sm"
           />
         ))}
