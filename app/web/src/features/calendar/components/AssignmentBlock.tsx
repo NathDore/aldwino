@@ -93,6 +93,11 @@ export const AssignmentBlock = memo(function AssignmentBlock({
             }`}
           title={assignment.description}
         >
+          {course && (
+            <span className="text-slate-700">
+              {course.code} -{" "}
+            </span>
+          )}
           {assignment.description}
         </p>
         {canToggle && (
@@ -106,7 +111,6 @@ export const AssignmentBlock = memo(function AssignmentBlock({
           </button>
         )}
       </div>
-      {course && <p className="text-[10px] text-slate-600 truncate">{course.code}</p>}
       {hasTasks && (
         <div
           className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
