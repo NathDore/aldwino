@@ -49,7 +49,7 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
       }
     >
       <div className="flex flex-col gap-6 md:flex-row flex-1">
-        <div className="min-w-0 flex-1 flex flex-col justify-between">
+        <div className="min-w-0 flex-[2] flex flex-col">
           <div>
             <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
             {coursesLoading ? (
@@ -90,69 +90,73 @@ export function AssignmentForm({ assignmentToEdit }: AssignmentFormProps) {
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <DateTimeField
-                label="Start"
-                id="startTime"
-                dateValue={formState.startDateDay}
-                timeValue={formState.startDateTime}
-                onDateChange={(v) => updateField("startDateDay", v)}
-                onTimeChange={(v) => updateField("startDateTime", v)}
-                dateError={formState.errors.startDateDay}
-                timeError={formState.errors.startDateTime}
-                disabled={isLoading}
-                renderDateInput={({ id, value, onChange, disabled }) => (
-                  <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
-                )}
-              />
+          <div className="space-y-6 mt-4">
+            <div className="grid grid-cols-2 gap-4 max-w-sm">
+              <div>
+                <DateTimeField
+                  label="Start"
+                  id="startTime"
+                  dateValue={formState.startDateDay}
+                  timeValue={formState.startDateTime}
+                  onDateChange={(v) => updateField("startDateDay", v)}
+                  onTimeChange={(v) => updateField("startDateTime", v)}
+                  dateError={formState.errors.startDateDay}
+                  timeError={formState.errors.startDateTime}
+                  disabled={isLoading}
+                  renderDateInput={({ id, value, onChange, disabled }) => (
+                    <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+                  )}
+                />
+              </div>
+
+              <div>
+                <DateTimeField
+                  label="Due"
+                  id="dueDate"
+                  dateValue={formState.dueDateDay}
+                  timeValue={formState.dueDateTime}
+                  onDateChange={(v) => updateField("dueDateDay", v)}
+                  onTimeChange={(v) => updateField("dueDateTime", v)}
+                  dateError={formState.errors.dueDateDay}
+                  timeError={formState.errors.dueDateTime}
+                  disabled={isLoading}
+                  renderDateInput={({ id, value, onChange, disabled }) => (
+                    <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="flex-1">
-              <DateTimeField
-                label="Due"
-                id="dueDate"
-                dateValue={formState.dueDateDay}
-                timeValue={formState.dueDateTime}
-                onDateChange={(v) => updateField("dueDateDay", v)}
-                onTimeChange={(v) => updateField("dueDateTime", v)}
-                dateError={formState.errors.dueDateDay}
-                timeError={formState.errors.dueDateTime}
+            <div className="max-w-sm">
+              <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
+              <DurationSelector
+                durations={ALLOWED_DURATIONS_MINUTES}
+                selectedMinutes={formState.expectedDurationMinutes}
+                onSelect={updateDuration}
                 disabled={isLoading}
-                renderDateInput={({ id, value, onChange, disabled }) => (
-                  <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
-                )}
               />
+              {formState.errors.expectedDurationMinutes && (
+                <p className="text-red-600 text-xs mt-1">{formState.errors.expectedDurationMinutes}</p>
+              )}
+              {effectiveEndTime && (
+                <p className="text-xs text-slate-600 mt-1">
+                  {wasClamped
+                    ? `Shortened to ${effectiveDurationMinutes} minutes — ends at ${formatTime(effectiveEndTime)} to stay within the day`
+                    : `Ends at ${formatTime(effectiveEndTime)}`}
+                </p>
+              )}
+              {noFittingDuration && (
+                <p className="text-red-600 text-xs mt-1">
+                  No session length fits before midnight — choose an earlier start time.
+                </p>
+              )}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
-            <DurationSelector
-              durations={ALLOWED_DURATIONS_MINUTES}
-              selectedMinutes={formState.expectedDurationMinutes}
-              onSelect={updateDuration}
-              disabled={isLoading}
-            />
-            {formState.errors.expectedDurationMinutes && (
-              <p className="text-red-600 text-xs mt-1">{formState.errors.expectedDurationMinutes}</p>
-            )}
-            {effectiveEndTime && (
-              <p className="text-xs text-slate-600 mt-1">
-                {wasClamped
-                  ? `Shortened to ${effectiveDurationMinutes} minutes — ends at ${formatTime(effectiveEndTime)} to stay within the day`
-                  : `Ends at ${formatTime(effectiveEndTime)}`}
-              </p>
-            )}
-            {noFittingDuration && (
-              <p className="text-red-600 text-xs mt-1">
-                No session length fits before midnight — choose an earlier start time.
-              </p>
-            )}
-          </div>
+          <div className="flex-1" />
         </div>
 
-        <div className="w-full shrink-0 border-slate-200 pt-4 md:flex md:w-64 md:flex-col md:border-l md:pl-4 md:pt-0">
+        <div className="w-full border-slate-200 pt-4 md:flex md:flex-1 md:flex-col md:border-l md:pl-4 md:pt-0">
           <label className="block text-xs font-semibold text-slate-900 mb-1">Tasks</label>
           <div className="flex flex-1 min-h-[140px] items-center justify-center rounded border border-dashed border-slate-300 bg-white p-3 text-center text-xs text-slate-400">
             Task checklist coming soon
