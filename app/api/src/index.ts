@@ -25,6 +25,7 @@ import { GetAssignmentByIdUseCase } from "./application/assignment/GetAssignment
 import { ListAssignmentsUseCase } from "./application/assignment/ListAssignmentsUseCase";
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
+import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
 import { AssignmentSchedulingService } from "./application/assignment/AssignmentSchedulingService";
 import { TaskRepository } from "./infrastructure/database/repositories/TaskRepository";
 import { CreateTaskUseCase } from "./application/task/CreateTaskUseCase";
@@ -69,6 +70,7 @@ const app = createServer({
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, db),
+  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, clock, db),
   createTaskUseCase: new CreateTaskUseCase(taskRepository, assignmentRepository, clock),
   getTaskByIdUseCase: new GetTaskByIdUseCase(taskRepository),
   listTasksUseCase: new ListTasksUseCase(taskRepository),

@@ -14,11 +14,12 @@ const SIZE_CLASSES: Record<"md" | "sm", string> = {
 export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }: AssignmentChipProps) {
   const { assignment, course } = item;
   const letter = course?.code?.charAt(0).toUpperCase() ?? "?";
+  const backgroundColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]}`}
-      style={{ backgroundColor: course?.color ?? "#cbd5e1" }}
+      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${assignment.isCompleted ? "opacity-50 line-through" : ""}`}
+      style={{ backgroundColor }}
       title={assignment.description}
     >
       {letter}

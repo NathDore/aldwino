@@ -14,9 +14,17 @@ export const AssignmentBlock = memo(function AssignmentBlock({ item, state = "de
     return <AssignmentChip item={item} />;
   }
 
+  const borderColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
+
   return (
-    <div className="border-l-2 pl-1.5 py-0.5" style={{ borderLeftColor: course?.color ?? "#cbd5e1" }}>
-      <p className="text-xs truncate text-slate-900" title={assignment.description}>
+    <div
+      className={`border-l-2 pl-1.5 py-0.5 ${assignment.isCompleted ? "opacity-50" : ""}`}
+      style={{ borderLeftColor: borderColor }}
+    >
+      <p
+        className={`text-xs truncate text-slate-900 ${assignment.isCompleted ? "line-through" : ""}`}
+        title={assignment.description}
+      >
         {assignment.description}
       </p>
     </div>

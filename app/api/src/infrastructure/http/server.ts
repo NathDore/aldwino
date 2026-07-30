@@ -19,6 +19,7 @@ import type { GetAssignmentByIdUseCase } from "../../application/assignment/GetA
 import type { ListAssignmentsUseCase } from "../../application/assignment/ListAssignmentsUseCase";
 import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
+import type { CompleteAssignmentUseCase } from "../../application/assignment/CompleteAssignmentUseCase";
 import { registerAssignmentRoutes } from "./routes/assignment.route";
 import type { CreateTaskUseCase } from "../../application/task/CreateTaskUseCase";
 import type { GetTaskByIdUseCase } from "../../application/task/GetTaskByIdUseCase";
@@ -44,6 +45,7 @@ export interface ServerDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
+  completeAssignmentUseCase: CompleteAssignmentUseCase;
   createTaskUseCase: CreateTaskUseCase;
   getTaskByIdUseCase: GetTaskByIdUseCase;
   listTasksUseCase: ListTasksUseCase;

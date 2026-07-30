@@ -5,6 +5,7 @@ import type { GetAssignmentByIdUseCase } from "../../../application/assignment/G
 import type { ListAssignmentsUseCase } from "../../../application/assignment/ListAssignmentsUseCase";
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
+import type { CompleteAssignmentUseCase } from "../../../application/assignment/CompleteAssignmentUseCase";
 
 interface AssignmentRouteDeps {
   createAssignmentUseCase: CreateAssignmentUseCase;
@@ -12,6 +13,7 @@ interface AssignmentRouteDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
+  completeAssignmentUseCase: CompleteAssignmentUseCase;
 }
 
 function handleAssignmentError(error: unknown) {
@@ -155,6 +157,31 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
       const id = c.req.param("id");
       deps.deleteAssignmentUseCase.execute(id);
       return new Response(null, { status: 204 });
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.patch("/assignments/:id", async (c) => {
+    try {
+      const id = c.req.param("id");
+      const body = (await c.req.json()) as {
+        isCompleted?: boolean;
+      };
+
+      if (body.isCompleted === undefined) {
+        return c.json({ error: "isCompleted is required" }, 400);
+      }
+
+      const assignment = deps.completeAssignmentUseCase.execute({
+        id,
+        isCompleted: body.isCompleted,
+      });
+      return c.json(assignment.toJSON(), 200);
     } catch (error) {
       const handled = handleAssignmentError(error);
       if (handled) {
