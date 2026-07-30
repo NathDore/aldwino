@@ -1,15 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import type { AssignmentDto } from "../types/assignment.types";
-import type { CourseDto } from "@/features/courses";
+import { useEffect, useState } from "react";
 import { useAssignmentStore } from "../store/assignmentStore";
 import { StudyDayCell } from "./StudyDayCell";
 import { WeekNavigation } from "@/shared/components/WeekNavigation";
 import { getWeekStart, parseISODate, toISODate, useWeekDays } from "@/features/calendar/hooks/useWeekDays";
-
-interface StudyTimeWeekGridProps {
-  assignments: AssignmentDto[];
-  courses: CourseDto[];
-}
 
 function shiftWeek(weekStartIso: string, days: number): string {
   const d = parseISODate(weekStartIso);
@@ -17,7 +10,7 @@ function shiftWeek(weekStartIso: string, days: number): string {
   return toISODate(d);
 }
 
-export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridProps) {
+export function StudyTimeWeekGrid() {
   const [weekStart, setWeekStart] = useState(() => toISODate(getWeekStart(new Date())));
   const days = useWeekDays(weekStart);
   const selectStudyDate = useAssignmentStore((s) => s.selectStudyDate);
@@ -26,22 +19,6 @@ export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridPro
   useEffect(() => {
     selectStudyDate(toISODate(new Date()));
   }, [selectStudyDate]);
-
-  const coursesById = useMemo(() => new Map(courses.map((course) => [course.id, course])), [courses]);
-
-  const assignmentsByDay = useMemo(() => {
-    const map = new Map<string, AssignmentDto[]>();
-    for (const assignment of assignments) {
-      const iso = toISODate(new Date(assignment.startTime));
-      const existing = map.get(iso);
-      if (existing) {
-        existing.push(assignment);
-      } else {
-        map.set(iso, [assignment]);
-      }
-    }
-    return map;
-  }, [assignments]);
 
   const today = toISODate(new Date());
 
@@ -66,8 +43,6 @@ export function StudyTimeWeekGrid({ assignments, courses }: StudyTimeWeekGridPro
               day={day}
               isToday={iso === today}
               isSelected={iso === selectedStudyDate}
-              dayAssignments={assignmentsByDay.get(iso) ?? []}
-              coursesById={coursesById}
               onSelect={selectStudyDate}
             />
           );

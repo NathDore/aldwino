@@ -1,20 +1,10 @@
-import { memo, useRef } from "react";
-import type { AssignmentDto } from "../types/assignment.types";
-import type { CourseDto } from "@/features/courses";
-import { AssignmentChip } from "@/features/calendar/components/AssignmentChip";
-import { useFittingChips } from "@/features/calendar/hooks/useFittingChips";
-
-const CHIP_SIZE_PX = 14;
-const CHIP_GAP_PX = 4;
-const INDICATOR_WIDTH_PX = 16;
+import { memo } from "react";
 
 interface StudyDayCellProps {
   iso: string;
   day: Date;
   isToday: boolean;
   isSelected: boolean;
-  dayAssignments: AssignmentDto[];
-  coursesById: Map<string, CourseDto>;
   onSelect: (iso: string) => void;
 }
 
@@ -23,18 +13,8 @@ export const StudyDayCell = memo(function StudyDayCell({
   day,
   isToday,
   isSelected,
-  dayAssignments,
-  coursesById,
   onSelect,
 }: StudyDayCellProps) {
-  const chipRowRef = useRef<HTMLDivElement>(null);
-  const { visibleCount } = useFittingChips(chipRowRef, dayAssignments.length, {
-    chipSizePx: CHIP_SIZE_PX,
-    gapPx: CHIP_GAP_PX,
-    indicatorWidthPx: INDICATOR_WIDTH_PX,
-  });
-  const hiddenAssignments = dayAssignments.slice(visibleCount);
-
   return (
     <button
       onClick={() => onSelect(iso)}
@@ -54,23 +34,6 @@ export const StudyDayCell = memo(function StudyDayCell({
       >
         {day.getDate()}
       </p>
-      <div ref={chipRowRef} className="mt-1 flex min-h-[14px] w-full items-center justify-center gap-1 overflow-hidden">
-        {dayAssignments.slice(0, visibleCount).map((assignment) => (
-          <AssignmentChip
-            key={assignment.id}
-            item={{ assignment, course: coursesById.get(assignment.courseId) }}
-            size="sm"
-          />
-        ))}
-        {hiddenAssignments.length > 0 && (
-          <span
-            className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700"
-            title={hiddenAssignments.map((a) => a.description).join("\n")}
-          >
-            +{hiddenAssignments.length}
-          </span>
-        )}
-      </div>
     </button>
   );
 });

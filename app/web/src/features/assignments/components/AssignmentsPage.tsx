@@ -6,14 +6,12 @@ import { useAssignmentStore } from "../store/assignmentStore";
 import { StudyTimeWeekGrid } from "./StudyTimeWeekGrid";
 import { AssignmentForm } from "./AssignmentForm";
 import { ScoreStreakPlaceholder } from "./ScoreStreakPlaceholder";
-import { useCoursesQuery } from "@/features/courses";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { Modal } from "@/shared/components/Modal";
 
 export function AssignmentsPage() {
   const queryClient = useQueryClient();
   const { data: assignments = [] } = useAssignmentsQuery();
-  const { data: courses = [] } = useCoursesQuery();
   const deleteMutation = useDeleteAssignmentMutation();
   const { selectedAssignmentId, assignmentIdPendingDelete, cancelDelete } = useAssignmentStore();
   const formSectionRef = useRef<HTMLDivElement>(null);
@@ -44,7 +42,7 @@ export function AssignmentsPage() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto min-h-screen flex flex-col">
-      <StudyTimeWeekGrid assignments={assignments} courses={courses} />
+      <StudyTimeWeekGrid />
 
       <div className="flex gap-6 mt-6 flex-1 min-h-0">
         <div ref={formSectionRef} className="w-3/4">
