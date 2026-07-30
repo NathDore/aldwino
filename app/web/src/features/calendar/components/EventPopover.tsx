@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { AssignmentPopoverItem } from "./AssignmentPopoverItem";
@@ -31,6 +31,10 @@ function formatEventDateHeading(startTime: string): { weekday: string; date: str
 
 export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
   const { event, assignments } = calendarEvent;
+  const sortedAssignments = useMemo(
+    () => [...assignments].sort((a, b) => Number(a.assignment.isCompleted) - Number(b.assignment.isCompleted)),
+    [assignments]
+  );
   const { weekday, date } = formatEventDateHeading(event.startTime);
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
@@ -97,7 +101,7 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
         </div>
 
         <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0">
-          {assignments.map((item) => (
+          {sortedAssignments.map((item) => (
             <AssignmentPopoverItem key={item.assignment.id} item={item} />
           ))}
         </div>
