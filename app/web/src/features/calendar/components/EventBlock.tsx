@@ -34,6 +34,8 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
   const overflowChipRowRef = useRef<HTMLDivElement>(null);
   const incompleteChipRowRef = useRef<HTMLDivElement>(null);
   const completedChipRowRef = useRef<HTMLDivElement>(null);
+  const overflowIncompleteChipRowRef = useRef<HTMLDivElement>(null);
+  const overflowCompletedChipRowRef = useRef<HTMLDivElement>(null);
   const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
   const { visibleCount: visibleChipCount } = useFittingChips(chipRowRef, assignments.length);
 
@@ -43,7 +45,20 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
   const { visibleCount: visibleCompletedCount } = useFittingChips(completedChipRowRef, completedAssignments.length);
 
   const hiddenCount = Math.max(assignments.length - visibleCount, 0);
+  const hiddenAssignments = assignments.slice(visibleCount);
+  const hiddenIncompleteAssignments = hiddenAssignments.filter((item) => !item.assignment.isCompleted);
+  const hiddenCompletedAssignments = hiddenAssignments.filter((item) => item.assignment.isCompleted);
   const { visibleCount: visibleOverflowChipCount } = useFittingChips(overflowChipRowRef, hiddenCount, {
+    chipSizePx: 14,
+    gapPx: 4,
+    indicatorWidthPx: 16,
+  });
+  const { visibleCount: visibleOverflowIncompleteCount } = useFittingChips(overflowIncompleteChipRowRef, hiddenIncompleteAssignments.length, {
+    chipSizePx: 14,
+    gapPx: 4,
+    indicatorWidthPx: 16,
+  });
+  const { visibleCount: visibleOverflowCompletedCount } = useFittingChips(overflowCompletedChipRowRef, hiddenCompletedAssignments.length, {
     chipSizePx: 14,
     gapPx: 4,
     indicatorWidthPx: 16,
@@ -125,22 +140,37 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
               ref={overflowChipRowRef}
               className="absolute inset-x-1.5 bottom-1.5 flex items-center gap-1 overflow-hidden"
             >
-              {assignments
-                .slice(visibleCount, visibleCount + visibleOverflowChipCount)
-                .map((hiddenItem) => (
+              {/* Incomplete overflow chips - proportional width based on count */}
+              <div
+                ref={overflowIncompleteChipRowRef}
+                className="flex items-center gap-1 overflow-hidden"
+                style={{ flex: hiddenIncompleteAssignments.length || 0 }}
+              >
+                {hiddenIncompleteAssignments.slice(0, visibleOverflowIncompleteCount).map((hiddenItem) => (
                   <AssignmentChip key={hiddenItem.assignment.id} item={hiddenItem} size="sm" />
                 ))}
-              {visibleOverflowChipCount < hiddenCount && (
-                <span
-                  className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700"
-                  title={assignments
-                    .slice(visibleCount + visibleOverflowChipCount)
-                    .map((hiddenItem) => hiddenItem.assignment.description)
-                    .join("\n")}
-                >
-                  +{hiddenCount - visibleOverflowChipCount}
-                </span>
-              )}
+                {visibleOverflowIncompleteCount < hiddenIncompleteAssignments.length && (
+                  <span className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700">
+                    +{hiddenIncompleteAssignments.length - visibleOverflowIncompleteCount}
+                  </span>
+                )}
+              </div>
+
+              {/* Completed overflow chips - proportional width based on count */}
+              <div
+                ref={overflowCompletedChipRowRef}
+                className="flex items-center gap-1 overflow-hidden justify-end"
+                style={{ flex: hiddenCompletedAssignments.length || 0 }}
+              >
+                {hiddenCompletedAssignments.slice(0, visibleOverflowCompletedCount).map((hiddenItem) => (
+                  <AssignmentChip key={hiddenItem.assignment.id} item={hiddenItem} size="sm" />
+                ))}
+                {visibleOverflowCompletedCount < hiddenCompletedAssignments.length && (
+                  <span className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700">
+                    +{hiddenCompletedAssignments.length - visibleOverflowCompletedCount}
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
