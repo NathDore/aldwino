@@ -32,8 +32,16 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
   const headerRef = useRef<HTMLDivElement>(null);
   const chipRowRef = useRef<HTMLDivElement>(null);
   const overflowChipRowRef = useRef<HTMLDivElement>(null);
+  const incompleteChipRowRef = useRef<HTMLDivElement>(null);
+  const completedChipRowRef = useRef<HTMLDivElement>(null);
   const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
   const { visibleCount: visibleChipCount } = useFittingChips(chipRowRef, assignments.length);
+
+  const incompleteAssignments = assignments.filter((item) => !item.assignment.isCompleted);
+  const completedAssignments = assignments.filter((item) => item.assignment.isCompleted);
+  const { visibleCount: visibleIncompleteCount } = useFittingChips(incompleteChipRowRef, incompleteAssignments.length);
+  const { visibleCount: visibleCompletedCount } = useFittingChips(completedChipRowRef, completedAssignments.length);
+
   const hiddenCount = Math.max(assignments.length - visibleCount, 0);
   const { visibleCount: visibleOverflowChipCount } = useFittingChips(overflowChipRowRef, hiddenCount, {
     chipSizePx: 14,
@@ -67,14 +75,37 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
         <AssignmentBlock item={assignments[0]} state="default" />
       ) : isCompact ? (
         <div ref={chipRowRef} className="flex w-full items-center gap-1 overflow-hidden">
-          {assignments.slice(0, visibleChipCount).map((item) => (
-            <AssignmentChip key={item.assignment.id} item={item} />
-          ))}
-          {visibleChipCount < assignments.length && (
-            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[10px] font-medium text-slate-700">
-              +{assignments.length - visibleChipCount}
-            </span>
-          )}
+          {/* Incomplete chips - proportional width based on count */}
+          <div
+            ref={incompleteChipRowRef}
+            className="flex items-center gap-1 overflow-hidden"
+            style={{ flex: incompleteAssignments.length || 0 }}
+          >
+            {incompleteAssignments.slice(0, visibleIncompleteCount).map((item) => (
+              <AssignmentChip key={item.assignment.id} item={item} />
+            ))}
+            {visibleIncompleteCount < incompleteAssignments.length && (
+              <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[10px] font-medium text-slate-700">
+                +{incompleteAssignments.length - visibleIncompleteCount}
+              </span>
+            )}
+          </div>
+
+          {/* Completed chips - proportional width based on count */}
+          <div
+            ref={completedChipRowRef}
+            className="flex items-center gap-1 overflow-hidden justify-end"
+            style={{ flex: completedAssignments.length || 0 }}
+          >
+            {completedAssignments.slice(0, visibleCompletedCount).map((item) => (
+              <AssignmentChip key={item.assignment.id} item={item} size="sm" />
+            ))}
+            {visibleCompletedCount < completedAssignments.length && (
+              <span className="inline-flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-200 px-1 text-[8px] font-medium text-slate-700">
+                +{completedAssignments.length - visibleCompletedCount}
+              </span>
+            )}
+          </div>
         </div>
       ) : (
         <div className="space-y-1">
