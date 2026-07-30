@@ -6,6 +6,7 @@ import {
   StartTimeInvalidError,
   DurationNotAllowedError,
   SessionCrossesMidnightError,
+  AssignmentNotCompletedError,
 } from "./AssignmentError";
 
 const DESCRIPTION_MAX_LENGTH = 250;
@@ -48,5 +49,11 @@ export function validateExpectedDurationMinutes(minutes: number): void {
 export function validateSessionWithinSingleDay(startTime: Date, endTime: Date): void {
   if (startTime.toDateString() !== endTime.toDateString()) {
     throw new SessionCrossesMidnightError();
+  }
+}
+
+export function validateCanBeDeleted(isCompleted: boolean): void {
+  if (!isCompleted) {
+    throw new AssignmentNotCompletedError();
   }
 }

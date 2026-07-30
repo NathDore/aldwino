@@ -5,18 +5,12 @@ import type { IAssignmentRepository } from "../../infrastructure/database/reposi
 import type { IEventRepository } from "../../infrastructure/database/repositories/EventRepository";
 import type { Clock } from "../health/ports/Clock";
 
-/**
- * Owns all event derivation for assignment scheduling: creating, merging, shrinking, and
- * deleting events as assignments are created, rescheduled, or removed. Writes events directly
- * through the repository rather than CreateEventUseCase/UpdateEventUseCase, whose
- * reject-on-overlap semantics exist only for the legacy manual event routes.
- */
 export class AssignmentSchedulingService {
   constructor(
     private readonly eventRepository: IEventRepository,
     private readonly assignmentRepository: IAssignmentRepository,
     private readonly clock: Clock,
-  ) {}
+  ) { }
 
   placeNewSession(startTime: Date, endTime: Date): string {
     return this.resolveEventForWindow({ startTime, endTime });
@@ -130,6 +124,8 @@ export class AssignmentSchedulingService {
       expectedDurationMinutes: assignment.expectedDurationMinutes,
       isCompleted: assignment.isCompleted,
       completedAt: assignment.completedAt,
+      isDeleted: assignment.isDeleted,
+      deletedAt: assignment.deletedAt,
       createdAt: assignment.createdAt,
     });
   }

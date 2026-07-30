@@ -8,6 +8,8 @@ export interface AssignmentDto {
   expectedDurationMinutes: number;
   isCompleted: boolean;
   completedAt: string | null;
+  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
 }
 

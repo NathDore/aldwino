@@ -1,7 +1,10 @@
 import { memo, useState } from "react";
-import { useCompleteAssignmentMutation } from "@/features/assignments/queries/useMutations";
+import {
+  useCompleteAssignmentMutation,
+  useDeleteAssignmentMutation,
+} from "@/features/assignments/queries/useMutations";
 import { Button } from "@/shared/components/Button";
-import { ChevronDownIcon } from "./icons";
+import { ChevronDownIcon, TrashIcon } from "./icons";
 import type { CalendarAssignment } from "../types/calendar.types";
 
 interface AssignmentPopoverItemProps {
@@ -19,6 +22,7 @@ function formatDueDate(dueDate: string): string {
 export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item }: AssignmentPopoverItemProps) {
   const { assignment, course } = item;
   const mutation = useCompleteAssignmentMutation();
+  const deleteMutation = useDeleteAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const borderColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
   const isCollapsed = assignment.isCompleted && !isExpanded;
@@ -28,6 +32,10 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
       id: assignment.id,
       isCompleted: !assignment.isCompleted,
     });
+  };
+
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync(assignment.id);
   };
 
   return (
@@ -67,6 +75,18 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
           <Button variant="ghost" size="sm" onClick={() => setIsExpanded((v) => !v)} className="shrink-0">
             <span className="sr-only">{isExpanded ? "Collapse assignment details" : "Expand assignment details"}</span>
             <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          </Button>
+        )}
+        {assignment.isCompleted && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="shrink-0"
+          >
+            <span className="sr-only">Delete {assignment.description}</span>
+            <TrashIcon />
           </Button>
         )}
         <input

@@ -67,3 +67,10 @@ export class SessionCrossesMidnightError extends AssignmentValidationError {
     this.name = "SessionCrossesMidnightError";
   }
 }
+
+export class AssignmentNotCompletedError extends AssignmentValidationError {
+  constructor() {
+    super("assignment must be completed before it can be deleted");
+    this.name = "AssignmentNotCompletedError";
+  }
+}

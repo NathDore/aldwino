@@ -17,3 +17,11 @@ export function ChevronDownIcon({ className = "w-3.5 h-3.5" }: IconProps) {
     </svg>
   );
 }
+
+export function TrashIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M3 4.5h10M6.5 4.5V3a1 1 0 011-1h1a1 1 0 011 1v1.5M12.5 4.5l-.6 8.4a1 1 0 01-1 .93H5.1a1 1 0 01-1-.93l-.6-8.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

@@ -65,6 +65,8 @@ export class UpdateAssignmentUseCase {
         expectedDurationMinutes: params.expectedDurationMinutes,
         isCompleted: params.isCompleted,
         completedAt,
+        isDeleted: existing.isDeleted,
+        deletedAt: existing.deletedAt,
         createdAt: existing.createdAt,
       });
 

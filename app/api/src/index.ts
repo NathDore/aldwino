@@ -7,6 +7,7 @@ import { migrate as migrateCourses } from "./infrastructure/database/migrations/
 import { migrate as migrateAssignments } from "./infrastructure/database/migrations/003_create_assignment_table";
 import { migrate as migrateTasks } from "./infrastructure/database/migrations/004_create_task_table";
 import { migrate as migrateAssignmentScheduling } from "./infrastructure/database/migrations/005_add_assignment_scheduling_columns";
+import { migrate as migrateAssignmentDeleted } from "./infrastructure/database/migrations/006_add_assignment_deleted_columns";
 import { EventRepository } from "./infrastructure/database/repositories/EventRepository";
 import { CreateEventUseCase } from "./application/event/CreateEventUseCase";
 import { GetEventByIdUseCase } from "./application/event/GetEventByIdUseCase";
@@ -44,6 +45,7 @@ migrateCourses(db);
 migrateAssignments(db);
 migrateTasks(db);
 migrateAssignmentScheduling(db);
+migrateAssignmentDeleted(db);
 
 // Create repositories
 const eventRepository = new EventRepository(db);
@@ -69,7 +71,7 @@ const app = createServer({
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
-  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, db),
+  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, clock, db),
   completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, clock, db),
   createTaskUseCase: new CreateTaskUseCase(taskRepository, assignmentRepository, clock),
   getTaskByIdUseCase: new GetTaskByIdUseCase(taskRepository),
