@@ -27,6 +27,7 @@ import { ListAssignmentsUseCase } from "./application/assignment/ListAssignments
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
 import { AssignmentSchedulingService } from "./application/assignment/AssignmentSchedulingService";
 import { TaskRepository } from "./infrastructure/database/repositories/TaskRepository";
 import { CreateTaskUseCase } from "./application/task/CreateTaskUseCase";
@@ -53,6 +54,18 @@ const courseRepository = new CourseRepository(db);
 const assignmentRepository = new AssignmentRepository(db);
 const taskRepository = new TaskRepository(db);
 const assignmentSchedulingService = new AssignmentSchedulingService(eventRepository, assignmentRepository, clock);
+
+// Purge assignments soft-deleted more than a week ago, on startup and then daily
+const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
+const runPurge = () => {
+  const purged = purgeDeletedAssignmentsUseCase.execute();
+  if (purged > 0) {
+    console.log(`[app-api] purged ${purged} expired soft-deleted assignment(s)`);
+  }
+};
+runPurge();
+const PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+setInterval(runPurge, PURGE_INTERVAL_MS).unref();
 
 // Create app with all dependencies
 const app = createServer({

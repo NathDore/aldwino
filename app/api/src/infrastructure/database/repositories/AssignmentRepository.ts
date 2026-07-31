@@ -7,6 +7,7 @@ export interface IAssignmentRepository {
   getAll(): Assignment[];
   getByEventId(eventId: string): Assignment[];
   update(assignment: Assignment): Assignment;
+  purgeDeletedBefore(cutoff: Date): number;
 }
 
 export class AssignmentRepository implements IAssignmentRepository {
@@ -74,6 +75,12 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.id,
     );
     return assignment;
+  }
+
+  purgeDeletedBefore(cutoff: Date): number {
+    const stmt = this.db.prepare("DELETE FROM assignments WHERE isDeleted = 1 AND deletedAt <= ?");
+    const result = stmt.run(cutoff.toISOString());
+    return result.changes;
   }
 
   private rowToAssignment(row: Record<string, string | number | null>): Assignment {
