@@ -86,7 +86,7 @@ function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"
   };
 }
 
-export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
+export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuccess?: () => void) {
   const [formState, setFormState] = useState<FormState>(
     assignmentToEdit ? { ...assignmentToFields(assignmentToEdit), errors: {} } : initialFormState
   );
@@ -257,6 +257,7 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null) {
       }
       setFormState(initialFormState);
       cancelEdit();
+      onSuccess?.();
     } catch (error: unknown) {
       if (error instanceof Error) {
         setFormState((prev) => ({
