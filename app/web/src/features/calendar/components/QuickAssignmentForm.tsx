@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { AssignmentDto } from "@/features/assignments/types/assignment.types";
 import { ALLOWED_DURATIONS_MINUTES, useAssignmentForm } from "@/features/assignments/hooks/useAssignmentForm";
 import { AssignmentDateCard } from "@/features/assignments/components/AssignmentDateCard";
 import { CourseSelector } from "@/features/assignments/components/CourseSelector";
@@ -8,23 +9,28 @@ import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 
 interface QuickAssignmentFormProps {
-  date: string;
-  hour: number;
   onClose: () => void;
+  assignmentToEdit?: AssignmentDto | null;
+  date?: string;
+  hour?: number;
 }
 
 function hourToTimeInput(hour: number): string {
   return `${hour.toString().padStart(2, "0")}:00`;
 }
 
-export function QuickAssignmentForm({ date, hour, onClose }: QuickAssignmentFormProps) {
-  const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(undefined, onClose);
+export function QuickAssignmentForm({ date, hour, onClose, assignmentToEdit }: QuickAssignmentFormProps) {
+  const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(
+    assignmentToEdit,
+    onClose
+  );
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
 
   useEffect(() => {
+    if (assignmentToEdit || date === undefined || hour === undefined) return;
     updateField("startDateDay", date);
     updateField("startDateTime", hourToTimeInput(hour));
-  }, [date, hour]);
+  }, [assignmentToEdit, date, hour]);
 
   useEffect(() => {
     if (!formState.courseId && courses.length > 0) {
@@ -113,7 +119,7 @@ export function QuickAssignmentForm({ date, hour, onClose }: QuickAssignmentForm
           Cancel
         </Button>
         <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isLoading || courses.length === 0}>
-          {isLoading ? "Creating..." : "Create Assignment"}
+          {assignmentToEdit ? (isLoading ? "Saving..." : "Save Changes") : isLoading ? "Creating..." : "Create Assignment"}
         </Button>
       </div>
     </div>

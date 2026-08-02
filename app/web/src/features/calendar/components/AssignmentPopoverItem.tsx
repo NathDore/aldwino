@@ -4,7 +4,8 @@ import {
   useDeleteAssignmentMutation,
 } from "@/features/assignments/queries/useMutations";
 import { Button } from "@/shared/components/Button";
-import { ChevronDownIcon, TrashIcon } from "./icons";
+import { ChevronDownIcon, PencilIcon, TrashIcon } from "./icons";
+import { EditAssignmentModal } from "./EditAssignmentModal";
 import type { CalendarAssignment } from "../types/calendar.types";
 
 interface AssignmentPopoverItemProps {
@@ -24,6 +25,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
   const mutation = useCompleteAssignmentMutation();
   const deleteMutation = useDeleteAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const borderColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
   const isCollapsed = assignment.isCompleted && !isExpanded;
 
@@ -89,6 +91,12 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
             <TrashIcon />
           </Button>
         )}
+        {!assignment.isCompleted && (
+          <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="shrink-0">
+            <span className="sr-only">Edit {assignment.description}</span>
+            <PencilIcon />
+          </Button>
+        )}
         <input
           type="checkbox"
           checked={assignment.isCompleted}
@@ -98,6 +106,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
           aria-label={`Mark ${assignment.description} as ${assignment.isCompleted ? "incomplete" : "complete"}`}
         />
       </div>
+      {isEditing && <EditAssignmentModal item={item} onClose={() => setIsEditing(false)} />}
     </div>
   );
 });

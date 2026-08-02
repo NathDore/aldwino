@@ -25,3 +25,11 @@ export function TrashIcon({ className = "w-3.5 h-3.5" }: IconProps) {
     </svg>
   );
 }
+
+export function PencilIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M11 2l3 3-8 8-3.5 1 1-3.5 8-8z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

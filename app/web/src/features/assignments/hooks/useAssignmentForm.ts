@@ -107,12 +107,13 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
   }, [assignmentToEdit]);
 
   useEffect(() => {
+    if (assignmentToEdit) return;
     setFormState((prev) => ({
       ...prev,
       startDateDay: selectedStudyDate,
       errors: { ...prev.errors, startDateDay: "" },
     }));
-  }, [selectedStudyDate]);
+  }, [assignmentToEdit, selectedStudyDate]);
 
   const updateField = (
     field: keyof Omit<FormState, "errors" | "expectedDurationMinutes" | "dueTouched">,
