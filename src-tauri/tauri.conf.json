@@ -9,7 +9,7 @@
       "cwd": "..",
       "wait": false
     },
-    "beforeBuildCommand": "bun run --cwd ../app/web build",
+    "beforeBuildCommand": "bun run --cwd app/web build",
     "devUrl": "http://localhost:1420",
     "frontendDist": "../app/web/dist"
   },

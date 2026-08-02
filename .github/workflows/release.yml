@@ -45,6 +45,7 @@ jobs:
         run: bun run --cwd app/web build
 
       - name: Compile API sidecar (${{ matrix.rust_target }})
+        shell: bash
         run: |
           bun build ./app/api/src/index.ts --compile \
             --target=${{ matrix.bun_target }} \
