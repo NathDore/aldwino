@@ -57,5 +57,5 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Aldwino ${{ github.ref_name }}"
           releaseDraft: true
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
           args: --target ${{ matrix.rust_target }}
