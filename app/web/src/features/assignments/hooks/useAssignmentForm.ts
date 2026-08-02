@@ -20,6 +20,8 @@ const DESCRIPTION_MAX_LENGTH = 250;
 
 export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
 
+const DEFAULT_DUE_TIME = "23:59";
+
 const initialFormState: FormState = {
   courseId: "",
   description: "",
@@ -140,26 +142,18 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       if (prev.dueTouched || prev.startDateDay === "") {
         return prev;
       }
-
-      let next = prev;
-
-      if (prev.dueDateDay !== prev.startDateDay) {
-        next = { ...next, dueDateDay: prev.startDateDay, errors: { ...next.errors, dueDateDay: "" } };
+      if (prev.dueDateDay === prev.startDateDay && prev.dueDateTime === DEFAULT_DUE_TIME) {
+        return prev;
       }
 
-      if (isValidTimeFormat(prev.startDateTime)) {
-        const start = combineDateAndTime(prev.startDateDay, prev.startDateTime);
-        const due = new Date(start.getTime() + prev.expectedDurationMinutes * 60000);
-        const midnightNext = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
-        const dueDateTime = due >= midnightNext ? "23:59" : dateToTimeInput(due);
-        if (dueDateTime !== next.dueDateTime) {
-          next = { ...next, dueDateTime, errors: { ...next.errors, dueDateTime: "" } };
-        }
-      }
-
-      return next;
+      return {
+        ...prev,
+        dueDateDay: prev.startDateDay,
+        dueDateTime: DEFAULT_DUE_TIME,
+        errors: { ...prev.errors, dueDateDay: "", dueDateTime: "" },
+      };
     });
-  }, [formState.startDateDay, formState.startDateTime, formState.expectedDurationMinutes]);
+  }, [formState.startDateDay]);
 
   const hasValidStart = formState.startDateDay !== "" && isValidTimeFormat(formState.startDateTime);
   const startDateTimeValue = hasValidStart
