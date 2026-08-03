@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
 import { AssignmentPopoverItem } from "@/features/assignments/components/AssignmentPopoverItem";
-import { CloseIcon } from "./icons";
-import type { CalendarEvent } from "../types/calendar.types";
+import { CloseIcon } from "@/features/calendar/components/icons";
+import type { CalendarEvent } from "@/features/calendar/types/calendar.types";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;

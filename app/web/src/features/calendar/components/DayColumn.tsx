@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { HourCell } from "./HourCell";
-import { EventBlock } from "./EventBlock";
+import { EventBlock } from "@/features/events/components/EventBlock";
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
 import { toISODate } from "../hooks/useWeekDays";
 import type { RowLayout } from "../hooks/useRowLayout";
