@@ -67,8 +67,12 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
 
   return (
     <div className="flex flex-col h-full border border-slate-200 rounded-lg overflow-hidden">
-      <div ref={headerRef} className="overflow-x-hidden shrink-0 bg-white border-b border-slate-200">
-        <div className="flex min-w-[900px]" style={{ paddingRight: scrollbarWidth }}>
+      <div
+        ref={headerRef}
+        className="overflow-x-hidden shrink-0 bg-white"
+        style={{ paddingRight: scrollbarWidth }}
+      >
+        <div className="flex min-w-[900px] border-b border-slate-200">
           <div className="w-16 shrink-0 border-r border-slate-200" />
           {days.map((day) => (
             <DayHeaderCell key={toISODate(day)} date={day} isToday={toISODate(day) === today} />
