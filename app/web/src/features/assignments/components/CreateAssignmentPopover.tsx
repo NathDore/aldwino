@@ -87,7 +87,7 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
       onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col w-[26rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col w-[34rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {

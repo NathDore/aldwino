@@ -18,15 +18,15 @@ export function ColorPicker({
   }
 
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(24px,1fr))] gap-1.5">
       {colors.map((color) => (
         <button
           key={color.hex}
           onClick={() => onChange(color.hex)}
-          className="relative w-12 h-12 border-2 transition-all hover:scale-105"
+          className="relative w-6 h-6 rounded-sm border transition-all hover:scale-105"
           style={{
             backgroundColor: color.hex,
-            borderColor: selectedColor === color.hex ? "#059669" : "#cbd5e1",
+            borderColor: selectedColor === color.hex ? "#059669" : "#94a3b8",
           }}
           title={color.hex}
           type="button"
@@ -34,7 +34,7 @@ export function ColorPicker({
           {selectedColor === color.hex && (
             <div className="absolute inset-0 flex items-center justify-center">
               <svg
-                className="w-6 h-6"
+                className="w-3 h-3"
                 fill="none"
                 stroke="white"
                 viewBox="0 0 24 24"
