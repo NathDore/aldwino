@@ -13,13 +13,22 @@ interface QuickAssignmentFormProps {
   assignmentToEdit?: AssignmentDto | null;
   date?: string;
   hour?: number;
+  onRequestCreateCourse: () => void;
+  pendingCourseId?: string;
 }
 
 function hourToTimeInput(hour: number): string {
   return `${hour.toString().padStart(2, "0")}:00`;
 }
 
-export function QuickAssignmentForm({ date, hour, onClose, assignmentToEdit }: QuickAssignmentFormProps) {
+export function QuickAssignmentForm({
+  date,
+  hour,
+  onClose,
+  assignmentToEdit,
+  onRequestCreateCourse,
+  pendingCourseId,
+}: QuickAssignmentFormProps) {
   const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(
     assignmentToEdit,
     onClose
@@ -38,19 +47,24 @@ export function QuickAssignmentForm({ date, hour, onClose, assignmentToEdit }: Q
     }
   }, [formState.courseId, courses]);
 
+  useEffect(() => {
+    if (pendingCourseId) {
+      updateField("courseId", pendingCourseId);
+    }
+  }, [pendingCourseId]);
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
         {coursesLoading ? (
           <p className="text-sm text-slate-400">Loading courses...</p>
-        ) : courses.length === 0 ? (
-          <p className="text-sm text-slate-600">No courses yet. Create one to get started.</p>
         ) : (
           <CourseSelector
             courses={courses}
             selectedCourseId={formState.courseId}
             onSelect={(id) => updateField("courseId", id)}
+            onRequestCreateCourse={onRequestCreateCourse}
             disabled={isLoading}
           />
         )}

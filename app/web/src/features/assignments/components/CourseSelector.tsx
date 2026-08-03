@@ -1,15 +1,37 @@
 import type { CourseDto } from "@/features/courses";
+import { PlusIcon } from "@/features/calendar/components/icons";
 
 interface CourseSelectorProps {
   courses: CourseDto[];
   selectedCourseId: string;
   onSelect: (id: string) => void;
+  onRequestCreateCourse?: () => void;
   disabled?: boolean;
 }
 
-export function CourseSelector({ courses, selectedCourseId, onSelect, disabled = false }: CourseSelectorProps) {
+export function CourseSelector({
+  courses,
+  selectedCourseId,
+  onSelect,
+  onRequestCreateCourse,
+  disabled = false,
+}: CourseSelectorProps) {
   return (
     <div className="grid max-h-26 grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1.5 overflow-y-auto p-0.5">
+      {onRequestCreateCourse && (
+        <button
+          type="button"
+          onClick={onRequestCreateCourse}
+          disabled={disabled}
+          title="Create a new course"
+          className="flex flex-col items-center gap-0.5 rounded border border-dashed border-slate-300 p-1 text-slate-500 transition-colors hover:border-emerald-500 hover:text-emerald-600 disabled:opacity-50"
+        >
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border border-dashed border-slate-400">
+            <PlusIcon className="w-3 h-3" />
+          </div>
+          <span className="w-full truncate text-center text-[9px] leading-tight">New</span>
+        </button>
+      )}
       {courses.map((course) => {
         const isSelected = course.id === selectedCourseId;
         const letter = course.code.charAt(0).toUpperCase();

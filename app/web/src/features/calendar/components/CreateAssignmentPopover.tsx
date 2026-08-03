@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKe
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { QuickAssignmentForm } from "./QuickAssignmentForm";
+import { AssignmentFormPanel } from "./AssignmentFormPanel";
 import { CloseIcon } from "./icons";
 import { parseISODate } from "../hooks/useWeekDays";
 
@@ -107,7 +107,7 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
         </div>
 
         <div className="px-6 py-4 overflow-y-auto min-h-0">
-          <QuickAssignmentForm date={date} hour={hour} onClose={handleClose} />
+          <AssignmentFormPanel date={date} hour={hour} onClose={handleClose} />
         </div>
       </div>
     </div>,

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKe
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { QuickAssignmentForm } from "./QuickAssignmentForm";
+import { AssignmentFormPanel } from "./AssignmentFormPanel";
 import { CloseIcon } from "./icons";
 import type { CalendarAssignment } from "../types/calendar.types";
 
@@ -98,7 +98,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
         </div>
 
         <div className="px-6 py-4 overflow-y-auto min-h-0">
-          <QuickAssignmentForm assignmentToEdit={assignment} onClose={handleClose} />
+          <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
         </div>
       </div>
     </div>,
