@@ -23,8 +23,8 @@ export function AssignmentFormPanel({ date, hour, onClose, assignmentToEdit }: A
   };
 
   return (
-    <>
-      <div className={mode === "create-course" ? "hidden" : undefined}>
+    <div className="grid">
+      <div className={`col-start-1 row-start-1 ${mode === "create-course" ? "invisible" : ""}`}>
         <QuickAssignmentForm
           date={date}
           hour={hour}
@@ -35,8 +35,10 @@ export function AssignmentFormPanel({ date, hour, onClose, assignmentToEdit }: A
         />
       </div>
       {mode === "create-course" && (
-        <InlineCourseForm onCreated={handleCourseCreated} onBack={() => setMode("assignment")} />
+        <div className="col-start-1 row-start-1">
+          <InlineCourseForm onCreated={handleCourseCreated} onBack={() => setMode("assignment")} />
+        </div>
       )}
-    </>
+    </div>
   );
 }

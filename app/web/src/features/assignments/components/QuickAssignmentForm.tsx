@@ -54,86 +54,88 @@ export function QuickAssignmentForm({
   }, [pendingCourseId]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
-        {coursesLoading ? (
-          <p className="text-sm text-slate-400">Loading courses...</p>
-        ) : (
-          <CourseSelector
-            courses={courses}
-            selectedCourseId={formState.courseId}
-            onSelect={(id) => updateField("courseId", id)}
-            onRequestCreateCourse={onRequestCreateCourse}
+    <div className="flex h-full flex-col">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
+          {coursesLoading ? (
+            <p className="text-sm text-slate-400">Loading courses...</p>
+          ) : (
+            <CourseSelector
+              courses={courses}
+              selectedCourseId={formState.courseId}
+              onSelect={(id) => updateField("courseId", id)}
+              onRequestCreateCourse={onRequestCreateCourse}
+              disabled={isLoading}
+            />
+          )}
+          {formState.errors.courseId && <p className="text-red-600 text-xs mt-1">{formState.errors.courseId}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="quick-description" className="block text-xs font-semibold text-slate-900 mb-1">
+            Assignment
+          </label>
+          <textarea
+            id="quick-description"
+            value={formState.description}
+            onChange={(e) => updateField("description", e.target.value)}
+            placeholder="Read chapters 1-3 and submit the exercises"
+            rows={2}
+            className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.description
+              ? "border-red-500 focus:border-red-600"
+              : "border-slate-300 focus:border-emerald-600"
+              }`}
             disabled={isLoading}
           />
-        )}
-        {formState.errors.courseId && <p className="text-red-600 text-xs mt-1">{formState.errors.courseId}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="quick-description" className="block text-xs font-semibold text-slate-900 mb-1">
-          Assignment
-        </label>
-        <textarea
-          id="quick-description"
-          value={formState.description}
-          onChange={(e) => updateField("description", e.target.value)}
-          placeholder="Read chapters 1-3 and submit the exercises"
-          rows={2}
-          className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.description
-            ? "border-red-500 focus:border-red-600"
-            : "border-slate-300 focus:border-emerald-600"
-            }`}
-          disabled={isLoading}
-        />
-        {formState.errors.description && (
-          <p className="text-red-600 text-xs mt-1">{formState.errors.description}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
-        <DurationSelector
-          durations={ALLOWED_DURATIONS_MINUTES}
-          selectedMinutes={formState.expectedDurationMinutes}
-          onSelect={updateDuration}
-          disabled={isLoading}
-        />
-        {formState.errors.expectedDurationMinutes && (
-          <p className="text-red-600 text-xs mt-1">{formState.errors.expectedDurationMinutes}</p>
-        )}
-      </div>
-
-      <div>
-        <DateTimeField
-          label="Due"
-          id="quick-dueDate"
-          dateValue={formState.dueDateDay}
-          timeValue={formState.dueDateTime}
-          onDateChange={(v) => updateField("dueDateDay", v)}
-          onTimeChange={(v) => updateField("dueDateTime", v)}
-          dateError={formState.errors.dueDateDay}
-          timeError={formState.errors.dueDateTime}
-          disabled={isLoading}
-          renderDateInput={({ id, value, onChange, disabled }) => (
-            <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+          {formState.errors.description && (
+            <p className="text-red-600 text-xs mt-1">{formState.errors.description}</p>
           )}
-        />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
+          <DurationSelector
+            durations={ALLOWED_DURATIONS_MINUTES}
+            selectedMinutes={formState.expectedDurationMinutes}
+            onSelect={updateDuration}
+            disabled={isLoading}
+          />
+          {formState.errors.expectedDurationMinutes && (
+            <p className="text-red-600 text-xs mt-1">{formState.errors.expectedDurationMinutes}</p>
+          )}
+        </div>
+
+        <div>
+          <DateTimeField
+            label="Due"
+            id="quick-dueDate"
+            dateValue={formState.dueDateDay}
+            timeValue={formState.dueDateTime}
+            onDateChange={(v) => updateField("dueDateDay", v)}
+            onTimeChange={(v) => updateField("dueDateTime", v)}
+            dateError={formState.errors.dueDateDay}
+            timeError={formState.errors.dueDateTime}
+            disabled={isLoading}
+            renderDateInput={({ id, value, onChange, disabled }) => (
+              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+            )}
+          />
+        </div>
+
+        {formState.errors.submit && (
+          <div className="p-2 bg-red-50 border border-red-300 rounded text-red-700 text-xs">
+            {formState.errors.submit}
+          </div>
+        )}
       </div>
 
-      {formState.errors.submit && (
-        <div className="p-2 bg-red-50 border border-red-300 rounded text-red-700 text-xs">
-          {formState.errors.submit}
-        </div>
-      )}
-
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mt-auto pt-4">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading}>
           Cancel
         </Button>
         <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isLoading || courses.length === 0}>
-          {assignmentToEdit ? (isLoading ? "Saving..." : "Save Changes") : isLoading ? "Creating..." : "Create Assignment"}
+          {assignmentToEdit ? (isLoading ? "Saving..." : "Save Changes") : isLoading ? "Creating..." : "Create"}
         </Button>
       </div>
     </div>
