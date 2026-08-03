@@ -97,7 +97,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
           </Button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto min-h-0">
+        <div className="px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
           <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
         </div>
       </div>

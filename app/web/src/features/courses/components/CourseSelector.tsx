@@ -17,7 +17,7 @@ export function CourseSelector({
   disabled = false,
 }: CourseSelectorProps) {
   return (
-    <div className="grid max-h-26 grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1.5 overflow-y-auto p-0.5">
+    <div className="grid max-h-26 grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1.5 overflow-y-auto p-0.5 styled-scrollbar">
       {onRequestCreateCourse && (
         <button
           type="button"

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCalendarStore } from "../store/calendarStore";
 import { useWeekDays, toISODate } from "../hooks/useWeekDays";
 import { useRowLayout } from "../hooks/useRowLayout";
@@ -28,9 +28,22 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
 
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
 
   const todayInView = days.some((day) => toISODate(day) === today);
-  useScrollToNowOnMount({ headerRef, bodyRef, rowLayout, enabled: todayInView });
+  useScrollToNowOnMount({ bodyRef, rowLayout, enabled: todayInView });
+
+  useEffect(() => {
+    const bodyEl = bodyRef.current;
+    if (!bodyEl) return;
+
+    const updateScrollbarWidth = () => setScrollbarWidth(bodyEl.offsetWidth - bodyEl.clientWidth);
+    updateScrollbarWidth();
+
+    const resizeObserver = new ResizeObserver(updateScrollbarWidth);
+    resizeObserver.observe(bodyEl);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const handleBodyScroll = () => {
     if (headerRef.current && bodyRef.current) {
@@ -53,9 +66,9 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
   }, [calendarEvents]);
 
   return (
-    <div className="border border-slate-200 rounded-lg">
-      <div ref={headerRef} className="overflow-x-hidden sticky top-14 z-40 bg-white border-b border-slate-200">
-        <div className="flex min-w-[900px]">
+    <div className="flex flex-col h-full border border-slate-200 rounded-lg">
+      <div ref={headerRef} className="overflow-x-hidden shrink-0 bg-white border-b border-slate-200">
+        <div className="flex min-w-[900px]" style={{ paddingRight: scrollbarWidth }}>
           <div className="w-16 shrink-0 border-r border-slate-200" />
           {days.map((day) => (
             <DayHeaderCell key={toISODate(day)} date={day} isToday={toISODate(day) === today} />
@@ -63,7 +76,11 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
         </div>
       </div>
 
-      <div ref={bodyRef} onScroll={handleBodyScroll} className="overflow-x-auto">
+      <div
+        ref={bodyRef}
+        onScroll={handleBodyScroll}
+        className="overflow-x-auto overflow-y-auto flex-1 min-h-0 styled-scrollbar"
+      >
         <div className="flex min-w-[900px]">
           <div className="w-16 shrink-0 border-r border-slate-200">
             {HOURS.map((hour) => (

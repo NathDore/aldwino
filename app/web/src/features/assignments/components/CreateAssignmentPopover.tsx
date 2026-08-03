@@ -106,7 +106,7 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
           </Button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto min-h-0">
+        <div className="px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
           <AssignmentFormPanel date={date} hour={hour} onClose={handleClose} />
         </div>
       </div>
