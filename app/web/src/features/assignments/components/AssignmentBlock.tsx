@@ -18,7 +18,7 @@ export const AssignmentBlock = memo(function AssignmentBlock({ item, state = "de
 
   return (
     <div
-      className={`border-l-2 pl-1.5 py-0.5 ${assignment.isCompleted ? "opacity-50" : ""}`}
+      className={`min-w-0 border-l-2 pl-1.5 py-0.5 ${assignment.isCompleted ? "opacity-50" : ""}`}
       style={{ borderLeftColor: borderColor }}
     >
       <p
