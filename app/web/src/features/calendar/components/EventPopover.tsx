@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { AssignmentPopoverItem } from "./AssignmentPopoverItem";
+import { AssignmentPopoverItem } from "@/features/assignments/components/AssignmentPopoverItem";
 import { CloseIcon } from "./icons";
 import type { CalendarEvent } from "../types/calendar.types";
 

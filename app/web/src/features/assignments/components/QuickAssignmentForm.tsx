@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import type { AssignmentDto } from "@/features/assignments/types/assignment.types";
-import { ALLOWED_DURATIONS_MINUTES, useAssignmentForm } from "@/features/assignments/hooks/useAssignmentForm";
-import { AssignmentDateCard } from "@/features/assignments/components/AssignmentDateCard";
-import { CourseSelector } from "@/features/assignments/components/CourseSelector";
-import { DurationSelector } from "@/features/assignments/components/DurationSelector";
+import type { AssignmentDto } from "../types/assignment.types";
+import { ALLOWED_DURATIONS_MINUTES, useAssignmentForm } from "../hooks/useAssignmentForm";
+import { AssignmentDateCard } from "./AssignmentDateCard";
+import { CourseSelector } from "@/features/courses/components/CourseSelector";
+import { DurationSelector } from "./DurationSelector";
 import { useCoursesQuery } from "@/features/courses";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";

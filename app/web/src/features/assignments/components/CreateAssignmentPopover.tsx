@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
 import { AssignmentFormPanel } from "./AssignmentFormPanel";
-import { CloseIcon } from "./icons";
-import { parseISODate } from "../hooks/useWeekDays";
+import { CloseIcon } from "@/features/calendar/components/icons";
+import { parseISODate } from "@/features/calendar/hooks/useWeekDays";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;

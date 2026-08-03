@@ -5,8 +5,8 @@ import { useFittingAssignments } from "../hooks/useFittingAssignments";
 import { useFittingChips } from "../hooks/useFittingChips";
 import { useIsEventActive } from "../hooks/useIsEventActive";
 import { useCalendarStore } from "../store/calendarStore";
-import { AssignmentBlock } from "./AssignmentBlock";
-import { AssignmentChip } from "./AssignmentChip";
+import { AssignmentBlock } from "@/features/assignments/components/AssignmentBlock";
+import { AssignmentChip } from "@/features/assignments/components/AssignmentChip";
 import { EventPopover } from "./EventPopover";
 import {
   COMPACT_EVENT_THRESHOLD_MINUTES,

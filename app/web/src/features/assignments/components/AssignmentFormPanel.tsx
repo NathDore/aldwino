@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AssignmentDto } from "@/features/assignments/types/assignment.types";
+import type { AssignmentDto } from "../types/assignment.types";
 import type { CourseDto } from "@/features/courses";
 import { QuickAssignmentForm } from "./QuickAssignmentForm";
 import { InlineCourseForm } from "@/features/courses/components/InlineCourseForm";
