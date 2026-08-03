@@ -18,8 +18,8 @@ export function CalendarPage() {
   const goToNextWeek = useCalendarStore((s) => s.goToNextWeek);
 
   return (
-    <div className="p-8 max-w-[1800px] mx-auto">
-      <div className="mb-4 sticky top-0 z-40 h-14 flex items-center bg-white border-b border-slate-200">
+    <div className="h-screen flex flex-col p-8 max-w-[1200px] mx-auto">
+      <div className="mb-4 shrink-0 h-14 flex items-center bg-white border-b border-slate-200">
         <WeekNavigation
           title="Calendar"
           weekStart={currentWeekStart}
@@ -28,7 +28,9 @@ export function CalendarPage() {
         />
       </div>
 
-      <WeekGrid calendarEvents={calendarEvents} />
+      <div className="flex-1 min-h-0">
+        <WeekGrid calendarEvents={calendarEvents} />
+      </div>
     </div>
   );
 }

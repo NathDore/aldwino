@@ -2,20 +2,35 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKe
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { QuickAssignmentForm } from "./QuickAssignmentForm";
-import { CloseIcon } from "./icons";
-import type { CalendarAssignment } from "../types/calendar.types";
+import { AssignmentFormPanel } from "./AssignmentFormPanel";
+import { CloseIcon } from "@/features/calendar/components/icons";
+import { parseISODate } from "@/features/calendar/hooks/useWeekDays";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
 
-interface EditAssignmentModalProps {
-  item: CalendarAssignment;
+interface CreateAssignmentPopoverProps {
+  date: string;
+  hour: number;
   onClose: () => void;
 }
 
-export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps) {
-  const { assignment, course } = item;
+function formatHourLabel(hour: number): string {
+  const period = hour < 12 ? "AM" : "PM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour} ${period}`;
+}
+
+function formatHeading(date: string): { weekday: string; dateLabel: string } {
+  const d = parseISODate(date);
+  return {
+    weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
+    dateLabel: d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+  };
+}
+
+export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmentPopoverProps) {
+  const { weekday, dateLabel } = formatHeading(date);
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
@@ -72,7 +87,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
       onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col w-[26rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col w-[34rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
@@ -80,16 +95,10 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
         }}
       >
         <div className="flex items-start justify-between gap-2 px-6 py-3 border-b border-slate-200 shrink-0">
-          <div className="min-w-0 flex items-center gap-2">
-            {course && (
-              <div
-                className="w-3.5 h-3.5 shrink-0 rounded-sm border border-slate-400"
-                style={{ backgroundColor: course.color }}
-                aria-hidden="true"
-              />
-            )}
-            <p className="text-xs text-slate-600 truncate">{course ? `${course.code} - ${course.title}` : ""}</p>
-            <p className="text-sm font-bold text-slate-900 shrink-0">Edit Assignment</p>
+          <div className="min-w-0 flex items-baseline gap-2">
+            <p className="text-sm font-bold text-slate-900 truncate">{weekday}</p>
+            <p className="text-xs text-slate-600 truncate">{dateLabel}</p>
+            <p className="text-xs font-semibold text-slate-900 shrink-0">{formatHourLabel(hour)}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>
@@ -97,8 +106,8 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
           </Button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto min-h-0">
-          <QuickAssignmentForm assignmentToEdit={assignment} onClose={handleClose} />
+        <div className="px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
+          <AssignmentFormPanel date={date} hour={hour} onClose={handleClose} />
         </div>
       </div>
     </div>,

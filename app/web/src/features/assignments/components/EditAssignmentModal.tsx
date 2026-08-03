@@ -1,42 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { AssignmentPopoverItem } from "./AssignmentPopoverItem";
-import { CloseIcon } from "./icons";
-import type { CalendarEvent } from "../types/calendar.types";
+import { AssignmentFormPanel } from "./AssignmentFormPanel";
+import { CloseIcon } from "@/features/calendar/components/icons";
+import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
 
-interface EventPopoverProps {
-  calendarEvent: CalendarEvent;
+interface EditAssignmentModalProps {
+  item: CalendarAssignment;
   onClose: () => void;
 }
 
-function formatTimeRange(startTime: string, endTime: string): string {
-  const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
-  return `${new Date(startTime).toLocaleTimeString(undefined, opts)} – ${new Date(endTime).toLocaleTimeString(
-    undefined,
-    opts
-  )}`;
-}
-
-function formatEventDateHeading(startTime: string): { weekday: string; date: string } {
-  const d = new Date(startTime);
-  return {
-    weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
-    date: d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
-  };
-}
-
-export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
-  const { event, assignments } = calendarEvent;
-  const sortedAssignments = useMemo(
-    () => [...assignments].sort((a, b) => Number(a.assignment.isCompleted) - Number(b.assignment.isCompleted)),
-    [assignments]
-  );
-  const { weekday, date } = formatEventDateHeading(event.startTime);
+export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps) {
+  const { assignment, course } = item;
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
@@ -82,6 +61,7 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
   }, [handleClose]);
 
   const stopClickPropagation = (e: MouseEvent) => e.stopPropagation();
+  const stopKeyDownPropagation = (e: ReactKeyboardEvent) => e.stopPropagation();
 
   return createPortal(
     <div
@@ -89,9 +69,10 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
         }`}
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
+      onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col w-[30rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col w-[34rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
@@ -99,12 +80,16 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
         }}
       >
         <div className="flex items-start justify-between gap-2 px-6 py-3 border-b border-slate-200 shrink-0">
-          <div className="min-w-0 flex items-baseline gap-2">
-            <p className="text-sm font-bold text-slate-900 truncate">{weekday}</p>
-            <p className="text-xs text-slate-600 truncate">{date}</p>
-            <p className="text-xs font-semibold text-slate-900 shrink-0">
-              {formatTimeRange(event.startTime, event.endTime)}
-            </p>
+          <div className="min-w-0 flex items-center gap-2">
+            {course && (
+              <div
+                className="w-3.5 h-3.5 shrink-0 rounded-sm border border-slate-400"
+                style={{ backgroundColor: course.color }}
+                aria-hidden="true"
+              />
+            )}
+            <p className="text-xs text-slate-600 truncate">{course ? `${course.code} - ${course.title}` : ""}</p>
+            <p className="text-sm font-bold text-slate-900 shrink-0">Edit Assignment</p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>
@@ -112,10 +97,8 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
           </Button>
         </div>
 
-        <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0">
-          {sortedAssignments.map((item) => (
-            <AssignmentPopoverItem key={item.assignment.id} item={item} />
-          ))}
+        <div className="px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
+          <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
         </div>
       </div>
     </div>,

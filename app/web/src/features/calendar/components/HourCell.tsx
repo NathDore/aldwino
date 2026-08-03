@@ -1,6 +1,6 @@
 import { memo, type KeyboardEvent } from "react";
 import { useCalendarStore } from "../store/calendarStore";
-import { CreateAssignmentPopover } from "./CreateAssignmentPopover";
+import { CreateAssignmentPopover } from "@/features/assignments/components/CreateAssignmentPopover";
 
 interface HourCellProps {
   date: string;

@@ -2,11 +2,11 @@ import { memo, useState } from "react";
 import {
   useCompleteAssignmentMutation,
   useDeleteAssignmentMutation,
-} from "@/features/assignments/queries/useMutations";
+} from "../queries/useMutations";
 import { Button } from "@/shared/components/Button";
-import { ChevronDownIcon, PencilIcon, TrashIcon } from "./icons";
+import { ChevronDownIcon, PencilIcon, TrashIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
-import type { CalendarAssignment } from "../types/calendar.types";
+import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentPopoverItemProps {
   item: CalendarAssignment;

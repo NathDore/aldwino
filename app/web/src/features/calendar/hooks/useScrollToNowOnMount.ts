@@ -9,31 +9,23 @@ function getNowMinutes(): number {
 }
 
 interface UseScrollToNowOnMountOptions {
-  headerRef: RefObject<HTMLDivElement | null>;
   bodyRef: RefObject<HTMLDivElement | null>;
   rowLayout: RowLayout;
   enabled: boolean;
 }
 
-export function useScrollToNowOnMount({ headerRef, bodyRef, rowLayout, enabled }: UseScrollToNowOnMountOptions) {
+export function useScrollToNowOnMount({ bodyRef, rowLayout, enabled }: UseScrollToNowOnMountOptions) {
   useLayoutEffect(() => {
     if (!enabled) return;
-    const headerEl = headerRef.current;
     const bodyEl = bodyRef.current;
-    if (!headerEl || !bodyEl) return;
-
-    const stickyTop = parseFloat(getComputedStyle(headerEl).top) || 0;
-    const stickyZoneHeight = stickyTop + headerEl.offsetHeight;
+    if (!bodyEl) return;
 
     const nowOffsetWithinBody = minutesToPx(getNowMinutes(), rowLayout);
-    const nowAbsoluteY = bodyEl.getBoundingClientRect().top + window.scrollY + nowOffsetWithinBody;
+    const desiredOffsetWithinViewport = bodyEl.clientHeight * COMFORTABLE_VIEWPORT_FRACTION;
 
-    const visibleContentHeight = Math.max(window.innerHeight - stickyZoneHeight, 0);
-    const desiredOffsetWithinViewport = stickyZoneHeight + visibleContentHeight * COMFORTABLE_VIEWPORT_FRACTION;
+    const maxScroll = Math.max(bodyEl.scrollHeight - bodyEl.clientHeight, 0);
+    const target = Math.min(Math.max(nowOffsetWithinBody - desiredOffsetWithinViewport, 0), maxScroll);
 
-    const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
-    const target = Math.min(Math.max(nowAbsoluteY - desiredOffsetWithinViewport, 0), maxScroll);
-
-    window.scrollTo({ top: target, behavior: "auto" });
+    bodyEl.scrollTo({ top: target, behavior: "auto" });
   }, []);
 }

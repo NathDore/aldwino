@@ -95,7 +95,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
 
   const createMutation = useCreateAssignmentMutation();
   const updateMutation = useUpdateAssignmentMutation();
-  const { cancelEdit } = useAssignmentStore();
   const selectedStudyDate = useAssignmentStore((s) => s.selectedStudyDate);
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
@@ -251,7 +250,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
         await createMutation.mutateAsync(data);
       }
       setFormState(initialFormState);
-      cancelEdit();
       onSuccess?.();
     } catch (error: unknown) {
       if (error instanceof Error) {

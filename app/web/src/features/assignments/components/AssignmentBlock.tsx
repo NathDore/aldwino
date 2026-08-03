@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { AssignmentChip } from "./AssignmentChip";
-import type { CalendarAssignment } from "../types/calendar.types";
+import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentBlockProps {
   item: CalendarAssignment;

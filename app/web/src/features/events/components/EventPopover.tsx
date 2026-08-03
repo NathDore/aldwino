@@ -1,36 +1,42 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
-import { QuickAssignmentForm } from "./QuickAssignmentForm";
-import { CloseIcon } from "./icons";
-import { parseISODate } from "../hooks/useWeekDays";
+import { AssignmentPopoverItem } from "@/features/assignments/components/AssignmentPopoverItem";
+import { CloseIcon } from "@/features/calendar/components/icons";
+import type { CalendarEvent } from "@/features/calendar/types/calendar.types";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
 
-interface CreateAssignmentPopoverProps {
-  date: string;
-  hour: number;
+interface EventPopoverProps {
+  calendarEvent: CalendarEvent;
   onClose: () => void;
 }
 
-function formatHourLabel(hour: number): string {
-  const period = hour < 12 ? "AM" : "PM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour} ${period}`;
+function formatTimeRange(startTime: string, endTime: string): string {
+  const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
+  return `${new Date(startTime).toLocaleTimeString(undefined, opts)} – ${new Date(endTime).toLocaleTimeString(
+    undefined,
+    opts
+  )}`;
 }
 
-function formatHeading(date: string): { weekday: string; dateLabel: string } {
-  const d = parseISODate(date);
+function formatEventDateHeading(startTime: string): { weekday: string; date: string } {
+  const d = new Date(startTime);
   return {
     weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
-    dateLabel: d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
+    date: d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }),
   };
 }
 
-export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmentPopoverProps) {
-  const { weekday, dateLabel } = formatHeading(date);
+export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
+  const { event, assignments } = calendarEvent;
+  const sortedAssignments = useMemo(
+    () => [...assignments].sort((a, b) => Number(a.assignment.isCompleted) - Number(b.assignment.isCompleted)),
+    [assignments]
+  );
+  const { weekday, date } = formatEventDateHeading(event.startTime);
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
@@ -76,7 +82,6 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
   }, [handleClose]);
 
   const stopClickPropagation = (e: MouseEvent) => e.stopPropagation();
-  const stopKeyDownPropagation = (e: ReactKeyboardEvent) => e.stopPropagation();
 
   return createPortal(
     <div
@@ -84,10 +89,9 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
         }`}
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
-      onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col w-[26rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col w-[30rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
@@ -97,8 +101,10 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
         <div className="flex items-start justify-between gap-2 px-6 py-3 border-b border-slate-200 shrink-0">
           <div className="min-w-0 flex items-baseline gap-2">
             <p className="text-sm font-bold text-slate-900 truncate">{weekday}</p>
-            <p className="text-xs text-slate-600 truncate">{dateLabel}</p>
-            <p className="text-xs font-semibold text-slate-900 shrink-0">{formatHourLabel(hour)}</p>
+            <p className="text-xs text-slate-600 truncate">{date}</p>
+            <p className="text-xs font-semibold text-slate-900 shrink-0">
+              {formatTimeRange(event.startTime, event.endTime)}
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>
@@ -106,8 +112,10 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
           </Button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto min-h-0">
-          <QuickAssignmentForm date={date} hour={hour} onClose={handleClose} />
+        <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
+          {sortedAssignments.map((item) => (
+            <AssignmentPopoverItem key={item.assignment.id} item={item} />
+          ))}
         </div>
       </div>
     </div>,

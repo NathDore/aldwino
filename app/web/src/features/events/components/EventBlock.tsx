@@ -1,19 +1,19 @@
 import { memo, useRef } from "react";
-import { useSlotPosition } from "../hooks/useSlotPosition";
-import type { RowLayout } from "../hooks/useRowLayout";
-import { useFittingAssignments } from "../hooks/useFittingAssignments";
-import { useFittingChips } from "../hooks/useFittingChips";
-import { useIsEventActive } from "../hooks/useIsEventActive";
-import { useCalendarStore } from "../store/calendarStore";
-import { AssignmentBlock } from "./AssignmentBlock";
-import { AssignmentChip } from "./AssignmentChip";
+import { useSlotPosition } from "@/features/calendar/hooks/useSlotPosition";
+import type { RowLayout } from "@/features/calendar/hooks/useRowLayout";
+import { useFittingAssignments } from "@/features/calendar/hooks/useFittingAssignments";
+import { useFittingChips } from "@/features/calendar/hooks/useFittingChips";
+import { useIsEventActive } from "@/features/calendar/hooks/useIsEventActive";
+import { useCalendarStore } from "@/features/calendar/store/calendarStore";
+import { AssignmentBlock } from "@/features/assignments/components/AssignmentBlock";
+import { AssignmentChip } from "@/features/assignments/components/AssignmentChip";
 import { EventPopover } from "./EventPopover";
 import {
   COMPACT_EVENT_THRESHOLD_MINUTES,
   SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES,
   getEventDurationMinutes,
-} from "../utils/duration";
-import type { CalendarEvent } from "../types/calendar.types";
+} from "@/features/calendar/utils/duration";
+import type { CalendarEvent } from "@/features/calendar/types/calendar.types";
 
 interface EventBlockProps {
   calendarEvent: CalendarEvent;
