@@ -1,4 +1,4 @@
-import type { CourseDto } from "@/features/courses";
+import type { CourseDto } from "../types/course.types";
 import { PlusIcon } from "@/features/calendar/components/icons";
 
 interface CourseSelectorProps {
