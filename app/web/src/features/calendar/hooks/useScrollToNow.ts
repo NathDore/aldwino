@@ -8,15 +8,14 @@ function getNowMinutes(): number {
   return now.getHours() * 60 + now.getMinutes();
 }
 
-interface UseScrollToNowOnMountOptions {
+interface UseScrollToNowOptions {
   bodyRef: RefObject<HTMLDivElement | null>;
   rowLayout: RowLayout;
-  enabled: boolean;
+  weekStart: string;
 }
 
-export function useScrollToNowOnMount({ bodyRef, rowLayout, enabled }: UseScrollToNowOnMountOptions) {
+export function useScrollToNow({ bodyRef, rowLayout, weekStart }: UseScrollToNowOptions) {
   useLayoutEffect(() => {
-    if (!enabled) return;
     const bodyEl = bodyRef.current;
     if (!bodyEl) return;
 
@@ -27,5 +26,5 @@ export function useScrollToNowOnMount({ bodyRef, rowLayout, enabled }: UseScroll
     const target = Math.min(Math.max(nowOffsetWithinBody - desiredOffsetWithinViewport, 0), maxScroll);
 
     bodyEl.scrollTo({ top: target, behavior: "auto" });
-  }, []);
+  }, [weekStart]);
 }
