@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { CourseDto, CourseColor } from "@/features/courses";
-import { useCreateCourseMutation, useAllowedColorsQuery } from "@/features/courses";
+import type { CourseDto, CourseColor } from "../types/course.types";
+import { useCreateCourseMutation } from "../queries/useMutations";
+import { useAllowedColorsQuery } from "../queries/useAllowedColorsQuery";
 
 interface FormState {
   code: string;

@@ -1,8 +1,8 @@
-import type { CourseDto } from "@/features/courses";
-import { ColorPicker } from "@/features/courses/components/ColorPicker";
+import type { CourseDto } from "../types/course.types";
+import { ColorPicker } from "./ColorPicker";
 import { Button } from "@/shared/components/Button";
 import { useInlineCourseForm } from "../hooks/useInlineCourseForm";
-import { ArrowLeftIcon } from "./icons";
+import { ArrowLeftIcon } from "@/features/calendar/components/icons";
 
 interface InlineCourseFormProps {
   onCreated: (course: CourseDto) => void;
