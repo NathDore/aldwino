@@ -19,7 +19,7 @@ export const DayColumn = memo(function DayColumn({ date, isToday, calendarEvents
   const dayIso = toISODate(date);
 
   return (
-    <div className="flex-1 min-w-[120px] border-r border-slate-200 last:border-r-0">
+    <div className="flex-1 min-w-[120px] border-r border-slate-200">
       <div className="relative" style={{ height: rowLayout.totalHeight }}>
         {HOURS.map((hour) => (
           <HourCell

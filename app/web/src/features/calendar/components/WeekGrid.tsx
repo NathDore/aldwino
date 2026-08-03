@@ -66,7 +66,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
   }, [calendarEvents]);
 
   return (
-    <div className="flex flex-col h-full border border-slate-200 rounded-lg">
+    <div className="flex flex-col h-full border border-slate-200 rounded-lg overflow-hidden">
       <div ref={headerRef} className="overflow-x-hidden shrink-0 bg-white border-b border-slate-200">
         <div className="flex min-w-[900px]" style={{ paddingRight: scrollbarWidth }}>
           <div className="w-16 shrink-0 border-r border-slate-200" />

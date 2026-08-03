@@ -5,7 +5,7 @@ interface DayHeaderCellProps {
 
 export function DayHeaderCell({ date, isToday }: DayHeaderCellProps) {
   return (
-    <div className="flex-1 min-w-[120px] border-r border-slate-200 last:border-r-0">
+    <div className="flex-1 min-w-[120px] border-r border-slate-200">
       <div
         className={`h-12 flex flex-col items-center justify-center ${isToday ? "bg-emerald-50" : ""}`}
       >

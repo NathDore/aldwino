@@ -18,7 +18,7 @@ export function CalendarPage() {
   const goToNextWeek = useCalendarStore((s) => s.goToNextWeek);
 
   return (
-    <div className="h-screen flex flex-col p-8 max-w-[1800px] mx-auto">
+    <div className="h-screen flex flex-col p-8 max-w-[1200px] mx-auto">
       <div className="mb-4 shrink-0 h-14 flex items-center bg-white border-b border-slate-200">
         <WeekNavigation
           title="Calendar"
