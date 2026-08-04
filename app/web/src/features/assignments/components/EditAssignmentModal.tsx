@@ -6,6 +6,7 @@ import { AssignmentFormPanel } from "./AssignmentFormPanel";
 import { CloseIcon } from "@/features/calendar/components/icons";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
+import { useAssignmentFormSize } from "@/features/calendar/store/calendarStore";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
@@ -17,6 +18,7 @@ interface EditAssignmentModalProps {
 
 export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps) {
   const { assignment, course } = item;
+  const formSize = useAssignmentFormSize();
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
@@ -73,14 +75,15 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
       onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col w-[34rem] max-w-full max-h-[80vh] bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col max-w-full bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${formSize ? "" : "w-[34rem] max-h-[80vh]"} ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
+        style={formSize ? { width: formSize.width, height: formSize.height } : undefined}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
           if (!isVisible && e.propertyName === "opacity") closeNow();
         }}
       >
-        <div className="flex items-start justify-between gap-2 px-6 py-3 border-b border-slate-200 shrink-0">
+        <div className="flex items-start justify-between gap-2 px-10 py-3 border-b border-slate-200 shrink-0">
           <div className="min-w-0 flex items-center gap-2">
             {course && (
               <div
@@ -98,7 +101,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
           </Button>
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
+        <div className="px-10 py-4 overflow-hidden min-h-0">
           <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
         </div>
       </div>

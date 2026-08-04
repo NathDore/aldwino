@@ -27,7 +27,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </button>
 
         <div>
-          <label htmlFor="inline-course-code" className="block text-xs font-semibold text-slate-900 mb-1">
+          <label htmlFor="inline-course-code" className="block text-sm font-semibold text-slate-700 mb-1.5">
             Course Code
           </label>
           <input
@@ -36,7 +36,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
             value={formState.code}
             onChange={(e) => updateField("code", e.target.value)}
             placeholder="MAT-101"
-            className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.code
+            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.code
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -46,7 +46,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </div>
 
         <div>
-          <label htmlFor="inline-course-title" className="block text-xs font-semibold text-slate-900 mb-1">
+          <label htmlFor="inline-course-title" className="block text-sm font-semibold text-slate-700 mb-1.5">
             Course Title
           </label>
           <input
@@ -55,7 +55,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
             value={formState.title}
             onChange={(e) => updateField("title", e.target.value)}
             placeholder="Calculus I"
-            className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.title
+            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.title
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -65,7 +65,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-900 mb-1">Color</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Color</label>
           <ColorPicker
             colors={colors}
             selectedColor={formState.color}

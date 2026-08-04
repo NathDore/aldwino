@@ -22,15 +22,23 @@ interface WeekGridProps {
 
 export function WeekGrid({ calendarEvents }: WeekGridProps) {
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
+  const captureWeekGridSize = useCalendarStore((s) => s.captureWeekGridSize);
   const days = useWeekDays(currentWeekStart);
   const today = toISODate(new Date());
   const rowLayout = useRowLayout();
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
 
   useScrollToNow({ bodyRef, rowLayout, weekStart: currentWeekStart });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    captureWeekGridSize({ width: el.offsetWidth, height: el.offsetHeight });
+  }, [captureWeekGridSize]);
 
   useEffect(() => {
     const bodyEl = bodyRef.current;
@@ -65,7 +73,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
   }, [calendarEvents]);
 
   return (
-    <div className="flex flex-col h-full border border-slate-200 rounded-lg overflow-hidden">
+    <div ref={containerRef} className="flex flex-col h-full border border-slate-200 rounded-lg overflow-hidden">
       <div
         ref={headerRef}
         className="overflow-x-hidden shrink-0 bg-white"
