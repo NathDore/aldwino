@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { CourseDto, CourseColor } from "../types/course.types";
 import { useCreateCourseMutation } from "../queries/useMutations";
 import { useAllowedColorsQuery } from "../queries/useAllowedColorsQuery";
+import { formatCourseCode } from "../utils/formatCourseCode";
 
 interface FormState {
   code: string;
@@ -28,7 +29,7 @@ export function useInlineCourseForm(onCreated: (course: CourseDto) => void) {
   const updateField = (field: "code" | "title" | "color", value: string) => {
     setFormState((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: field === "code" ? formatCourseCode(prev.code, value) : value,
       errors: { ...prev.errors, [field]: "" },
     }));
   };

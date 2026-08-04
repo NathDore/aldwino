@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/Button";
 import { ChevronDownIcon, PencilIcon, TrashIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
+import { formatCourseLabel } from "@/features/courses";
 
 interface AssignmentPopoverItemProps {
   item: CalendarAssignment;
@@ -60,7 +61,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
           ) : (
             <>
               <p className={`text-sm font-semibold text-slate-700 truncate ${assignment.isCompleted ? "line-through" : ""}`}>
-                {course ? `${course.code} - ${course.title}` : "Unknown course"}
+                {course ? formatCourseLabel(course) : "Unknown course"}
               </p>
               <p className={`text-base mt-0.5 whitespace-normal break-words text-slate-900 ${assignment.isCompleted ? "line-through" : ""}`}>
                 {assignment.description}

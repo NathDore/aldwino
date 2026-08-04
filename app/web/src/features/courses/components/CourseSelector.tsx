@@ -1,5 +1,6 @@
 import type { CourseDto } from "../types/course.types";
 import { PlusIcon } from "@/features/calendar/components/icons";
+import { formatCourseLabel } from "../utils/formatCourseLabel";
 
 interface CourseSelectorProps {
   courses: CourseDto[];
@@ -42,7 +43,7 @@ export function CourseSelector({
             type="button"
             onClick={() => onSelect(course.id)}
             disabled={disabled}
-            title={`${course.code} - ${course.title}`}
+            title={formatCourseLabel(course)}
             className={`flex flex-col items-center gap-0.5 rounded border p-1 transition-colors disabled:opacity-50 ${isSelected ? "border-emerald-600 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"
               }`}
           >
