@@ -5,6 +5,7 @@ import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
 import { AssignmentFormPanel } from "./AssignmentFormPanel";
 import { CloseIcon } from "@/features/calendar/components/icons";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
+import { formatCourseLabel } from "@/features/courses";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
@@ -88,7 +89,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
                 aria-hidden="true"
               />
             )}
-            <p className="text-xs text-slate-600 truncate">{course ? `${course.code} - ${course.title}` : ""}</p>
+            <p className="text-xs text-slate-600 truncate">{course ? formatCourseLabel(course) : ""}</p>
             <p className="text-sm font-bold text-slate-900 shrink-0">Edit Assignment</p>
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
