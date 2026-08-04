@@ -9,6 +9,7 @@ import { migrate as migrateTasks } from "./infrastructure/database/migrations/00
 import { migrate as migrateAssignmentScheduling } from "./infrastructure/database/migrations/005_add_assignment_scheduling_columns";
 import { migrate as migrateAssignmentDeleted } from "./infrastructure/database/migrations/006_add_assignment_deleted_columns";
 import { migrate as migrateEventStatus } from "./infrastructure/database/migrations/007_add_event_status_column";
+import { migrate as migrateAssignmentReschedule } from "./infrastructure/database/migrations/008_add_assignment_reschedule_columns";
 import { EventRepository } from "./infrastructure/database/repositories/EventRepository";
 import { CreateEventUseCase } from "./application/event/CreateEventUseCase";
 import { GetEventByIdUseCase } from "./application/event/GetEventByIdUseCase";
@@ -28,6 +29,7 @@ import { ListAssignmentsUseCase } from "./application/assignment/ListAssignments
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
 import { AssignmentSchedulingService } from "./application/assignment/AssignmentSchedulingService";
 import { TaskRepository } from "./infrastructure/database/repositories/TaskRepository";
@@ -49,6 +51,7 @@ migrateTasks(db);
 migrateAssignmentScheduling(db);
 migrateAssignmentDeleted(db);
 migrateEventStatus(db);
+migrateAssignmentReschedule(db);
 
 // Create repositories
 const eventRepository = new EventRepository(db);
@@ -88,6 +91,7 @@ const app = createServer({
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, clock, db),
   completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, clock, db),
+  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, assignmentSchedulingService, clock, db),
   createTaskUseCase: new CreateTaskUseCase(taskRepository, assignmentRepository, clock),
   getTaskByIdUseCase: new GetTaskByIdUseCase(taskRepository),
   listTasksUseCase: new ListTasksUseCase(taskRepository),

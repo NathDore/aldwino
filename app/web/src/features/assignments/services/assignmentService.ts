@@ -35,3 +35,16 @@ export async function completeAssignment(id: string, isCompleted: boolean): Prom
     body: JSON.stringify({ isCompleted }),
   });
 }
+
+export interface RescheduleAssignmentData {
+  startTime: string;
+  expectedDurationMinutes: number;
+}
+
+export async function rescheduleAssignment(id: string, data: RescheduleAssignmentData): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/reschedule`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}

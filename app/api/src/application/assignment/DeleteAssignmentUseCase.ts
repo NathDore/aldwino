@@ -35,6 +35,8 @@ export class DeleteAssignmentUseCase {
         completedAt: existing.completedAt,
         isDeleted: true,
         deletedAt: this.clock.now(),
+        isReschedule: existing.isReschedule,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
 

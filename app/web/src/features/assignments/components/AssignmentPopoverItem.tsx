@@ -4,14 +4,16 @@ import {
   useDeleteAssignmentMutation,
 } from "../queries/useMutations";
 import { Button } from "@/shared/components/Button";
-import { ChevronDownIcon, PencilIcon, TrashIcon } from "@/features/calendar/components/icons";
+import { ChevronDownIcon, PencilIcon, RescheduleIcon, TrashIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
+import { RescheduleAssignmentModal } from "./RescheduleAssignmentModal";
 import { getAssignmentColor, isAssignmentOverdue } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
 
 interface AssignmentPopoverItemProps {
   item: CalendarAssignment;
+  isEventCompleted: boolean;
 }
 
 function formatDueDate(dueDate: string): string {
@@ -22,16 +24,18 @@ function formatDueDate(dueDate: string): string {
   });
 }
 
-export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item }: AssignmentPopoverItemProps) {
+export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item, isEventCompleted }: AssignmentPopoverItemProps) {
   const { assignment, course } = item;
   const mutation = useCompleteAssignmentMutation();
   const deleteMutation = useDeleteAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const borderColor = getAssignmentColor(assignment, course);
   const isOverdue = isAssignmentOverdue(assignment);
   const isCollapsed = assignment.isCompleted && !isExpanded;
   const isDeletable = assignment.isCompleted || isOverdue;
+  const canReschedule = !isEventCompleted && !assignment.isCompleted;
 
   const handleToggleComplete = async () => {
     await mutation.mutateAsync({
@@ -101,20 +105,29 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item 
             <PencilIcon />
           </Button>
         )}
-        <input
-          type="checkbox"
-          checked={assignment.isCompleted}
-          onChange={handleToggleComplete}
-          disabled={mutation.isPending || isOverdue}
-          className="mt-1 cursor-pointer shrink-0 disabled:cursor-not-allowed"
-          aria-label={
-            isOverdue
-              ? `${assignment.description} is overdue and can no longer be marked complete`
-              : `Mark ${assignment.description} as ${assignment.isCompleted ? "incomplete" : "complete"}`
-          }
-        />
+        {canReschedule && (
+          <Button variant="ghost" size="sm" onClick={() => setIsRescheduling(true)} className="shrink-0">
+            <span className="sr-only">Reschedule {assignment.description}</span>
+            <RescheduleIcon />
+          </Button>
+        )}
+        {(isEventCompleted || assignment.isCompleted) && (
+          <input
+            type="checkbox"
+            checked={assignment.isCompleted}
+            onChange={handleToggleComplete}
+            disabled={mutation.isPending || isOverdue}
+            className="mt-1 cursor-pointer shrink-0 disabled:cursor-not-allowed"
+            aria-label={
+              isOverdue
+                ? `${assignment.description} is overdue and can no longer be marked complete`
+                : `Mark ${assignment.description} as ${assignment.isCompleted ? "incomplete" : "complete"}`
+            }
+          />
+        )}
       </div>
       {isEditing && <EditAssignmentModal item={item} onClose={() => setIsEditing(false)} />}
+      {isRescheduling && <RescheduleAssignmentModal item={item} onClose={() => setIsRescheduling(false)} />}
     </div>
   );
 });

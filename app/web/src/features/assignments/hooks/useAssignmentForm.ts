@@ -34,14 +34,14 @@ const initialFormState: FormState = {
   errors: {},
 };
 
-function dateToDateInput(d: Date): string {
+export function dateToDateInput(d: Date): string {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
     .getDate()
     .toString()
     .padStart(2, "0")}`;
 }
 
-function isoToDateInput(iso: string): string {
+export function isoToDateInput(iso: string): string {
   return dateToDateInput(new Date(iso));
 }
 
@@ -50,20 +50,20 @@ function dateToTimeInput(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function isoToTimeInput(iso: string): string {
+export function isoToTimeInput(iso: string): string {
   return dateToTimeInput(new Date(iso));
 }
 
-function combineDateAndTime(day: string, time: string): Date {
+export function combineDateAndTime(day: string, time: string): Date {
   return new Date(`${day}T${time}:00`);
 }
 
-interface FittingDuration {
+export interface FittingDuration {
   minutes: number | null;
   clamped: boolean;
 }
 
-function computeFittingDuration(start: Date, requestedMinutes: number): FittingDuration {
+export function computeFittingDuration(start: Date, requestedMinutes: number): FittingDuration {
   const midnightNext = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
   const availableMinutes = Math.floor((midnightNext.getTime() - start.getTime()) / 60000);
 
@@ -214,8 +214,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       const originalStartTime = assignmentToEdit ? new Date(assignmentToEdit.startTime) : null;
       const startTimeUnchanged = originalStartTime !== null && startDateTimeValue.getTime() === originalStartTime.getTime();
       if (!startTimeUnchanged && startDateTimeValue < now) {
-        // No start-time field is rendered in this form (it's set from the clicked slot or
-        // left as-is on edit), so surface this via the submit banner rather than a field error.
         errors.submit = "Start time cannot be in the past";
       }
     }

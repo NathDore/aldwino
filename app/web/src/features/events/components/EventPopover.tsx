@@ -120,7 +120,7 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
 
         <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
           {sortedAssignments.map((item) => (
-            <AssignmentPopoverItem key={item.assignment.id} item={item} />
+            <AssignmentPopoverItem key={item.assignment.id} item={item} isEventCompleted={event.isCompleted} />
           ))}
         </div>
       </div>

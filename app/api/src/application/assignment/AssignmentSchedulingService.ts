@@ -140,6 +140,8 @@ export class AssignmentSchedulingService {
       completedAt: assignment.completedAt,
       isDeleted: assignment.isDeleted,
       deletedAt: assignment.deletedAt,
+      isReschedule: assignment.isReschedule,
+      rescheduleAt: assignment.rescheduleAt,
       createdAt: assignment.createdAt,
     });
   }
