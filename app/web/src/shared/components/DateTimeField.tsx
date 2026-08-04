@@ -148,7 +148,7 @@ export function DateTimeField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-semibold text-slate-900 mb-1">
+      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 mb-1.5">
         {label}
       </label>
       <div className="flex items-end gap-1.5">

@@ -57,7 +57,7 @@ export function QuickAssignmentForm({
     <div className="flex h-full flex-col">
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-900 mb-1">Courses</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Courses</label>
           {coursesLoading ? (
             <p className="text-sm text-slate-400">Loading courses...</p>
           ) : (
@@ -73,7 +73,7 @@ export function QuickAssignmentForm({
         </div>
 
         <div>
-          <label htmlFor="quick-description" className="block text-xs font-semibold text-slate-900 mb-1">
+          <label htmlFor="quick-description" className="block text-sm font-semibold text-slate-700 mb-1.5">
             Assignment
           </label>
           <textarea
@@ -82,7 +82,7 @@ export function QuickAssignmentForm({
             onChange={(e) => updateField("description", e.target.value)}
             placeholder="Read chapters 1-3 and submit the exercises"
             rows={2}
-            className={`w-full px-3 py-2 text-sm bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.description
+            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.description
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -94,7 +94,7 @@ export function QuickAssignmentForm({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-900 mb-1">Duration</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Duration</label>
           <DurationSelector
             durations={ALLOWED_DURATIONS_MINUTES}
             selectedMinutes={formState.expectedDurationMinutes}
