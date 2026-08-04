@@ -15,15 +15,15 @@ export class EventRepository implements IEventRepository {
   create(event: Event): Event {
     const json = event.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO events (id, startDateTime, endDateTime, createdAt) VALUES (?, ?, ?, ?)",
+      "INSERT INTO events (id, startDateTime, endDateTime, createdAt, isCompleted) VALUES (?, ?, ?, ?, ?)",
     );
-    stmt.run(json.id, json.startTime, json.endTime, json.createdAt);
+    stmt.run(json.id, json.startTime, json.endTime, json.createdAt, json.isCompleted ? 1 : 0);
     return event;
   }
 
   getById(id: string): Event | null {
     const stmt = this.db.prepare("SELECT * FROM events WHERE id = ?");
-    const row = stmt.get(id) as Record<string, string> | undefined;
+    const row = stmt.get(id) as Record<string, string | number> | undefined;
     if (!row) {
       return null;
     }
@@ -32,16 +32,16 @@ export class EventRepository implements IEventRepository {
 
   getAll(): Event[] {
     const stmt = this.db.prepare("SELECT * FROM events");
-    const rows = stmt.all() as Record<string, string>[];
+    const rows = stmt.all() as Record<string, string | number>[];
     return rows.map((row) => this.rowToEvent(row));
   }
 
   update(event: Event): Event {
     const json = event.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE events SET startDateTime = ?, endDateTime = ? WHERE id = ?",
+      "UPDATE events SET startDateTime = ?, endDateTime = ?, isCompleted = ? WHERE id = ?",
     );
-    stmt.run(json.startTime, json.endTime, json.id);
+    stmt.run(json.startTime, json.endTime, json.isCompleted ? 1 : 0, json.id);
     return event;
   }
 
@@ -51,12 +51,13 @@ export class EventRepository implements IEventRepository {
     return result.changes > 0;
   }
 
-  private rowToEvent(row: Record<string, string>): Event {
+  private rowToEvent(row: Record<string, string | number>): Event {
     return Event.create({
-      id: row.id,
-      startTime: new Date(row.startDateTime),
-      endTime: new Date(row.endDateTime),
-      createdAt: new Date(row.createdAt),
+      id: row.id as string,
+      startTime: new Date(row.startDateTime as string),
+      endTime: new Date(row.endDateTime as string),
+      createdAt: new Date(row.createdAt as string),
+      isCompleted: Boolean(row.isCompleted),
     });
   }
 }

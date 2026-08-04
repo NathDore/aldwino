@@ -105,6 +105,12 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
             <p className="text-xs font-semibold text-slate-900 shrink-0">
               {formatTimeRange(event.startTime, event.endTime)}
             </p>
+            {!event.isCompleted && (
+              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-amber-600">
+                <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
+                Uncompleted
+              </span>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>

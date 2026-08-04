@@ -5,9 +5,10 @@ interface AssignmentDateCardProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  min?: string;
 }
 
-export function AssignmentDateCard({ id, value, onChange, disabled = false }: AssignmentDateCardProps) {
+export function AssignmentDateCard({ id, value, onChange, disabled = false, min }: AssignmentDateCardProps) {
   const day = value ? parseISODate(value) : null;
 
   return (
@@ -34,6 +35,7 @@ export function AssignmentDateCard({ id, value, onChange, disabled = false }: As
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onClick={(e) => e.currentTarget.showPicker?.()}
+        min={min}
         disabled={disabled}
         className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
       />

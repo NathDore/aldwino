@@ -34,12 +34,15 @@ const initialFormState: FormState = {
   errors: {},
 };
 
-function isoToDateInput(iso: string): string {
-  const d = new Date(iso);
+function dateToDateInput(d: Date): string {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
     .getDate()
     .toString()
     .padStart(2, "0")}`;
+}
+
+function isoToDateInput(iso: string): string {
+  return dateToDateInput(new Date(iso));
 }
 
 function dateToTimeInput(d: Date): string {
@@ -181,6 +184,8 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.description = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer`;
     }
 
+    const now = new Date();
+
     if (!formState.dueDateDay) {
       errors.dueDateDay = "Due date is required";
     }
@@ -188,6 +193,12 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.dueDateTime = "Due time is required";
     } else if (!isValidTimeFormat(formState.dueDateTime)) {
       errors.dueDateTime = TIME_FORMAT_ERROR;
+    }
+    if (!errors.dueDateDay && !errors.dueDateTime) {
+      const dueDateTimeValue = combineDateAndTime(formState.dueDateDay, formState.dueDateTime);
+      if (dueDateTimeValue < now) {
+        errors.dueDateTime = "Due date cannot be in the past";
+      }
     }
 
     if (!formState.startDateDay) {
@@ -197,6 +208,16 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.startDateTime = "Start time is required";
     } else if (!isValidTimeFormat(formState.startDateTime)) {
       errors.startDateTime = TIME_FORMAT_ERROR;
+    }
+    if (!errors.startDateDay && !errors.startDateTime) {
+      const startDateTimeValue = combineDateAndTime(formState.startDateDay, formState.startDateTime);
+      const originalStartTime = assignmentToEdit ? new Date(assignmentToEdit.startTime) : null;
+      const startTimeUnchanged = originalStartTime !== null && startDateTimeValue.getTime() === originalStartTime.getTime();
+      if (!startTimeUnchanged && startDateTimeValue < now) {
+        // No start-time field is rendered in this form (it's set from the clicked slot or
+        // left as-is on edit), so surface this via the submit banner rather than a field error.
+        errors.submit = "Start time cannot be in the past";
+      }
     }
 
     if (
@@ -271,5 +292,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
     effectiveDurationMinutes: fittingDuration.minutes,
     wasClamped,
     noFittingDuration,
+    todayDateInput: dateToDateInput(new Date()),
   };
 }

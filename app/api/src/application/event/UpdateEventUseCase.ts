@@ -17,6 +17,7 @@ export class UpdateEventUseCase {
       startTime: params.startTime,
       endTime: params.endTime,
       createdAt: existing.createdAt,
+      isCompleted: existing.isCompleted,
     });
 
     const otherEvents = this.repository.getAll().filter((e) => e.id !== params.id);

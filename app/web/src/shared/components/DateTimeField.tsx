@@ -86,11 +86,13 @@ interface DateTimeFieldProps {
   dateError?: string;
   timeError?: string;
   disabled?: boolean;
+  min?: string;
   renderDateInput?: (props: {
     id: string;
     value: string;
     onChange: (value: string) => void;
     disabled: boolean;
+    min?: string;
   }) => ReactNode;
 }
 
@@ -104,6 +106,7 @@ export function DateTimeField({
   dateError,
   timeError,
   disabled = false,
+  min,
   renderDateInput,
 }: DateTimeFieldProps) {
   const [digits, setDigits] = useState("");
@@ -153,13 +156,14 @@ export function DateTimeField({
       </label>
       <div className="flex items-end gap-1.5">
         {renderDateInput ? (
-          renderDateInput({ id, value: dateValue, onChange: onDateChange, disabled })
+          renderDateInput({ id, value: dateValue, onChange: onDateChange, disabled, min })
         ) : (
           <input
             id={id}
             type="date"
             value={dateValue}
             onChange={(e) => onDateChange(e.target.value)}
+            min={min}
             className={`w-28 shrink-0 px-2 py-1 text-xs bg-white border text-slate-900 focus:outline-none transition-colors ${
               dateError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
             }`}

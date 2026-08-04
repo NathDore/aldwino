@@ -18,3 +18,14 @@ export function adjustEndDateToStartDay(startTime: Date, endTime: Date): Date {
   adjusted.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds(), endTime.getMilliseconds());
   return adjusted;
 }
+
+export function deriveEventCompletion(
+  endTime: Date,
+  assignmentIsCompleted: boolean[],
+  now: Date,
+): boolean | null {
+  if (now <= endTime) {
+    return null;
+  }
+  return assignmentIsCompleted.every((isCompleted) => isCompleted);
+}

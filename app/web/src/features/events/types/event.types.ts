@@ -3,4 +3,5 @@ export interface EventDto {
   startTime: string;
   endTime: string;
   createdAt: string;
+  isCompleted: boolean;
 }

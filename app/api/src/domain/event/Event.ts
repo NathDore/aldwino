@@ -7,6 +7,7 @@ export class Event {
     public readonly startTime: Date,
     public readonly endTime: Date,
     public readonly createdAt: Date,
+    public readonly isCompleted: boolean,
   ) {}
 
   static create(params: {
@@ -14,10 +15,11 @@ export class Event {
     startTime: Date;
     endTime: Date;
     createdAt: Date;
+    isCompleted?: boolean;
   }): Event {
     const adjustedEndTime = adjustEndDateToStartDay(params.startTime, params.endTime);
     this.validateTimeOrder(params.startTime, adjustedEndTime);
-    return new Event(params.id, params.startTime, adjustedEndTime, params.createdAt);
+    return new Event(params.id, params.startTime, adjustedEndTime, params.createdAt, params.isCompleted ?? true);
   }
 
   private static validateTimeOrder(startTime: Date, endTime: Date): void {
@@ -35,6 +37,7 @@ export class Event {
       startTime: this.startTime.toISOString(),
       endTime: this.endTime.toISOString(),
       createdAt: this.createdAt.toISOString(),
+      isCompleted: this.isCompleted,
     };
   }
 }

@@ -3,6 +3,8 @@ import { Assignment } from "../../domain/assignment/Assignment";
 import { CourseNotFoundError } from "../../domain/assignment/AssignmentError";
 import {
   validateStartTime,
+  validateStartTimeNotInPast,
+  validateDueDateNotInPast,
   validateExpectedDurationMinutes,
   validateSessionWithinSingleDay,
 } from "../../domain/assignment/AssignmentRules";
@@ -40,6 +42,14 @@ export class UpdateAssignmentUseCase {
       }
 
       validateStartTime(params.startTime);
+      const now = this.clock.now();
+      // Only enforce "not in the past" on startTime when it's actually being changed —
+      // the assignment form doesn't expose a startTime editor, so a no-op resave of an
+      // already-elapsed session (e.g. just pushing dueDate forward) must stay possible.
+      if (params.startTime.getTime() !== existing.startTime.getTime()) {
+        validateStartTimeNotInPast(params.startTime, now);
+      }
+      validateDueDateNotInPast(params.dueDate, now);
       validateExpectedDurationMinutes(params.expectedDurationMinutes);
       const endTime = new Date(params.startTime.getTime() + params.expectedDurationMinutes * 60000);
       validateSessionWithinSingleDay(params.startTime, endTime);

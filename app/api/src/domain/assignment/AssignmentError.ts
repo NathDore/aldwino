@@ -54,6 +54,20 @@ export class StartTimeInvalidError extends AssignmentValidationError {
   }
 }
 
+export class StartTimeInPastError extends AssignmentValidationError {
+  constructor() {
+    super("startTime cannot be in the past");
+    this.name = "StartTimeInPastError";
+  }
+}
+
+export class DueDateInPastError extends AssignmentValidationError {
+  constructor() {
+    super("dueDate cannot be in the past");
+    this.name = "DueDateInPastError";
+  }
+}
+
 export class DurationNotAllowedError extends AssignmentValidationError {
   constructor() {
     super("expectedDurationMinutes must be one of 15, 25, 50, 60, 90");
@@ -70,7 +84,7 @@ export class SessionCrossesMidnightError extends AssignmentValidationError {
 
 export class AssignmentNotCompletedError extends AssignmentValidationError {
   constructor() {
-    super("assignment must be completed before it can be deleted");
+    super("assignment must be completed or overdue before it can be deleted");
     this.name = "AssignmentNotCompletedError";
   }
 }

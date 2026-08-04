@@ -3,6 +3,8 @@ import { Assignment } from "../../domain/assignment/Assignment";
 import { CourseNotFoundError } from "../../domain/assignment/AssignmentError";
 import {
   validateStartTime,
+  validateStartTimeNotInPast,
+  validateDueDateNotInPast,
   validateExpectedDurationMinutes,
   validateSessionWithinSingleDay,
 } from "../../domain/assignment/AssignmentRules";
@@ -33,6 +35,9 @@ export class CreateAssignmentUseCase {
       }
 
       validateStartTime(params.startTime);
+      const now = this.clock.now();
+      validateStartTimeNotInPast(params.startTime, now);
+      validateDueDateNotInPast(params.dueDate, now);
       validateExpectedDurationMinutes(params.expectedDurationMinutes);
       const endTime = new Date(params.startTime.getTime() + params.expectedDurationMinutes * 60000);
       validateSessionWithinSingleDay(params.startTime, endTime);
@@ -48,7 +53,7 @@ export class CreateAssignmentUseCase {
         dueDate: params.dueDate,
         startTime: params.startTime,
         expectedDurationMinutes: params.expectedDurationMinutes,
-        createdAt: this.clock.now(),
+        createdAt: now,
       });
       return this.repository.create(assignment);
     })();

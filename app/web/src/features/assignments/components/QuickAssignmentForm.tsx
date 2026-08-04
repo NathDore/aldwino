@@ -29,7 +29,7 @@ export function QuickAssignmentForm({
   onRequestCreateCourse,
   pendingCourseId,
 }: QuickAssignmentFormProps) {
-  const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(
+  const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } = useAssignmentForm(
     assignmentToEdit,
     onClose
   );
@@ -117,8 +117,9 @@ export function QuickAssignmentForm({
             dateError={formState.errors.dueDateDay}
             timeError={formState.errors.dueDateTime}
             disabled={isLoading}
-            renderDateInput={({ id, value, onChange, disabled }) => (
-              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+            min={todayDateInput}
+            renderDateInput={({ id, value, onChange, disabled, min }) => (
+              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} min={min} />
             )}
           />
         </div>

@@ -82,7 +82,8 @@ export const EventBlock = memo(function EventBlock({ calendarEvent, rowLayout }:
       ref={containerRef}
       onClick={handleBlockClick}
       className={`absolute left-1 right-1 bg-white border rounded overflow-hidden p-1.5 transition-[box-shadow,border-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
-        } ${isActive ? "border-emerald-400 animate-glow" : "border-slate-300"} ${isSingleCompactAssignment || isCompact ? "flex items-center" : ""
+        } ${isActive ? "border-emerald-400 animate-glow" : event.isCompleted ? "border-slate-300" : "border-amber-500"
+        } ${isSingleCompactAssignment || isCompact ? "flex items-center" : ""
         }`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
     >
