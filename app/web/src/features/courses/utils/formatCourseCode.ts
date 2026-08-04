@@ -12,6 +12,17 @@ export function formatCourseCode(previousValue: string, rawValue: string): strin
     return upperRawValue.slice(0, -1);
   }
 
+  const dashIndex = upperRawValue.indexOf("-");
+  if (dashIndex !== -1) {
+    const prefix = upperRawValue.slice(0, dashIndex);
+    const digitsOnlySuffix = upperRawValue.slice(dashIndex + 1).replace(/\D/g, "");
+    return `${prefix}-${digitsOnlySuffix}`;
+  }
+
   const boundaryMatch = upperRawValue.match(/^([A-Z]+)(\d.*)$/);
-  return boundaryMatch ? `${boundaryMatch[1]}-${boundaryMatch[2]}` : upperRawValue;
+  if (!boundaryMatch) {
+    return upperRawValue;
+  }
+  const digitsOnlySuffix = boundaryMatch[2].replace(/\D/g, "");
+  return `${boundaryMatch[1]}-${digitsOnlySuffix}`;
 }
