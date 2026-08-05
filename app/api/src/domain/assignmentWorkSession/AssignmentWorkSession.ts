@@ -1,11 +1,10 @@
-import { validateColor, validateCode, validateTitle } from "./CourseRules";
+import { validateAssignmentId, validateWorkSessionId } from "./AssignmentWorkSessionRules";
 
-export class Course {
+export class AssignmentWorkSession {
   private constructor(
     public readonly id: string,
-    public readonly color: string,
-    public readonly code: string,
-    public readonly title: string,
+    public readonly assignmentId: string,
+    public readonly workSessionId: string,
     public readonly isDeleted: boolean,
     public readonly deletedAt: Date | null,
     public readonly createdAt: Date,
@@ -13,21 +12,18 @@ export class Course {
 
   static create(params: {
     id: string;
-    color: string;
-    code: string;
-    title: string;
+    assignmentId: string;
+    workSessionId: string;
     isDeleted?: boolean;
     deletedAt?: Date | null;
     createdAt: Date;
-  }): Course {
-    validateColor(params.color);
-    validateCode(params.code);
-    validateTitle(params.title);
-    return new Course(
+  }): AssignmentWorkSession {
+    validateAssignmentId(params.assignmentId);
+    validateWorkSessionId(params.workSessionId);
+    return new AssignmentWorkSession(
       params.id,
-      params.color,
-      params.code,
-      params.title,
+      params.assignmentId,
+      params.workSessionId,
       params.isDeleted ?? false,
       params.deletedAt ?? null,
       params.createdAt,
@@ -37,9 +33,8 @@ export class Course {
   toJSON() {
     return {
       id: this.id,
-      color: this.color,
-      code: this.code,
-      title: this.title,
+      assignmentId: this.assignmentId,
+      workSessionId: this.workSessionId,
       isDeleted: this.isDeleted,
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),

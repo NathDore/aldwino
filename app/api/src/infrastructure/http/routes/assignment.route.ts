@@ -1,12 +1,15 @@
 import type { Hono } from "hono";
-import { AssignmentValidationError, CourseNotFoundError } from "../../../domain/assignment/AssignmentError";
+import {
+  AssignmentValidationError,
+  CourseNotFoundError,
+  AssignmentStateNotFoundError,
+} from "../../../domain/assignment/AssignmentError";
 import type { CreateAssignmentUseCase } from "../../../application/assignment/CreateAssignmentUseCase";
 import type { GetAssignmentByIdUseCase } from "../../../application/assignment/GetAssignmentByIdUseCase";
 import type { ListAssignmentsUseCase } from "../../../application/assignment/ListAssignmentsUseCase";
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
-import type { CompleteAssignmentUseCase } from "../../../application/assignment/CompleteAssignmentUseCase";
-import type { RescheduleAssignmentUseCase } from "../../../application/assignment/RescheduleAssignmentUseCase";
+import type { ChangeAssignmentStateUseCase } from "../../../application/assignment/ChangeAssignmentStateUseCase";
 
 interface AssignmentRouteDeps {
   createAssignmentUseCase: CreateAssignmentUseCase;
@@ -14,15 +17,14 @@ interface AssignmentRouteDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
-  completeAssignmentUseCase: CompleteAssignmentUseCase;
-  rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
+  changeAssignmentStateUseCase: ChangeAssignmentStateUseCase;
 }
 
 function handleAssignmentError(error: unknown) {
   if (error instanceof AssignmentValidationError) {
     return { body: { error: error.message }, status: 400 as const };
   }
-  if (error instanceof CourseNotFoundError) {
+  if (error instanceof CourseNotFoundError || error instanceof AssignmentStateNotFoundError) {
     return { body: { error: error.message }, status: 404 as const };
   }
   if (error instanceof Error && error.message.includes("not found")) {
@@ -36,23 +38,13 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
     try {
       const body = (await c.req.json()) as {
         courseId?: string;
-        description?: string;
+        name?: string;
         dueDate?: string;
-        startTime?: string;
-        expectedDurationMinutes?: number;
+        assignmentStateId?: string;
       };
 
-      if (
-        !body.courseId ||
-        !body.description ||
-        !body.dueDate ||
-        !body.startTime ||
-        body.expectedDurationMinutes === undefined
-      ) {
-        return c.json(
-          { error: "courseId, description, dueDate, startTime and expectedDurationMinutes are required" },
-          400,
-        );
+      if (!body.courseId || !body.name || !body.dueDate) {
+        return c.json({ error: "courseId, name and dueDate are required" }, 400);
       }
 
       const dueDate = new Date(body.dueDate);
@@ -60,17 +52,11 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         return c.json({ error: "dueDate must be a valid ISO 8601 date" }, 400);
       }
 
-      const startTime = new Date(body.startTime);
-      if (isNaN(startTime.getTime())) {
-        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
-      }
-
       const assignment = deps.createAssignmentUseCase.execute({
         courseId: body.courseId,
-        description: body.description,
+        name: body.name,
         dueDate,
-        startTime,
-        expectedDurationMinutes: Number(body.expectedDurationMinutes),
+        assignmentStateId: body.assignmentStateId,
       });
       return c.json(assignment.toJSON(), 201);
     } catch (error) {
@@ -101,28 +87,13 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
       const id = c.req.param("id");
       const body = (await c.req.json()) as {
         courseId?: string;
-        description?: string;
+        name?: string;
         dueDate?: string;
-        startTime?: string;
-        expectedDurationMinutes?: number;
-        isCompleted?: boolean;
+        assignmentStateId?: string;
       };
 
-      if (
-        !body.courseId ||
-        !body.description ||
-        !body.dueDate ||
-        !body.startTime ||
-        body.expectedDurationMinutes === undefined ||
-        body.isCompleted === undefined
-      ) {
-        return c.json(
-          {
-            error:
-              "courseId, description, dueDate, startTime, expectedDurationMinutes and isCompleted are required",
-          },
-          400,
-        );
+      if (!body.courseId || !body.name || !body.dueDate || !body.assignmentStateId) {
+        return c.json({ error: "courseId, name, dueDate and assignmentStateId are required" }, 400);
       }
 
       const dueDate = new Date(body.dueDate);
@@ -130,19 +101,12 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         return c.json({ error: "dueDate must be a valid ISO 8601 date" }, 400);
       }
 
-      const startTime = new Date(body.startTime);
-      if (isNaN(startTime.getTime())) {
-        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
-      }
-
       const assignment = deps.updateAssignmentUseCase.execute({
         id,
         courseId: body.courseId,
-        description: body.description,
+        name: body.name,
         dueDate,
-        startTime,
-        expectedDurationMinutes: Number(body.expectedDurationMinutes),
-        isCompleted: body.isCompleted,
+        assignmentStateId: body.assignmentStateId,
       });
       return c.json(assignment.toJSON(), 200);
     } catch (error) {
@@ -168,52 +132,18 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
     }
   });
 
-  app.patch("/assignments/:id", async (c) => {
+  app.patch("/assignments/:id/state", async (c) => {
     try {
       const id = c.req.param("id");
-      const body = (await c.req.json()) as {
-        isCompleted?: boolean;
-      };
+      const body = (await c.req.json()) as { assignmentStateId?: string };
 
-      if (body.isCompleted === undefined) {
-        return c.json({ error: "isCompleted is required" }, 400);
+      if (!body.assignmentStateId) {
+        return c.json({ error: "assignmentStateId is required" }, 400);
       }
 
-      const assignment = deps.completeAssignmentUseCase.execute({
+      const assignment = deps.changeAssignmentStateUseCase.execute({
         id,
-        isCompleted: body.isCompleted,
-      });
-      return c.json(assignment.toJSON(), 200);
-    } catch (error) {
-      const handled = handleAssignmentError(error);
-      if (handled) {
-        return c.json(handled.body, handled.status);
-      }
-      throw error;
-    }
-  });
-
-  app.patch("/assignments/:id/reschedule", async (c) => {
-    try {
-      const id = c.req.param("id");
-      const body = (await c.req.json()) as {
-        startTime?: string;
-        expectedDurationMinutes?: number;
-      };
-
-      if (!body.startTime || body.expectedDurationMinutes === undefined) {
-        return c.json({ error: "startTime and expectedDurationMinutes are required" }, 400);
-      }
-
-      const startTime = new Date(body.startTime);
-      if (isNaN(startTime.getTime())) {
-        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
-      }
-
-      const assignment = deps.rescheduleAssignmentUseCase.execute({
-        id,
-        startTime,
-        expectedDurationMinutes: Number(body.expectedDurationMinutes),
+        assignmentStateId: body.assignmentStateId,
       });
       return c.json(assignment.toJSON(), 200);
     } catch (error) {

@@ -20,6 +20,8 @@ export class UpdateCourseUseCase {
       color: params.color,
       code: params.code,
       title: params.title,
+      isDeleted: existing.isDeleted,
+      deletedAt: existing.deletedAt,
       createdAt: existing.createdAt,
     });
 

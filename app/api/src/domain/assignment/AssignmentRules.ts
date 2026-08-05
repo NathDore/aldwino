@@ -1,19 +1,12 @@
 import {
   CourseIdRequiredError,
-  EventIdRequiredError,
-  DescriptionEmptyError,
-  DescriptionTooLongError,
-  StartTimeInvalidError,
-  StartTimeInPastError,
-  DueDateInPastError,
-  DurationNotAllowedError,
-  SessionCrossesMidnightError,
-  AssignmentNotCompletedError,
+  AssignmentStateIdRequiredError,
+  NameEmptyError,
+  NameTooLongError,
+  DueDateInvalidError,
 } from "./AssignmentError";
 
-const DESCRIPTION_MAX_LENGTH = 250;
-
-export const ALLOWED_DURATIONS_MINUTES: readonly number[] = [15, 25, 50, 60, 90];
+const NAME_MAX_LENGTH = 250;
 
 export function validateCourseId(courseId: string): void {
   if (courseId.length === 0) {
@@ -21,53 +14,23 @@ export function validateCourseId(courseId: string): void {
   }
 }
 
-export function validateEventId(eventId: string): void {
-  if (eventId.length === 0) {
-    throw new EventIdRequiredError();
+export function validateAssignmentStateId(assignmentStateId: string): void {
+  if (assignmentStateId.length === 0) {
+    throw new AssignmentStateIdRequiredError();
   }
 }
 
-export function validateDescription(description: string): void {
-  if (description.length === 0) {
-    throw new DescriptionEmptyError();
+export function validateName(name: string): void {
+  if (name.length === 0) {
+    throw new NameEmptyError();
   }
-  if (description.length > DESCRIPTION_MAX_LENGTH) {
-    throw new DescriptionTooLongError();
-  }
-}
-
-export function validateStartTime(startTime: Date): void {
-  if (isNaN(startTime.getTime())) {
-    throw new StartTimeInvalidError();
+  if (name.length > NAME_MAX_LENGTH) {
+    throw new NameTooLongError();
   }
 }
 
-export function validateStartTimeNotInPast(startTime: Date, now: Date): void {
-  if (startTime < now) {
-    throw new StartTimeInPastError();
-  }
-}
-
-export function validateDueDateNotInPast(dueDate: Date, now: Date): void {
-  if (dueDate < now) {
-    throw new DueDateInPastError();
-  }
-}
-
-export function validateExpectedDurationMinutes(minutes: number): void {
-  if (!ALLOWED_DURATIONS_MINUTES.includes(minutes)) {
-    throw new DurationNotAllowedError();
-  }
-}
-
-export function validateSessionWithinSingleDay(startTime: Date, endTime: Date): void {
-  if (startTime.toDateString() !== endTime.toDateString()) {
-    throw new SessionCrossesMidnightError();
-  }
-}
-
-export function validateCanBeDeleted(isCompleted: boolean, isOverdue: boolean): void {
-  if (!isCompleted && !isOverdue) {
-    throw new AssignmentNotCompletedError();
+export function validateDueDate(dueDate: Date): void {
+  if (isNaN(dueDate.getTime())) {
+    throw new DueDateInvalidError();
   }
 }

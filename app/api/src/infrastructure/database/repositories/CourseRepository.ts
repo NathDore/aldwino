@@ -6,7 +6,6 @@ export interface ICourseRepository {
   getById(id: string): Course | null;
   getAll(): Course[];
   update(course: Course): Course;
-  delete(id: string): boolean;
   existsByCode(code: string, excludeId?: string): boolean;
 }
 
@@ -16,15 +15,15 @@ export class CourseRepository implements ICourseRepository {
   create(course: Course): Course {
     const json = course.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO courses (id, color, code, title, createdAt) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO courses (id, color, code, title, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
-    stmt.run(json.id, json.color, json.code, json.title, json.createdAt);
+    stmt.run(json.id, json.color, json.code, json.title, json.isDeleted ? 1 : 0, json.deletedAt, json.createdAt);
     return course;
   }
 
   getById(id: string): Course | null {
-    const stmt = this.db.prepare("SELECT * FROM courses WHERE id = ?");
-    const row = stmt.get(id) as Record<string, string> | undefined;
+    const stmt = this.db.prepare("SELECT * FROM courses WHERE id = ? AND isDeleted = 0");
+    const row = stmt.get(id) as Record<string, string | number | null> | undefined;
     if (!row) {
       return null;
     }
@@ -32,41 +31,37 @@ export class CourseRepository implements ICourseRepository {
   }
 
   getAll(): Course[] {
-    const stmt = this.db.prepare("SELECT * FROM courses");
-    const rows = stmt.all() as Record<string, string>[];
+    const stmt = this.db.prepare("SELECT * FROM courses WHERE isDeleted = 0");
+    const rows = stmt.all() as Record<string, string | number | null>[];
     return rows.map((row) => this.rowToCourse(row));
   }
 
   update(course: Course): Course {
     const json = course.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE courses SET color = ?, code = ?, title = ? WHERE id = ?",
+      "UPDATE courses SET color = ?, code = ?, title = ?, isDeleted = ?, deletedAt = ? WHERE id = ?",
     );
-    stmt.run(json.color, json.code, json.title, json.id);
+    stmt.run(json.color, json.code, json.title, json.isDeleted ? 1 : 0, json.deletedAt, json.id);
     return course;
-  }
-
-  delete(id: string): boolean {
-    const stmt = this.db.prepare("DELETE FROM courses WHERE id = ?");
-    const result = stmt.run(id);
-    return result.changes > 0;
   }
 
   existsByCode(code: string, excludeId?: string): boolean {
     const stmt = excludeId
-      ? this.db.prepare("SELECT 1 FROM courses WHERE code = ? AND id != ?")
-      : this.db.prepare("SELECT 1 FROM courses WHERE code = ?");
+      ? this.db.prepare("SELECT 1 FROM courses WHERE code = ? AND id != ? AND isDeleted = 0")
+      : this.db.prepare("SELECT 1 FROM courses WHERE code = ? AND isDeleted = 0");
     const row = excludeId ? stmt.get(code, excludeId) : stmt.get(code);
     return row !== undefined && row !== null;
   }
 
-  private rowToCourse(row: Record<string, string>): Course {
+  private rowToCourse(row: Record<string, string | number | null>): Course {
     return Course.create({
-      id: row.id,
-      color: row.color,
-      code: row.code,
-      title: row.title,
-      createdAt: new Date(row.createdAt),
+      id: row.id as string,
+      color: row.color as string,
+      code: row.code as string,
+      title: row.title as string,
+      isDeleted: Boolean(row.isDeleted),
+      deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
+      createdAt: new Date(row.createdAt as string),
     });
   }
 }
