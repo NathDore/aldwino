@@ -1,33 +1,32 @@
 import type { Database } from "bun:sqlite";
-import { Assignment } from "../../domain/assignment/Assignment";
+import { WorkSession } from "../../domain/workSession/WorkSession";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
-import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
+import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class DeleteAssignmentUseCase {
+export class DeleteWorkSessionUseCase {
   constructor(
-    private readonly repository: IAssignmentRepository,
+    private readonly repository: IWorkSessionRepository,
     private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
 
-  execute(id: string): Assignment {
+  execute(id: string): WorkSession {
     return this.db.transaction(() => {
       const existing = this.repository.getById(id);
       if (!existing) {
-        throw new Error(`Assignment with id ${id} not found`);
+        throw new Error(`WorkSession with id ${id} not found`);
       }
 
       const now = this.clock.now();
 
-      const deleted = Assignment.create({
+      const deleted = WorkSession.create({
         id: existing.id,
-        courseId: existing.courseId,
-        assignmentStateId: existing.assignmentStateId,
-        name: existing.name,
-        dueDate: existing.dueDate,
+        workSessionStateId: existing.workSessionStateId,
+        startTime: existing.startTime,
+        endTime: existing.endTime,
         completedAt: existing.completedAt,
         isDeleted: true,
         deletedAt: now,
@@ -35,7 +34,7 @@ export class DeleteAssignmentUseCase {
       });
       const updated = this.repository.update(deleted);
 
-      for (const link of this.assignmentWorkSessionRepository.getByAssignmentId(id)) {
+      for (const link of this.assignmentWorkSessionRepository.getByWorkSessionId(id)) {
         this.assignmentWorkSessionRepository.update(
           AssignmentWorkSession.create({
             id: link.id,

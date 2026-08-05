@@ -12,24 +12,31 @@ export class CourseIdRequiredError extends AssignmentValidationError {
   }
 }
 
-export class EventIdRequiredError extends AssignmentValidationError {
+export class AssignmentStateIdRequiredError extends AssignmentValidationError {
   constructor() {
-    super("eventId cannot be empty");
-    this.name = "EventIdRequiredError";
+    super("assignmentStateId cannot be empty");
+    this.name = "AssignmentStateIdRequiredError";
   }
 }
 
-export class DescriptionEmptyError extends AssignmentValidationError {
+export class NameEmptyError extends AssignmentValidationError {
   constructor() {
-    super("description cannot be empty");
-    this.name = "DescriptionEmptyError";
+    super("name cannot be empty");
+    this.name = "NameEmptyError";
   }
 }
 
-export class DescriptionTooLongError extends AssignmentValidationError {
+export class NameTooLongError extends AssignmentValidationError {
   constructor() {
-    super("description must not exceed 250 characters");
-    this.name = "DescriptionTooLongError";
+    super("name must not exceed 250 characters");
+    this.name = "NameTooLongError";
+  }
+}
+
+export class DueDateInvalidError extends AssignmentValidationError {
+  constructor() {
+    super("dueDate must be a valid date");
+    this.name = "DueDateInvalidError";
   }
 }
 
@@ -40,51 +47,9 @@ export class CourseNotFoundError extends Error {
   }
 }
 
-export class EventNotFoundError extends Error {
-  constructor(eventId: string) {
-    super(`Event with id ${eventId} not found`);
-    this.name = "EventNotFoundError";
-  }
-}
-
-export class StartTimeInvalidError extends AssignmentValidationError {
-  constructor() {
-    super("startTime must be a valid date");
-    this.name = "StartTimeInvalidError";
-  }
-}
-
-export class StartTimeInPastError extends AssignmentValidationError {
-  constructor() {
-    super("startTime cannot be in the past");
-    this.name = "StartTimeInPastError";
-  }
-}
-
-export class DueDateInPastError extends AssignmentValidationError {
-  constructor() {
-    super("dueDate cannot be in the past");
-    this.name = "DueDateInPastError";
-  }
-}
-
-export class DurationNotAllowedError extends AssignmentValidationError {
-  constructor() {
-    super("expectedDurationMinutes must be one of 15, 25, 50, 60, 90");
-    this.name = "DurationNotAllowedError";
-  }
-}
-
-export class SessionCrossesMidnightError extends AssignmentValidationError {
-  constructor() {
-    super("startTime plus expectedDurationMinutes must not cross midnight");
-    this.name = "SessionCrossesMidnightError";
-  }
-}
-
-export class AssignmentNotCompletedError extends AssignmentValidationError {
-  constructor() {
-    super("assignment must be completed or overdue before it can be deleted");
-    this.name = "AssignmentNotCompletedError";
+export class AssignmentStateNotFoundError extends Error {
+  constructor(assignmentStateId: string) {
+    super(`AssignmentState with id ${assignmentStateId} not found`);
+    this.name = "AssignmentStateNotFoundError";
   }
 }

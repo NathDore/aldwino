@@ -10,12 +10,15 @@ import { migrate as migrateAssignmentScheduling } from "./infrastructure/databas
 import { migrate as migrateAssignmentDeleted } from "./infrastructure/database/migrations/006_add_assignment_deleted_columns";
 import { migrate as migrateEventStatus } from "./infrastructure/database/migrations/007_add_event_status_column";
 import { migrate as migrateAssignmentReschedule } from "./infrastructure/database/migrations/008_add_assignment_reschedule_columns";
-import { EventRepository } from "./infrastructure/database/repositories/EventRepository";
-import { CreateEventUseCase } from "./application/event/CreateEventUseCase";
-import { GetEventByIdUseCase } from "./application/event/GetEventByIdUseCase";
-import { ListEventsUseCase } from "./application/event/ListEventsUseCase";
-import { UpdateEventUseCase } from "./application/event/UpdateEventUseCase";
-import { DeleteEventUseCase } from "./application/event/DeleteEventUseCase";
+import { migrate as migrateDropEventAndTask } from "./infrastructure/database/migrations/009_drop_event_and_task_tables";
+import { migrate as migrateCourseDeleted } from "./infrastructure/database/migrations/010_add_course_deleted_columns";
+import { migrate as migrateAssignmentStateTable } from "./infrastructure/database/migrations/011_create_assignment_state_table";
+import { migrate as migrateWorkSessionStateTable } from "./infrastructure/database/migrations/012_create_work_session_state_table";
+import { migrate as migrateRecreateAssignment } from "./infrastructure/database/migrations/013_recreate_assignment_table";
+import { migrate as migrateWorkSessionTable } from "./infrastructure/database/migrations/014_create_work_session_table";
+import { migrate as migrateAssignmentWorkSessionTable } from "./infrastructure/database/migrations/015_create_assignment_work_session_table";
+import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
+import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
 import { CreateCourseUseCase } from "./application/course/CreateCourseUseCase";
 import { GetCourseByIdUseCase } from "./application/course/GetCourseByIdUseCase";
@@ -23,21 +26,30 @@ import { ListCoursesUseCase } from "./application/course/ListCoursesUseCase";
 import { UpdateCourseUseCase } from "./application/course/UpdateCourseUseCase";
 import { DeleteCourseUseCase } from "./application/course/DeleteCourseUseCase";
 import { AssignmentRepository } from "./infrastructure/database/repositories/AssignmentRepository";
+import { AssignmentStateRepository } from "./infrastructure/database/repositories/AssignmentStateRepository";
 import { CreateAssignmentUseCase } from "./application/assignment/CreateAssignmentUseCase";
 import { GetAssignmentByIdUseCase } from "./application/assignment/GetAssignmentByIdUseCase";
 import { ListAssignmentsUseCase } from "./application/assignment/ListAssignmentsUseCase";
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
-import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
-import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
+import { ChangeAssignmentStateUseCase } from "./application/assignment/ChangeAssignmentStateUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
-import { AssignmentSchedulingService } from "./application/assignment/AssignmentSchedulingService";
-import { TaskRepository } from "./infrastructure/database/repositories/TaskRepository";
-import { CreateTaskUseCase } from "./application/task/CreateTaskUseCase";
-import { GetTaskByIdUseCase } from "./application/task/GetTaskByIdUseCase";
-import { ListTasksUseCase } from "./application/task/ListTasksUseCase";
-import { UpdateTaskUseCase } from "./application/task/UpdateTaskUseCase";
-import { DeleteTaskUseCase } from "./application/task/DeleteTaskUseCase";
+import { ListAssignmentStatesUseCase } from "./application/assignmentState/ListAssignmentStatesUseCase";
+import { WorkSessionRepository } from "./infrastructure/database/repositories/WorkSessionRepository";
+import { WorkSessionStateRepository } from "./infrastructure/database/repositories/WorkSessionStateRepository";
+import { CreateWorkSessionUseCase } from "./application/workSession/CreateWorkSessionUseCase";
+import { GetWorkSessionByIdUseCase } from "./application/workSession/GetWorkSessionByIdUseCase";
+import { ListWorkSessionsUseCase } from "./application/workSession/ListWorkSessionsUseCase";
+import { UpdateWorkSessionUseCase } from "./application/workSession/UpdateWorkSessionUseCase";
+import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
+import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
+import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
+import { AssignmentWorkSessionRepository } from "./infrastructure/database/repositories/AssignmentWorkSessionRepository";
+import { CreateAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
+import { GetAssignmentWorkSessionByIdUseCase } from "./application/assignmentWorkSession/GetAssignmentWorkSessionByIdUseCase";
+import { ListAssignmentWorkSessionsUseCase } from "./application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
+import { UpdateAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/UpdateAssignmentWorkSessionUseCase";
+import { DeleteAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
 
 const PORT = Number(process.env.API_PORT ?? 4287);
 const clock = new SystemClock();
@@ -52,13 +64,25 @@ migrateAssignmentScheduling(db);
 migrateAssignmentDeleted(db);
 migrateEventStatus(db);
 migrateAssignmentReschedule(db);
+migrateDropEventAndTask(db);
+migrateCourseDeleted(db);
+migrateAssignmentStateTable(db);
+migrateWorkSessionStateTable(db);
+migrateRecreateAssignment(db);
+migrateWorkSessionTable(db);
+migrateAssignmentWorkSessionTable(db);
+
+// Seed lookup tables (idempotent, runs every startup)
+seedAssignmentStates(db);
+seedWorkSessionStates(db);
 
 // Create repositories
-const eventRepository = new EventRepository(db);
 const courseRepository = new CourseRepository(db);
 const assignmentRepository = new AssignmentRepository(db);
-const taskRepository = new TaskRepository(db);
-const assignmentSchedulingService = new AssignmentSchedulingService(eventRepository, assignmentRepository, clock);
+const assignmentStateRepository = new AssignmentStateRepository(db);
+const workSessionRepository = new WorkSessionRepository(db);
+const workSessionStateRepository = new WorkSessionStateRepository(db);
+const assignmentWorkSessionRepository = new AssignmentWorkSessionRepository(db);
 
 // Purge assignments soft-deleted more than a week ago, on startup and then daily
 const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
@@ -75,28 +99,67 @@ setInterval(runPurge, PURGE_INTERVAL_MS).unref();
 // Create app with all dependencies
 const app = createServer({
   getHealthUseCase: new GetHealthUseCase(clock),
-  createEventUseCase: new CreateEventUseCase(eventRepository, clock),
-  getEventByIdUseCase: new GetEventByIdUseCase(eventRepository, assignmentRepository, clock),
-  listEventsUseCase: new ListEventsUseCase(eventRepository, assignmentRepository, clock),
-  updateEventUseCase: new UpdateEventUseCase(eventRepository),
-  deleteEventUseCase: new DeleteEventUseCase(eventRepository),
   createCourseUseCase: new CreateCourseUseCase(courseRepository, clock),
   getCourseByIdUseCase: new GetCourseByIdUseCase(courseRepository),
   listCoursesUseCase: new ListCoursesUseCase(courseRepository),
   updateCourseUseCase: new UpdateCourseUseCase(courseRepository),
-  deleteCourseUseCase: new DeleteCourseUseCase(courseRepository),
-  createAssignmentUseCase: new CreateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
+  deleteCourseUseCase: new DeleteCourseUseCase(courseRepository, assignmentRepository, clock, db),
+  createAssignmentUseCase: new CreateAssignmentUseCase(
+    assignmentRepository,
+    courseRepository,
+    assignmentStateRepository,
+    clock,
+    db,
+  ),
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
-  updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, assignmentSchedulingService, clock, db),
-  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentSchedulingService, clock, db),
-  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, clock, db),
-  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, assignmentSchedulingService, clock, db),
-  createTaskUseCase: new CreateTaskUseCase(taskRepository, assignmentRepository, clock),
-  getTaskByIdUseCase: new GetTaskByIdUseCase(taskRepository),
-  listTasksUseCase: new ListTasksUseCase(taskRepository),
-  updateTaskUseCase: new UpdateTaskUseCase(taskRepository, assignmentRepository),
-  deleteTaskUseCase: new DeleteTaskUseCase(taskRepository),
+  updateAssignmentUseCase: new UpdateAssignmentUseCase(
+    assignmentRepository,
+    courseRepository,
+    assignmentStateRepository,
+    clock,
+    db,
+  ),
+  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
+  changeAssignmentStateUseCase: new ChangeAssignmentStateUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    clock,
+    db,
+  ),
+  listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
+  createWorkSessionUseCase: new CreateWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
+  getWorkSessionByIdUseCase: new GetWorkSessionByIdUseCase(workSessionRepository),
+  listWorkSessionsUseCase: new ListWorkSessionsUseCase(workSessionRepository),
+  updateWorkSessionUseCase: new UpdateWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
+  deleteWorkSessionUseCase: new DeleteWorkSessionUseCase(
+    workSessionRepository,
+    assignmentWorkSessionRepository,
+    clock,
+    db,
+  ),
+  rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(workSessionRepository, db),
+  listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),
+  createAssignmentWorkSessionUseCase: new CreateAssignmentWorkSessionUseCase(
+    assignmentWorkSessionRepository,
+    assignmentRepository,
+    workSessionRepository,
+    clock,
+    db,
+  ),
+  getAssignmentWorkSessionByIdUseCase: new GetAssignmentWorkSessionByIdUseCase(assignmentWorkSessionRepository),
+  listAssignmentWorkSessionsUseCase: new ListAssignmentWorkSessionsUseCase(assignmentWorkSessionRepository),
+  updateAssignmentWorkSessionUseCase: new UpdateAssignmentWorkSessionUseCase(
+    assignmentWorkSessionRepository,
+    assignmentRepository,
+    workSessionRepository,
+    db,
+  ),
+  deleteAssignmentWorkSessionUseCase: new DeleteAssignmentWorkSessionUseCase(
+    assignmentWorkSessionRepository,
+    clock,
+    db,
+  ),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
 });
 
