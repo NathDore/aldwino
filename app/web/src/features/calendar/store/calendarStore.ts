@@ -5,6 +5,7 @@ import { getWeekStart, parseISODate, toISODate } from "../hooks/useWeekDays";
 interface CreatingAssignmentAt {
   date: string;
   hour: number;
+  useCurrentTimeAsStart?: boolean;
 }
 
 interface WeekGridSize {
@@ -22,7 +23,7 @@ interface CalendarStore {
   goToToday: () => void;
   expandEvent: (id: string) => void;
   collapseEvent: () => void;
-  startCreatingAssignment: (date: string, hour: number) => void;
+  startCreatingAssignment: (date: string, hour: number, useCurrentTimeAsStart?: boolean) => void;
   stopCreatingAssignment: () => void;
   captureWeekGridSize: (size: WeekGridSize) => void;
 }
@@ -43,7 +44,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   goToToday: () => set({ currentWeekStart: toISODate(getWeekStart(new Date())) }),
   expandEvent: (id) => set({ expandedEventId: id }),
   collapseEvent: () => set({ expandedEventId: null }),
-  startCreatingAssignment: (date, hour) => set({ creatingAssignmentAt: { date, hour } }),
+  startCreatingAssignment: (date, hour, useCurrentTimeAsStart) =>
+    set({ creatingAssignmentAt: { date, hour, useCurrentTimeAsStart } }),
   stopCreatingAssignment: () => set({ creatingAssignmentAt: null }),
   captureWeekGridSize: (size) => {
     if (get().weekGridSize) return;

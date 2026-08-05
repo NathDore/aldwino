@@ -112,6 +112,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
                 key={dayIso}
                 date={day}
                 isToday={dayIso === today}
+                isPastDay={dayIso < today}
                 calendarEvents={eventsByDay.get(dayIso) ?? EMPTY_EVENTS}
                 rowLayout={rowLayout}
               />

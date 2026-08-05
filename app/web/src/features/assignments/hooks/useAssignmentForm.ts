@@ -22,6 +22,10 @@ export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
 
 const DEFAULT_DUE_TIME = "23:59";
 
+// The backend rejects any startTime strictly before its own clock at request time, so a
+// literal "now" captured on submit always loses that race to network/processing latency.
+const START_NOW_SUBMIT_BUFFER_MS = 5000;
+
 const initialFormState: FormState = {
   courseId: "",
   description: "",
@@ -91,7 +95,11 @@ function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"
   };
 }
 
-export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuccess?: () => void) {
+export function useAssignmentForm(
+  assignmentToEdit?: AssignmentDto | null,
+  onSuccess?: () => void,
+  useCurrentTimeAsStart?: boolean
+) {
   const [formState, setFormState] = useState<FormState>(
     assignmentToEdit ? { ...assignmentToFields(assignmentToEdit), errors: {} } : initialFormState
   );
@@ -210,7 +218,9 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.startDateTime = TIME_FORMAT_ERROR;
     }
     if (!errors.startDateDay && !errors.startDateTime) {
-      const startDateTimeValue = combineDateAndTime(formState.startDateDay, formState.startDateTime);
+      const startDateTimeValue = useCurrentTimeAsStart
+        ? new Date(now.getTime() + START_NOW_SUBMIT_BUFFER_MS)
+        : combineDateAndTime(formState.startDateDay, formState.startDateTime);
       const originalStartTime = assignmentToEdit ? new Date(assignmentToEdit.startTime) : null;
       const startTimeUnchanged = originalStartTime !== null && startDateTimeValue.getTime() === originalStartTime.getTime();
       if (!startTimeUnchanged && startDateTimeValue < now) {
@@ -247,7 +257,9 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
     }
 
     const dueDate = combineDateAndTime(formState.dueDateDay, formState.dueDateTime).toISOString();
-    const startDateTime = combineDateAndTime(formState.startDateDay, formState.startDateTime);
+    const startDateTime = useCurrentTimeAsStart
+      ? new Date(Date.now() + START_NOW_SUBMIT_BUFFER_MS)
+      : combineDateAndTime(formState.startDateDay, formState.startDateTime);
     const startTime = startDateTime.toISOString();
     const expectedDurationMinutes = fittingDuration.minutes;
 

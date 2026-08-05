@@ -34,7 +34,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item,
   const borderColor = getAssignmentColor(assignment, course);
   const isOverdue = isAssignmentOverdue(assignment);
   const isCollapsed = assignment.isCompleted && !isExpanded;
-  const isDeletable = assignment.isCompleted || isOverdue;
+  const isDeletable = assignment.isCompleted || (isOverdue && isEventCompleted);
   const canReschedule = !isEventCompleted && !assignment.isCompleted;
 
   const handleToggleComplete = async () => {
@@ -99,7 +99,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({ item,
             <TrashIcon />
           </Button>
         )}
-        {!assignment.isCompleted && (
+        {!assignment.isCompleted && isEventCompleted && (
           <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="shrink-0">
             <span className="sr-only">Edit {assignment.description}</span>
             <PencilIcon />

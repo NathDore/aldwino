@@ -13,6 +13,7 @@ const EXIT_SAFETY_MARGIN_MS = 100;
 interface CreateAssignmentPopoverProps {
   date: string;
   hour: number;
+  useCurrentTimeAsStart?: boolean;
   onClose: () => void;
 }
 
@@ -30,7 +31,7 @@ function formatHeading(date: string): { weekday: string; dateLabel: string } {
   };
 }
 
-export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmentPopoverProps) {
+export function CreateAssignmentPopover({ date, hour, useCurrentTimeAsStart, onClose }: CreateAssignmentPopoverProps) {
   const { weekday, dateLabel } = formatHeading(date);
   const formSize = useAssignmentFormSize();
   const [isVisible, setIsVisible] = useState(false);
@@ -110,7 +111,12 @@ export function CreateAssignmentPopover({ date, hour, onClose }: CreateAssignmen
         </div>
 
         <div className="px-10 py-4 overflow-hidden min-h-0">
-          <AssignmentFormPanel date={date} hour={hour} onClose={handleClose} />
+          <AssignmentFormPanel
+            date={date}
+            hour={hour}
+            useCurrentTimeAsStart={useCurrentTimeAsStart}
+            onClose={handleClose}
+          />
         </div>
       </div>
     </div>,

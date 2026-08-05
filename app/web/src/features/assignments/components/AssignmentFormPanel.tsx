@@ -9,11 +9,12 @@ interface AssignmentFormPanelProps {
   assignmentToEdit?: AssignmentDto | null;
   date?: string;
   hour?: number;
+  useCurrentTimeAsStart?: boolean;
 }
 
 type Mode = "assignment" | "create-course";
 
-export function AssignmentFormPanel({ date, hour, onClose, assignmentToEdit }: AssignmentFormPanelProps) {
+export function AssignmentFormPanel({ date, hour, useCurrentTimeAsStart, onClose, assignmentToEdit }: AssignmentFormPanelProps) {
   const [mode, setMode] = useState<Mode>("assignment");
   const [pendingCourseId, setPendingCourseId] = useState<string | undefined>(undefined);
 
@@ -28,6 +29,7 @@ export function AssignmentFormPanel({ date, hour, onClose, assignmentToEdit }: A
         <QuickAssignmentForm
           date={date}
           hour={hour}
+          useCurrentTimeAsStart={useCurrentTimeAsStart}
           onClose={onClose}
           assignmentToEdit={assignmentToEdit}
           onRequestCreateCourse={() => setMode("create-course")}
