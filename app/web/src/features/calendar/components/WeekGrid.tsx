@@ -22,7 +22,6 @@ interface WeekGridProps {
 
 export function WeekGrid({ calendarEvents }: WeekGridProps) {
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
-  const captureWeekGridSize = useCalendarStore((s) => s.captureWeekGridSize);
   const days = useWeekDays(currentWeekStart);
   const today = toISODate(new Date());
   const rowLayout = useRowLayout();
@@ -33,12 +32,6 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
   const [scrollbarWidth, setScrollbarWidth] = useState(0);
 
   useScrollToNow({ bodyRef, rowLayout, weekStart: currentWeekStart });
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    captureWeekGridSize({ width: el.offsetWidth, height: el.offsetHeight });
-  }, [captureWeekGridSize]);
 
   useEffect(() => {
     const bodyEl = bodyRef.current;
