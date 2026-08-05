@@ -17,6 +17,7 @@ import { migrate as migrateWorkSessionStateTable } from "./infrastructure/databa
 import { migrate as migrateRecreateAssignment } from "./infrastructure/database/migrations/013_recreate_assignment_table";
 import { migrate as migrateWorkSessionTable } from "./infrastructure/database/migrations/014_create_work_session_table";
 import { migrate as migrateAssignmentWorkSessionTable } from "./infrastructure/database/migrations/015_create_assignment_work_session_table";
+import { migrate as migrateWorkSessionOverlapIndex } from "./infrastructure/database/migrations/016_add_work_session_overlap_index";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -40,9 +41,10 @@ import { WorkSessionStateRepository } from "./infrastructure/database/repositori
 import { CreateWorkSessionUseCase } from "./application/workSession/CreateWorkSessionUseCase";
 import { GetWorkSessionByIdUseCase } from "./application/workSession/GetWorkSessionByIdUseCase";
 import { ListWorkSessionsUseCase } from "./application/workSession/ListWorkSessionsUseCase";
-import { UpdateWorkSessionUseCase } from "./application/workSession/UpdateWorkSessionUseCase";
+import { ChangeWorkSessionStateUseCase } from "./application/workSession/ChangeWorkSessionStateUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
+import { WorkSessionMergeService } from "./application/workSession/WorkSessionMergeService";
 import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
 import { AssignmentWorkSessionRepository } from "./infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import { CreateAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
@@ -71,6 +73,7 @@ migrateWorkSessionStateTable(db);
 migrateRecreateAssignment(db);
 migrateWorkSessionTable(db);
 migrateAssignmentWorkSessionTable(db);
+migrateWorkSessionOverlapIndex(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -83,6 +86,12 @@ const assignmentStateRepository = new AssignmentStateRepository(db);
 const workSessionRepository = new WorkSessionRepository(db);
 const workSessionStateRepository = new WorkSessionStateRepository(db);
 const assignmentWorkSessionRepository = new AssignmentWorkSessionRepository(db);
+const workSessionMergeService = new WorkSessionMergeService(
+  workSessionRepository,
+  assignmentWorkSessionRepository,
+  workSessionStateRepository,
+  clock,
+);
 
 // Purge assignments soft-deleted more than a week ago, on startup and then daily
 const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
@@ -128,17 +137,34 @@ const app = createServer({
     db,
   ),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
-  createWorkSessionUseCase: new CreateWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
+  createWorkSessionUseCase: new CreateWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    workSessionMergeService,
+    clock,
+    db,
+  ),
   getWorkSessionByIdUseCase: new GetWorkSessionByIdUseCase(workSessionRepository),
   listWorkSessionsUseCase: new ListWorkSessionsUseCase(workSessionRepository),
-  updateWorkSessionUseCase: new UpdateWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
+  changeWorkSessionStateUseCase: new ChangeWorkSessionStateUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    workSessionMergeService,
+    clock,
+    db,
+  ),
   deleteWorkSessionUseCase: new DeleteWorkSessionUseCase(
     workSessionRepository,
     assignmentWorkSessionRepository,
     clock,
     db,
   ),
-  rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(workSessionRepository, db),
+  rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    workSessionMergeService,
+    db,
+  ),
   listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),
   createAssignmentWorkSessionUseCase: new CreateAssignmentWorkSessionUseCase(
     assignmentWorkSessionRepository,

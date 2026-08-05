@@ -3,6 +3,7 @@ import {
   validateStartTime,
   validateEndTime,
   validateStartBeforeEnd,
+  validateSameDay,
 } from "./WorkSessionRules";
 
 export class WorkSession {
@@ -31,6 +32,7 @@ export class WorkSession {
     validateStartTime(params.startTime);
     validateEndTime(params.endTime);
     validateStartBeforeEnd(params.startTime, params.endTime);
+    validateSameDay(params.startTime, params.endTime);
     return new WorkSession(
       params.id,
       params.workSessionStateId,

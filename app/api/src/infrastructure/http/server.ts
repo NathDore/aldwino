@@ -20,7 +20,7 @@ import { registerAssignmentStateRoutes } from "./routes/assignmentState.route";
 import type { CreateWorkSessionUseCase } from "../../application/workSession/CreateWorkSessionUseCase";
 import type { GetWorkSessionByIdUseCase } from "../../application/workSession/GetWorkSessionByIdUseCase";
 import type { ListWorkSessionsUseCase } from "../../application/workSession/ListWorkSessionsUseCase";
-import type { UpdateWorkSessionUseCase } from "../../application/workSession/UpdateWorkSessionUseCase";
+import type { ChangeWorkSessionStateUseCase } from "../../application/workSession/ChangeWorkSessionStateUseCase";
 import type { DeleteWorkSessionUseCase } from "../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../application/workSession/RescheduleWorkSessionUseCase";
 import { registerWorkSessionRoutes } from "./routes/workSession.route";
@@ -50,7 +50,7 @@ export interface ServerDeps {
   createWorkSessionUseCase: CreateWorkSessionUseCase;
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
   listWorkSessionsUseCase: ListWorkSessionsUseCase;
-  updateWorkSessionUseCase: UpdateWorkSessionUseCase;
+  changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
   listWorkSessionStatesUseCase: ListWorkSessionStatesUseCase;

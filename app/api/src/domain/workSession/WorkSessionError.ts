@@ -33,6 +33,13 @@ export class StartTimeNotBeforeEndTimeError extends WorkSessionValidationError {
   }
 }
 
+export class SpansMultipleDaysError extends WorkSessionValidationError {
+  constructor() {
+    super("startTime and endTime must fall on the same calendar day");
+    this.name = "SpansMultipleDaysError";
+  }
+}
+
 export class WorkSessionStateNotFoundError extends Error {
   constructor(workSessionStateId: string) {
     super(`WorkSessionState with id ${workSessionStateId} not found`);

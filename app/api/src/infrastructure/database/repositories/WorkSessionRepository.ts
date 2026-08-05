@@ -6,6 +6,7 @@ export interface IWorkSessionRepository {
   getById(id: string): WorkSession | null;
   getAll(): WorkSession[];
   update(workSession: WorkSession): WorkSession;
+  findOverlappingInProgress(start: Date, end: Date, excludeId?: string): WorkSession[];
 }
 
 export class WorkSessionRepository implements IWorkSessionRepository {
@@ -59,6 +60,34 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       json.id,
     );
     return workSession;
+  }
+
+  findOverlappingInProgress(start: Date, end: Date, excludeId?: string): WorkSession[] {
+    const dayStart = new Date(start);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const params: (string | number)[] = [
+      dayStart.toISOString(),
+      dayEnd.toISOString(),
+      end.toISOString(),
+      start.toISOString(),
+    ];
+    let sql =
+      "SELECT ws.* FROM workSessions ws " +
+      "JOIN workSessionStates wss ON ws.workSessionStateId = wss.id " +
+      "WHERE wss.state = 'INPROGRESS' AND ws.isDeleted = 0 " +
+      "AND ws.startTime >= ? AND ws.startTime < ? " +
+      "AND ws.startTime < ? AND ws.endTime > ?";
+    if (excludeId) {
+      sql += " AND ws.id != ?";
+      params.push(excludeId);
+    }
+
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as Record<string, string | number | null>[];
+    return rows.map((row) => this.rowToWorkSession(row));
   }
 
   private rowToWorkSession(row: Record<string, string | number | null>): WorkSession {

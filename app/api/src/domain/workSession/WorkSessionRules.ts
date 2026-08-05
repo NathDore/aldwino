@@ -3,6 +3,7 @@ import {
   StartTimeInvalidError,
   EndTimeInvalidError,
   StartTimeNotBeforeEndTimeError,
+  SpansMultipleDaysError,
 } from "./WorkSessionError";
 
 export function validateWorkSessionStateId(workSessionStateId: string): void {
@@ -26,5 +27,15 @@ export function validateEndTime(endTime: Date): void {
 export function validateStartBeforeEnd(startTime: Date, endTime: Date): void {
   if (!(startTime < endTime)) {
     throw new StartTimeNotBeforeEndTimeError();
+  }
+}
+
+export function validateSameDay(startTime: Date, endTime: Date): void {
+  const sameDay =
+    startTime.getFullYear() === endTime.getFullYear() &&
+    startTime.getMonth() === endTime.getMonth() &&
+    startTime.getDate() === endTime.getDate();
+  if (!sameDay) {
+    throw new SpansMultipleDaysError();
   }
 }
