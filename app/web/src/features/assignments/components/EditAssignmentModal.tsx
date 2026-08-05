@@ -6,10 +6,11 @@ import { AssignmentFormPanel } from "./AssignmentFormPanel";
 import { CloseIcon } from "@/features/calendar/components/icons";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
-import { useAssignmentFormSize } from "@/features/calendar/store/calendarStore";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
+const FORM_WIDTH = 1200;
+const FORM_HEIGHT = 1000;
 
 interface EditAssignmentModalProps {
   item: CalendarAssignment;
@@ -18,7 +19,6 @@ interface EditAssignmentModalProps {
 
 export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps) {
   const { assignment, course } = item;
-  const formSize = useAssignmentFormSize();
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
@@ -75,9 +75,9 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
       onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col max-w-full bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${formSize ? "" : "w-[34rem] max-h-[80vh]"} ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        className={`flex flex-col max-w-full max-h-full bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
-        style={formSize ? { width: formSize.width, height: formSize.height } : undefined}
+        style={{ width: FORM_WIDTH, height: FORM_HEIGHT }}
         onClick={stopClickPropagation}
         onTransitionEnd={(e) => {
           if (!isVisible && e.propertyName === "opacity") closeNow();
