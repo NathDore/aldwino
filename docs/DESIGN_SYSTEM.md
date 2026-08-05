@@ -62,6 +62,11 @@ All colors use Tailwind CSS utility classes from the light theme palette.
 - Use for: Cancel, dismiss, low-emphasis actions
 - Component: `Button` with `variant="ghost"`
 
+#### Overdue / Warning
+- Swatch/border: `#f59e0b` (amber-500) — kept distinct from Danger (red, used for form errors and destructive actions) so an overdue item doesn't read as an active error
+- Use for: assignments past their due date and still incomplete, and calendar events containing such an assignment past their end time
+- Follows the same "colored left-border + small swatch" pattern used for course colors and the completed state (`#10b981` emerald-500), rather than introducing new UI chrome
+
 ### Feature-Specific Colors
 
 Some features have their own color palettes (e.g., course colors). These are fetched from the API and should be displayed prominently as they are part of the user's data. Display them with a subtle border to maintain visual balance.

@@ -4,6 +4,8 @@ import {
   DescriptionEmptyError,
   DescriptionTooLongError,
   StartTimeInvalidError,
+  StartTimeInPastError,
+  DueDateInPastError,
   DurationNotAllowedError,
   SessionCrossesMidnightError,
   AssignmentNotCompletedError,
@@ -40,6 +42,18 @@ export function validateStartTime(startTime: Date): void {
   }
 }
 
+export function validateStartTimeNotInPast(startTime: Date, now: Date): void {
+  if (startTime < now) {
+    throw new StartTimeInPastError();
+  }
+}
+
+export function validateDueDateNotInPast(dueDate: Date, now: Date): void {
+  if (dueDate < now) {
+    throw new DueDateInPastError();
+  }
+}
+
 export function validateExpectedDurationMinutes(minutes: number): void {
   if (!ALLOWED_DURATIONS_MINUTES.includes(minutes)) {
     throw new DurationNotAllowedError();
@@ -52,8 +66,8 @@ export function validateSessionWithinSingleDay(startTime: Date, endTime: Date): 
   }
 }
 
-export function validateCanBeDeleted(isCompleted: boolean): void {
-  if (!isCompleted) {
+export function validateCanBeDeleted(isCompleted: boolean, isOverdue: boolean): void {
+  if (!isCompleted && !isOverdue) {
     throw new AssignmentNotCompletedError();
   }
 }

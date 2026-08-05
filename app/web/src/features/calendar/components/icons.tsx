@@ -49,3 +49,14 @@ export function ArrowLeftIcon({ className = "w-3.5 h-3.5" }: IconProps) {
     </svg>
   );
 }
+
+export function RescheduleIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <circle cx="7" cy="9" r="5.5" />
+      <path d="M7 6.5v2.5l1.8 1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.5 1.5l1.7 1.7-1.7 1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.2 3.2A6.5 6.5 0 003 4.5" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -16,7 +16,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   create(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO assignments (id, courseId, eventId, description, dueDate, startTime, expectedDurationMinutes, isCompleted, completedAt, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO assignments (id, courseId, eventId, description, dueDate, startTime, expectedDurationMinutes, isCompleted, completedAt, isDeleted, deletedAt, isReschedule, rescheduleAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -30,6 +30,8 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.completedAt,
       json.isDeleted ? 1 : 0,
       json.deletedAt,
+      json.isReschedule ? 1 : 0,
+      json.rescheduleAt,
       json.createdAt,
     );
     return assignment;
@@ -59,7 +61,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   update(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE assignments SET courseId = ?, eventId = ?, description = ?, dueDate = ?, startTime = ?, expectedDurationMinutes = ?, isCompleted = ?, completedAt = ?, isDeleted = ?, deletedAt = ? WHERE id = ?",
+      "UPDATE assignments SET courseId = ?, eventId = ?, description = ?, dueDate = ?, startTime = ?, expectedDurationMinutes = ?, isCompleted = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, isReschedule = ?, rescheduleAt = ? WHERE id = ?",
     );
     stmt.run(
       json.courseId,
@@ -72,6 +74,8 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.completedAt,
       json.isDeleted ? 1 : 0,
       json.deletedAt,
+      json.isReschedule ? 1 : 0,
+      json.rescheduleAt,
       json.id,
     );
     return assignment;
@@ -96,6 +100,8 @@ export class AssignmentRepository implements IAssignmentRepository {
       completedAt: row.completedAt ? new Date(row.completedAt as string) : null,
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
+      isReschedule: Boolean(row.isReschedule),
+      rescheduleAt: row.rescheduleAt ? new Date(row.rescheduleAt as string) : null,
       createdAt: new Date(row.createdAt as string),
     });
   }

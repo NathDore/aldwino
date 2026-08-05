@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { AssignmentChip } from "./AssignmentChip";
+import { getAssignmentColor } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentBlockProps {
@@ -14,7 +15,7 @@ export const AssignmentBlock = memo(function AssignmentBlock({ item, state = "de
     return <AssignmentChip item={item} />;
   }
 
-  const borderColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
+  const borderColor = getAssignmentColor(assignment, course);
 
   return (
     <div

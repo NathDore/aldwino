@@ -20,6 +20,8 @@ export class Assignment {
     public readonly completedAt: Date | null,
     public readonly isDeleted: boolean,
     public readonly deletedAt: Date | null,
+    public readonly isReschedule: boolean,
+    public readonly rescheduleAt: Date | null,
     public readonly createdAt: Date,
   ) {}
 
@@ -35,6 +37,8 @@ export class Assignment {
     completedAt?: Date | null;
     isDeleted?: boolean;
     deletedAt?: Date | null;
+    isReschedule?: boolean;
+    rescheduleAt?: Date | null;
     createdAt: Date;
   }): Assignment {
     validateCourseId(params.courseId);
@@ -56,6 +60,8 @@ export class Assignment {
       params.completedAt ?? null,
       params.isDeleted ?? false,
       params.deletedAt ?? null,
+      params.isReschedule ?? false,
+      params.rescheduleAt ?? null,
       params.createdAt,
     );
   }
@@ -73,6 +79,8 @@ export class Assignment {
       completedAt: this.completedAt ? this.completedAt.toISOString() : null,
       isDeleted: this.isDeleted,
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
+      isReschedule: this.isReschedule,
+      rescheduleAt: this.rescheduleAt ? this.rescheduleAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
     };
   }

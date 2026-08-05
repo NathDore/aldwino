@@ -22,6 +22,10 @@ export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
 
 const DEFAULT_DUE_TIME = "23:59";
 
+// The backend rejects any startTime strictly before its own clock at request time, so a
+// literal "now" captured on submit always loses that race to network/processing latency.
+const START_NOW_SUBMIT_BUFFER_MS = 5000;
+
 const initialFormState: FormState = {
   courseId: "",
   description: "",
@@ -34,12 +38,15 @@ const initialFormState: FormState = {
   errors: {},
 };
 
-function isoToDateInput(iso: string): string {
-  const d = new Date(iso);
+export function dateToDateInput(d: Date): string {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
     .getDate()
     .toString()
     .padStart(2, "0")}`;
+}
+
+export function isoToDateInput(iso: string): string {
+  return dateToDateInput(new Date(iso));
 }
 
 function dateToTimeInput(d: Date): string {
@@ -47,20 +54,20 @@ function dateToTimeInput(d: Date): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function isoToTimeInput(iso: string): string {
+export function isoToTimeInput(iso: string): string {
   return dateToTimeInput(new Date(iso));
 }
 
-function combineDateAndTime(day: string, time: string): Date {
+export function combineDateAndTime(day: string, time: string): Date {
   return new Date(`${day}T${time}:00`);
 }
 
-interface FittingDuration {
+export interface FittingDuration {
   minutes: number | null;
   clamped: boolean;
 }
 
-function computeFittingDuration(start: Date, requestedMinutes: number): FittingDuration {
+export function computeFittingDuration(start: Date, requestedMinutes: number): FittingDuration {
   const midnightNext = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0, 0, 0);
   const availableMinutes = Math.floor((midnightNext.getTime() - start.getTime()) / 60000);
 
@@ -88,7 +95,11 @@ function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"
   };
 }
 
-export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuccess?: () => void) {
+export function useAssignmentForm(
+  assignmentToEdit?: AssignmentDto | null,
+  onSuccess?: () => void,
+  useCurrentTimeAsStart?: boolean
+) {
   const [formState, setFormState] = useState<FormState>(
     assignmentToEdit ? { ...assignmentToFields(assignmentToEdit), errors: {} } : initialFormState
   );
@@ -181,6 +192,8 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.description = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer`;
     }
 
+    const now = new Date();
+
     if (!formState.dueDateDay) {
       errors.dueDateDay = "Due date is required";
     }
@@ -188,6 +201,12 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.dueDateTime = "Due time is required";
     } else if (!isValidTimeFormat(formState.dueDateTime)) {
       errors.dueDateTime = TIME_FORMAT_ERROR;
+    }
+    if (!errors.dueDateDay && !errors.dueDateTime) {
+      const dueDateTimeValue = combineDateAndTime(formState.dueDateDay, formState.dueDateTime);
+      if (dueDateTimeValue < now) {
+        errors.dueDateTime = "Due date cannot be in the past";
+      }
     }
 
     if (!formState.startDateDay) {
@@ -197,6 +216,16 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
       errors.startDateTime = "Start time is required";
     } else if (!isValidTimeFormat(formState.startDateTime)) {
       errors.startDateTime = TIME_FORMAT_ERROR;
+    }
+    if (!errors.startDateDay && !errors.startDateTime) {
+      const startDateTimeValue = useCurrentTimeAsStart
+        ? new Date(now.getTime() + START_NOW_SUBMIT_BUFFER_MS)
+        : combineDateAndTime(formState.startDateDay, formState.startDateTime);
+      const originalStartTime = assignmentToEdit ? new Date(assignmentToEdit.startTime) : null;
+      const startTimeUnchanged = originalStartTime !== null && startDateTimeValue.getTime() === originalStartTime.getTime();
+      if (!startTimeUnchanged && startDateTimeValue < now) {
+        errors.submit = "Start time cannot be in the past";
+      }
     }
 
     if (
@@ -228,7 +257,9 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
     }
 
     const dueDate = combineDateAndTime(formState.dueDateDay, formState.dueDateTime).toISOString();
-    const startDateTime = combineDateAndTime(formState.startDateDay, formState.startDateTime);
+    const startDateTime = useCurrentTimeAsStart
+      ? new Date(Date.now() + START_NOW_SUBMIT_BUFFER_MS)
+      : combineDateAndTime(formState.startDateDay, formState.startDateTime);
     const startTime = startDateTime.toISOString();
     const expectedDurationMinutes = fittingDuration.minutes;
 
@@ -271,5 +302,6 @@ export function useAssignmentForm(assignmentToEdit?: AssignmentDto | null, onSuc
     effectiveDurationMinutes: fittingDuration.minutes,
     wasClamped,
     noFittingDuration,
+    todayDateInput: dateToDateInput(new Date()),
   };
 }

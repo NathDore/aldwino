@@ -13,6 +13,7 @@ interface QuickAssignmentFormProps {
   assignmentToEdit?: AssignmentDto | null;
   date?: string;
   hour?: number;
+  useCurrentTimeAsStart?: boolean;
   onRequestCreateCourse: () => void;
   pendingCourseId?: string;
 }
@@ -21,25 +22,33 @@ function hourToTimeInput(hour: number): string {
   return `${hour.toString().padStart(2, "0")}:00`;
 }
 
+function nowTimeInput(): string {
+  const now = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
 export function QuickAssignmentForm({
   date,
   hour,
+  useCurrentTimeAsStart,
   onClose,
   assignmentToEdit,
   onRequestCreateCourse,
   pendingCourseId,
 }: QuickAssignmentFormProps) {
-  const { formState, updateField, updateDuration, handleSubmit, isLoading } = useAssignmentForm(
+  const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } = useAssignmentForm(
     assignmentToEdit,
-    onClose
+    onClose,
+    useCurrentTimeAsStart
   );
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
 
   useEffect(() => {
     if (assignmentToEdit || date === undefined || hour === undefined) return;
     updateField("startDateDay", date);
-    updateField("startDateTime", hourToTimeInput(hour));
-  }, [assignmentToEdit, date, hour]);
+    updateField("startDateTime", useCurrentTimeAsStart ? nowTimeInput() : hourToTimeInput(hour));
+  }, [assignmentToEdit, date, hour, useCurrentTimeAsStart]);
 
   useEffect(() => {
     if (!formState.courseId && courses.length > 0) {
@@ -117,8 +126,9 @@ export function QuickAssignmentForm({
             dateError={formState.errors.dueDateDay}
             timeError={formState.errors.dueDateTime}
             disabled={isLoading}
-            renderDateInput={({ id, value, onChange, disabled }) => (
-              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} />
+            min={todayDateInput}
+            renderDateInput={({ id, value, onChange, disabled, min }) => (
+              <AssignmentDateCard id={id} value={value} onChange={onChange} disabled={disabled} min={min} />
             )}
           />
         </div>

@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { getAssignmentColor } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentChipProps {
@@ -14,7 +15,7 @@ const SIZE_CLASSES: Record<"md" | "sm", string> = {
 export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }: AssignmentChipProps) {
   const { assignment, course } = item;
   const letter = course?.code?.charAt(0).toUpperCase() ?? "?";
-  const backgroundColor = assignment.isCompleted ? "#10b981" : (course?.color ?? "#cbd5e1");
+  const backgroundColor = getAssignmentColor(assignment, course);
 
   return (
     <div

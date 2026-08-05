@@ -31,6 +31,10 @@ export class CompleteAssignmentUseCase {
         expectedDurationMinutes: existing.expectedDurationMinutes,
         isCompleted: params.isCompleted,
         completedAt,
+        isDeleted: existing.isDeleted,
+        deletedAt: existing.deletedAt,
+        isReschedule: existing.isReschedule,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
 

@@ -10,6 +10,8 @@ export interface AssignmentDto {
   completedAt: string | null;
   isDeleted: boolean;
   deletedAt: string | null;
+  isReschedule: boolean;
+  rescheduleAt: string | null;
   createdAt: string;
 }
 

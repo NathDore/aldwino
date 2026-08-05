@@ -20,7 +20,8 @@ export class DeleteAssignmentUseCase {
         throw new Error(`Assignment with id ${id} not found`);
       }
 
-      validateCanBeDeleted(existing.isCompleted);
+      const isOverdue = !existing.isCompleted && existing.dueDate < this.clock.now();
+      validateCanBeDeleted(existing.isCompleted, isOverdue);
 
       const deleted = Assignment.create({
         id: existing.id,
@@ -34,6 +35,8 @@ export class DeleteAssignmentUseCase {
         completedAt: existing.completedAt,
         isDeleted: true,
         deletedAt: this.clock.now(),
+        isReschedule: existing.isReschedule,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
 

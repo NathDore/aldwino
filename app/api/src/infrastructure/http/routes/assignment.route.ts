@@ -6,6 +6,7 @@ import type { ListAssignmentsUseCase } from "../../../application/assignment/Lis
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
 import type { CompleteAssignmentUseCase } from "../../../application/assignment/CompleteAssignmentUseCase";
+import type { RescheduleAssignmentUseCase } from "../../../application/assignment/RescheduleAssignmentUseCase";
 
 interface AssignmentRouteDeps {
   createAssignmentUseCase: CreateAssignmentUseCase;
@@ -14,6 +15,7 @@ interface AssignmentRouteDeps {
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
   completeAssignmentUseCase: CompleteAssignmentUseCase;
+  rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
 }
 
 function handleAssignmentError(error: unknown) {
@@ -180,6 +182,38 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
       const assignment = deps.completeAssignmentUseCase.execute({
         id,
         isCompleted: body.isCompleted,
+      });
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.patch("/assignments/:id/reschedule", async (c) => {
+    try {
+      const id = c.req.param("id");
+      const body = (await c.req.json()) as {
+        startTime?: string;
+        expectedDurationMinutes?: number;
+      };
+
+      if (!body.startTime || body.expectedDurationMinutes === undefined) {
+        return c.json({ error: "startTime and expectedDurationMinutes are required" }, 400);
+      }
+
+      const startTime = new Date(body.startTime);
+      if (isNaN(startTime.getTime())) {
+        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
+      }
+
+      const assignment = deps.rescheduleAssignmentUseCase.execute({
+        id,
+        startTime,
+        expectedDurationMinutes: Number(body.expectedDurationMinutes),
       });
       return c.json(assignment.toJSON(), 200);
     } catch (error) {

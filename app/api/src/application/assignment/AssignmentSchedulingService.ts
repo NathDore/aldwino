@@ -71,7 +71,13 @@ export class AssignmentSchedulingService {
 
     if (mergedStart.getTime() !== survivor.startTime.getTime() || mergedEnd.getTime() !== survivor.endTime.getTime()) {
       this.eventRepository.update(
-        Event.create({ id: survivor.id, startTime: mergedStart, endTime: mergedEnd, createdAt: survivor.createdAt }),
+        Event.create({
+          id: survivor.id,
+          startTime: mergedStart,
+          endTime: mergedEnd,
+          createdAt: survivor.createdAt,
+          isCompleted: survivor.isCompleted,
+        }),
       );
     }
 
@@ -102,7 +108,15 @@ export class AssignmentSchedulingService {
       if (assignmentEnd > end) end = assignmentEnd;
     }
 
-    this.eventRepository.update(Event.create({ id: eventId, startTime: start, endTime: end, createdAt: existing.createdAt }));
+    this.eventRepository.update(
+      Event.create({
+        id: eventId,
+        startTime: start,
+        endTime: end,
+        createdAt: existing.createdAt,
+        isCompleted: existing.isCompleted,
+      }),
+    );
   }
 
   private sessionStart(assignment: Assignment): Date {
@@ -126,6 +140,8 @@ export class AssignmentSchedulingService {
       completedAt: assignment.completedAt,
       isDeleted: assignment.isDeleted,
       deletedAt: assignment.deletedAt,
+      isReschedule: assignment.isReschedule,
+      rescheduleAt: assignment.rescheduleAt,
       createdAt: assignment.createdAt,
     });
   }

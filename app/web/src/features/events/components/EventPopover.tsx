@@ -105,6 +105,12 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
             <p className="text-xs font-semibold text-slate-900 shrink-0">
               {formatTimeRange(event.startTime, event.endTime)}
             </p>
+            {!event.isCompleted && (
+              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-amber-600">
+                <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
+                Uncompleted
+              </span>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <span className="sr-only">Close</span>
@@ -114,7 +120,7 @@ export function EventPopover({ calendarEvent, onClose }: EventPopoverProps) {
 
         <div className="space-y-3 px-6 py-4 overflow-y-auto min-h-0 styled-scrollbar">
           {sortedAssignments.map((item) => (
-            <AssignmentPopoverItem key={item.assignment.id} item={item} />
+            <AssignmentPopoverItem key={item.assignment.id} item={item} isEventCompleted={event.isCompleted} />
           ))}
         </div>
       </div>
