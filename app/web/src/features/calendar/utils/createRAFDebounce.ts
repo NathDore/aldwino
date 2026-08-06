@@ -1,9 +1,9 @@
-export function createRAFDebounce<T extends (...args: any[]) => void>(
-  callback: T
-): { debounced: T; cancel: () => void } {
+export function createRAFDebounce<Args extends unknown[]>(
+  callback: (...args: Args) => void
+): { debounced: (...args: Args) => void; cancel: () => void } {
   let rafId: number | null = null;
 
-  const debounced = ((...args: any[]) => {
+  const debounced = (...args: Args) => {
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
     }
@@ -11,7 +11,7 @@ export function createRAFDebounce<T extends (...args: any[]) => void>(
       callback(...args);
       rafId = null;
     });
-  }) as T;
+  };
 
   const cancel = () => {
     if (rafId !== null) {
