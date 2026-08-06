@@ -64,7 +64,8 @@ export function registerAssignmentWorkSessionRoutes(app: Hono, deps: AssignmentW
   });
 
   app.get("/assignment-work-sessions", (c) => {
-    const links = deps.listAssignmentWorkSessionsUseCase.execute();
+    const workSessionId = c.req.query("workSessionId");
+    const links = deps.listAssignmentWorkSessionsUseCase.execute(workSessionId ? { workSessionId } : undefined);
     return c.json(links.map((link) => link.toJSON()), 200);
   });
 

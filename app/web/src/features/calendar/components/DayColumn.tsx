@@ -1,11 +1,11 @@
 import { memo } from "react";
 import { HourCell } from "./HourCell";
-import { EventBlock } from "@/features/events/components/EventBlock";
+import { WorkSessionBlock } from "@/features/workSessions/components/WorkSessionBlock";
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
 import { toISODate } from "../hooks/useWeekDays";
 import { useCurrentHour } from "../hooks/useCurrentHour";
 import type { RowLayout } from "../hooks/useRowLayout";
-import type { CalendarEvent } from "../types/calendar.types";
+import type { CalendarWorkSession } from "../types/calendar.types";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
@@ -13,11 +13,11 @@ interface DayColumnProps {
   date: Date;
   isToday: boolean;
   isPastDay: boolean;
-  calendarEvents: CalendarEvent[];
+  calendarWorkSessions: CalendarWorkSession[];
   rowLayout: RowLayout;
 }
 
-export const DayColumn = memo(function DayColumn({ date, isToday, isPastDay, calendarEvents, rowLayout }: DayColumnProps) {
+export const DayColumn = memo(function DayColumn({ date, isToday, isPastDay, calendarWorkSessions, rowLayout }: DayColumnProps) {
   const dayIso = toISODate(date);
   const currentHour = useCurrentHour();
 
@@ -40,8 +40,12 @@ export const DayColumn = memo(function DayColumn({ date, isToday, isPastDay, cal
           );
         })}
 
-        {calendarEvents.map((calendarEvent) => (
-          <EventBlock key={calendarEvent.event.id} calendarEvent={calendarEvent} rowLayout={rowLayout} />
+        {calendarWorkSessions.map((calendarWorkSession) => (
+          <WorkSessionBlock
+            key={calendarWorkSession.workSession.id}
+            calendarWorkSession={calendarWorkSession}
+            rowLayout={rowLayout}
+          />
         ))}
 
         {isToday && <CurrentTimeIndicator rowLayout={rowLayout} />}

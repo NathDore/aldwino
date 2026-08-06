@@ -4,7 +4,10 @@ import type { IAssignmentWorkSessionRepository } from "../../infrastructure/data
 export class ListAssignmentWorkSessionsUseCase {
   constructor(private readonly repository: IAssignmentWorkSessionRepository) {}
 
-  execute(): AssignmentWorkSession[] {
+  execute(params?: { workSessionId?: string }): AssignmentWorkSession[] {
+    if (params?.workSessionId) {
+      return this.repository.getByWorkSessionId(params.workSessionId);
+    }
     return this.repository.getAll();
   }
 }

@@ -5,10 +5,10 @@ import { useRowLayout } from "../hooks/useRowLayout";
 import { useScrollToNow } from "../hooks/useScrollToNow";
 import { DayColumn } from "./DayColumn";
 import { DayHeaderCell } from "./DayHeaderCell";
-import type { CalendarEvent } from "../types/calendar.types";
+import type { CalendarWorkSession } from "../types/calendar.types";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const EMPTY_EVENTS: CalendarEvent[] = [];
+const EMPTY_WORK_SESSIONS: CalendarWorkSession[] = [];
 
 function formatHourLabel(hour: number): string {
   const period = hour < 12 ? "AM" : "PM";
@@ -17,10 +17,10 @@ function formatHourLabel(hour: number): string {
 }
 
 interface WeekGridProps {
-  calendarEvents: CalendarEvent[];
+  calendarWorkSessions: CalendarWorkSession[];
 }
 
-export function WeekGrid({ calendarEvents }: WeekGridProps) {
+export function WeekGrid({ calendarWorkSessions }: WeekGridProps) {
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
   const days = useWeekDays(currentWeekStart);
   const today = toISODate(new Date());
@@ -51,19 +51,19 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
     }
   };
 
-  const eventsByDay = useMemo(() => {
-    const map = new Map<string, CalendarEvent[]>();
-    for (const calendarEvent of calendarEvents) {
-      const dayIso = toISODate(new Date(calendarEvent.event.startTime));
+  const workSessionsByDay = useMemo(() => {
+    const map = new Map<string, CalendarWorkSession[]>();
+    for (const calendarWorkSession of calendarWorkSessions) {
+      const dayIso = toISODate(new Date(calendarWorkSession.workSession.startTime));
       const existing = map.get(dayIso);
       if (existing) {
-        existing.push(calendarEvent);
+        existing.push(calendarWorkSession);
       } else {
-        map.set(dayIso, [calendarEvent]);
+        map.set(dayIso, [calendarWorkSession]);
       }
     }
     return map;
-  }, [calendarEvents]);
+  }, [calendarWorkSessions]);
 
   return (
     <div ref={containerRef} className="flex flex-col h-full border border-slate-200 rounded-lg overflow-hidden">
@@ -106,7 +106,7 @@ export function WeekGrid({ calendarEvents }: WeekGridProps) {
                 date={day}
                 isToday={dayIso === today}
                 isPastDay={dayIso < today}
-                calendarEvents={eventsByDay.get(dayIso) ?? EMPTY_EVENTS}
+                calendarWorkSessions={workSessionsByDay.get(dayIso) ?? EMPTY_WORK_SESSIONS}
                 rowLayout={rowLayout}
               />
             );
