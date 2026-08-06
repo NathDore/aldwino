@@ -50,6 +50,15 @@ export function ArrowLeftIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   );
 }
 
+export function UnlinkIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M6.5 9.5l3-3" strokeLinecap="round" />
+      <path d="M6.8 4.8L8 3.6a2.2 2.2 0 013.1 3.1l-1.2 1.2M9.2 11.2L8 12.4a2.2 2.2 0 01-3.1-3.1l1.2-1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function RescheduleIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>

@@ -1,35 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createAssignment,
-  updateAssignment,
-  deleteAssignment,
-  completeAssignment,
-  rescheduleAssignment,
-  type RescheduleAssignmentData,
-} from "../services/assignmentService";
-import type { AssignmentFormData } from "../types/assignment.types";
-
-export function useCreateAssignmentMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createAssignment,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-    },
-  });
-}
+import { updateAssignment, deleteAssignment, changeAssignmentState } from "../services/assignmentService";
+import type { AssignmentEditData } from "../types/assignment.types";
 
 export function useUpdateAssignmentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AssignmentFormData & { isCompleted: boolean } }) =>
-      updateAssignment(id, data),
+    mutationFn: ({ id, data }: { id: string; data: AssignmentEditData }) => updateAssignment(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 }
@@ -41,33 +20,19 @@ export function useDeleteAssignmentMutation() {
     mutationFn: deleteAssignment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
     },
   });
 }
 
-export function useCompleteAssignmentMutation() {
+export function useChangeAssignmentStateMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, isCompleted }: { id: string; isCompleted: boolean }) =>
-      completeAssignment(id, isCompleted),
+    mutationFn: ({ id, assignmentStateId }: { id: string; assignmentStateId: string }) =>
+      changeAssignmentState(id, assignmentStateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-    },
-  });
-}
-
-export function useRescheduleAssignmentMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: RescheduleAssignmentData }) =>
-      rescheduleAssignment(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 }

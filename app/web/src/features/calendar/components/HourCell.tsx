@@ -1,6 +1,6 @@
 import { memo, type KeyboardEvent } from "react";
 import { useCalendarStore } from "../store/calendarStore";
-import { CreateAssignmentPopover } from "@/features/assignments/components/CreateAssignmentPopover";
+import { CreateWorkSessionPopover } from "@/features/workSessions/components/CreateWorkSessionPopover";
 
 interface HourCellProps {
   date: string;
@@ -12,14 +12,14 @@ interface HourCellProps {
 }
 
 export const HourCell = memo(function HourCell({ date, hour, top, height, disabled, isCurrentHour }: HourCellProps) {
-  const creatingAssignmentAt = useCalendarStore((s) => s.creatingAssignmentAt);
-  const startCreatingAssignment = useCalendarStore((s) => s.startCreatingAssignment);
-  const stopCreatingAssignment = useCalendarStore((s) => s.stopCreatingAssignment);
-  const isCreating = creatingAssignmentAt?.date === date && creatingAssignmentAt?.hour === hour;
+  const creatingWorkSessionAt = useCalendarStore((s) => s.creatingWorkSessionAt);
+  const startCreatingWorkSession = useCalendarStore((s) => s.startCreatingWorkSession);
+  const stopCreatingWorkSession = useCalendarStore((s) => s.stopCreatingWorkSession);
+  const isCreating = creatingWorkSessionAt?.date === date && creatingWorkSessionAt?.hour === hour;
 
   const handleStartCreating = () => {
     if (disabled) return;
-    startCreatingAssignment(date, hour, isCurrentHour);
+    startCreatingWorkSession(date, hour, isCurrentHour);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,11 +43,11 @@ export const HourCell = memo(function HourCell({ date, hour, top, height, disabl
       style={{ top, height }}
     >
       {isCreating && (
-        <CreateAssignmentPopover
+        <CreateWorkSessionPopover
           date={date}
           hour={hour}
-          useCurrentTimeAsStart={creatingAssignmentAt?.useCurrentTimeAsStart}
-          onClose={stopCreatingAssignment}
+          useCurrentTimeAsStart={creatingWorkSessionAt?.useCurrentTimeAsStart}
+          onClose={stopCreatingWorkSession}
         />
       )}
     </div>
