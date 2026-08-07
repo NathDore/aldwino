@@ -110,7 +110,7 @@ export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, on
           </Button>
         </div>
 
-        <div className="px-10 py-4 overflow-hidden min-h-0">
+        <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
           <WorkSessionFormPanel
             date={date}
             hour={hour}
