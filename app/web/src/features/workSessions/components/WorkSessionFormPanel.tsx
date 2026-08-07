@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 import { DateCard } from "@/shared/components/DateCard";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
+import { AssignmentSelectionList } from "./AssignmentSelectionList";
 
 interface WorkSessionFormPanelProps {
   onClose: () => void;
@@ -13,16 +14,20 @@ interface WorkSessionFormPanelProps {
 }
 
 export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStart }: WorkSessionFormPanelProps) {
-  const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } = useWorkSessionForm(
-    onClose,
-    date,
-    hour,
-    useCurrentTimeAsStart
-  );
+  const {
+    formState,
+    updateField,
+    updateDuration,
+    handleSubmit,
+    isLoading,
+    todayDateInput,
+    selectedAssignmentIds,
+    toggleAssignment,
+  } = useWorkSessionForm(onClose, date, hour, useCurrentTimeAsStart);
 
   return (
     <div className="flex h-full flex-col">
-      <div className="space-y-4">
+      <div className="space-y-4 shrink-0">
         <div>
           <DateTimeField
             label="Start"
@@ -61,7 +66,12 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
         )}
       </div>
 
-      <div className="flex justify-end gap-2 mt-auto pt-4">
+      <div className="mt-6 flex-1 min-h-0 flex flex-col">
+        <label className="block text-sm font-semibold text-slate-700 mb-1.5 shrink-0">Link assignments (optional)</label>
+        <AssignmentSelectionList selectedIds={selectedAssignmentIds} onToggle={toggleAssignment} disabled={isLoading} />
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 shrink-0">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading}>
           Cancel
         </Button>

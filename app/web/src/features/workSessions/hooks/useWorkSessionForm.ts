@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useCreateWorkSessionMutation } from "../queries/useWorkSessionMutations";
+import { useLinkAssignmentMutation } from "../queries/useAssignmentWorkSessionMutations";
+import { useAssignmentsQuery } from "@/features/assignments";
 import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSessionValidation";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
+import { showToast } from "@/shared/store/toastStore";
 import {
   ALLOWED_DURATIONS_MINUTES,
   combineDateAndTime,
@@ -30,8 +33,20 @@ const START_NOW_SUBMIT_BUFFER_MS = 5000;
 
 export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?: number, useCurrentTimeAsStart?: boolean) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set());
   const createMutation = useCreateWorkSessionMutation();
-  const isLoading = createMutation.isPending;
+  const linkMutation = useLinkAssignmentMutation();
+  const { data: assignments = [] } = useAssignmentsQuery();
+  const isLoading = createMutation.isPending || linkMutation.isPending;
+
+  const toggleAssignment = (id: string) => {
+    setSelectedAssignmentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (date === undefined || hour === undefined) return;
@@ -131,11 +146,26 @@ export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?:
     const endDateTime = new Date(startDateTime.getTime() + fittingDuration.minutes * 60000);
 
     try {
-      await createMutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
       });
+
+      if (selectedAssignmentIds.size > 0) {
+        const results = await Promise.allSettled(
+          Array.from(selectedAssignmentIds).map((assignmentId) =>
+            linkMutation.mutateAsync({ assignmentId, workSessionId: created.id })
+          )
+        );
+        const failedIds = Array.from(selectedAssignmentIds).filter((_, i) => results[i].status === "rejected");
+        if (failedIds.length > 0) {
+          const names = failedIds.map((id) => assignments.find((a) => a.id === id)?.name ?? id);
+          showToast(`Session created, but failed to link: ${names.join(", ")}`, "warning");
+        }
+      }
+
       setFormState(initialFormState);
+      setSelectedAssignmentIds(new Set());
       onSuccess?.();
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -154,6 +184,8 @@ export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?:
     wasClamped,
     noFittingDuration,
     todayDateInput: dateToDateInput(new Date()),
+    selectedAssignmentIds,
+    toggleAssignment,
   };
 }
 
