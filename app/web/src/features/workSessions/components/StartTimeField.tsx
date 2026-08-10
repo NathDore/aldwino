@@ -5,6 +5,7 @@ import {
   backspaceDigit,
   EMPTY_TIME_DIGITS,
   formatDigits,
+  formatTime12h,
   from24Hour,
   parseDigits,
   to24Hour,
@@ -27,9 +28,7 @@ function addMinutes(time24: string, offset: number): string {
 
 function formatChipLabel(time24: string): string {
   const [hh, mm] = time24.split(":").map(Number);
-  const period = hh >= 12 ? "PM" : "AM";
-  const hour12 = hh % 12 === 0 ? 12 : hh % 12;
-  return `${hour12}:${pad(mm)} ${period}`;
+  return formatTime12h(hh, mm);
 }
 
 interface StartTimeFieldProps {

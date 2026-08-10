@@ -89,6 +89,12 @@ export function to24Hour(hour12: number, minute: number, period: Period): string
   return `${pad(hour24)}:${pad(minute)}`;
 }
 
+export function formatTime12h(hour24: number, minute: number): string {
+  const period: Period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${minute.toString().padStart(2, "0")} ${period}`;
+}
+
 export function from24Hour(time24: string): { state: TimeDigits; period: Period } | null {
   if (!isValidTimeFormat(time24)) return null;
   const [hh, mm] = time24.split(":").map(Number);
