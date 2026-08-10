@@ -3,6 +3,7 @@ import { useAssignmentsQuery, isAssignmentCompleted, isAssignmentOverdue, getAss
 import type { AssignmentDto } from "@/features/assignments";
 import { useCoursesQuery } from "@/features/courses";
 import type { CourseDto } from "@/features/courses";
+import { CourseFilterDropdown } from "./CourseFilterDropdown";
 
 interface AssignmentSelectionListProps {
   selectedIds: Set<string>;
@@ -17,17 +18,28 @@ function formatDueDate(dueDate: string): string {
   });
 }
 
-function matchesSearch(assignment: AssignmentDto, course: CourseDto | undefined, query: string): boolean {
-  const haystack = `${assignment.name} ${course?.code ?? ""} ${course?.title ?? ""}`.toLowerCase();
-  return haystack.includes(query.toLowerCase());
+function matchesSearch(assignment: AssignmentDto, query: string): boolean {
+  return assignment.name.toLowerCase().includes(query.toLowerCase());
 }
 
 export function AssignmentSelectionList({ selectedIds, onToggle, disabled = false }: AssignmentSelectionListProps) {
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
   const [search, setSearch] = useState("");
+  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(new Set());
 
   const coursesById = useMemo(() => new Map(courses.map((course) => [course.id, course])), [courses]);
+
+  const toggleCourse = (courseId: string) => {
+    setSelectedCourseIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(courseId)) next.delete(courseId);
+      else next.add(courseId);
+      return next;
+    });
+  };
+
+  const clearCourses = () => setSelectedCourseIds(new Set());
 
   const inProgress = useMemo(
     () => assignments.filter((assignment) => !isAssignmentCompleted(assignment) && !isAssignmentOverdue(assignment)),
@@ -36,24 +48,33 @@ export function AssignmentSelectionList({ selectedIds, onToggle, disabled = fals
 
   const visible = useMemo(
     () =>
-      search.trim() === ""
-        ? inProgress
-        : inProgress.filter((assignment) => matchesSearch(assignment, coursesById.get(assignment.courseId), search)),
-    [inProgress, coursesById, search]
+      inProgress
+        .filter((assignment) => search.trim() === "" || matchesSearch(assignment, search))
+        .filter((assignment) => selectedCourseIds.size === 0 || selectedCourseIds.has(assignment.courseId)),
+    [inProgress, search, selectedCourseIds]
   );
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search assignments…"
-        disabled={disabled || inProgress.length === 0}
-        className="w-full px-3 py-2 text-sm rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-emerald-600 disabled:opacity-50 shrink-0"
-      />
+      <div className="flex items-center gap-2 shrink-0">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search assignments…"
+          disabled={disabled || inProgress.length === 0}
+          className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-emerald-600 disabled:opacity-50"
+        />
+        <CourseFilterDropdown
+          courses={courses}
+          selectedCourseIds={selectedCourseIds}
+          onToggle={toggleCourse}
+          onClear={clearCourses}
+          disabled={disabled || inProgress.length === 0}
+        />
+      </div>
 
-      <div className="mt-2 flex-1 min-h-0 max-h-[420px] overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
+      <div className="mt-2 flex-1 min-h-0 max-h-[280px] overflow-y-auto styled-scrollbar border border-slate-200 rounded-lg divide-y divide-slate-100">
         {visible.length === 0 ? (
           <p className="px-3 py-6 text-sm text-slate-600 text-center">
             {inProgress.length === 0 ? "No assignments in progress" : "No matches"}
