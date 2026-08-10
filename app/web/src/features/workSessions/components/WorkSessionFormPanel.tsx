@@ -1,10 +1,9 @@
 import { useWorkSessionForm } from "../hooks/useWorkSessionForm";
 import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
-import { DateTimeField } from "@/shared/components/DateTimeField";
-import { DateCard } from "@/shared/components/DateCard";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
 import { AssignmentSelectionList } from "./AssignmentSelectionList";
+import { StartTimeField } from "./StartTimeField";
 
 interface WorkSessionFormPanelProps {
   onClose: () => void;
@@ -21,6 +20,7 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
     handleSubmit,
     isLoading,
     todayDateInput,
+    quickTimeBase,
     selectedAssignmentIds,
     toggleAssignment,
   } = useWorkSessionForm(onClose, date, hour, useCurrentTimeAsStart);
@@ -29,20 +29,17 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
     <div className="flex h-full flex-col">
       <div className="space-y-4 shrink-0">
         <div>
-          <DateTimeField
-            label="Start"
+          <StartTimeField
             id="worksession-start"
             dateValue={formState.startDateDay}
             timeValue={formState.startDateTime}
+            quickTimeBase={quickTimeBase}
             onDateChange={(v) => updateField("startDateDay", v)}
             onTimeChange={(v) => updateField("startDateTime", v)}
             dateError={formState.errors.startDateDay}
             timeError={formState.errors.startDateTime}
             disabled={isLoading}
             min={todayDateInput}
-            renderDateInput={({ id, value, onChange, disabled, min }) => (
-              <DateCard id={id} value={value} onChange={onChange} disabled={disabled} min={min} />
-            )}
           />
         </div>
 
