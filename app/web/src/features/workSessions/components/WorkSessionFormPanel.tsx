@@ -2,6 +2,7 @@ import { useWorkSessionForm } from "../hooks/useWorkSessionForm";
 import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
+import { formatTime12h } from "@/shared/lib/timeDigits";
 import { AssignmentSelectionList } from "./AssignmentSelectionList";
 import { StartTimeField } from "./StartTimeField";
 
@@ -23,7 +24,13 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
     quickTimeBase,
     selectedAssignmentIds,
     toggleAssignment,
+    effectiveEndTime,
   } = useWorkSessionForm(onClose, date, hour, useCurrentTimeAsStart);
+
+  const startTimeParts = formState.startDateTime.split(":");
+  const startTimeLabel =
+    startTimeParts.length === 2 ? formatTime12h(Number(startTimeParts[0]), Number(startTimeParts[1])) : null;
+  const endTimeLabel = effectiveEndTime ? formatTime12h(effectiveEndTime.getHours(), effectiveEndTime.getMinutes()) : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -44,7 +51,14 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Duration</label>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <label className="text-sm font-semibold text-slate-700">Duration</label>
+            {startTimeLabel && endTimeLabel && (
+              <p className="text-xs text-slate-500 whitespace-nowrap">
+                {startTimeLabel} → <span className="font-semibold text-slate-900">{endTimeLabel}</span>
+              </p>
+            )}
+          </div>
           <DurationSelector
             durations={ALLOWED_DURATIONS_MINUTES}
             selectedMinutes={formState.durationMinutes}

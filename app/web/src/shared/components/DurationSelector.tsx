@@ -15,10 +15,14 @@ function ClockIcon({ className }: { className?: string }) {
 }
 
 export function DurationSelector({ durations, selectedMinutes, onSelect, disabled = false }: DurationSelectorProps) {
+  const maxMinutes = Math.max(...durations);
+
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] gap-1.5 p-0.5">
+    <div className="flex gap-1.5">
       {durations.map((minutes) => {
         const isSelected = minutes === selectedMinutes;
+        // Chip width scales with duration so longer sessions read as visually "longer".
+        const paddingX = Math.round(8 + (minutes / maxMinutes) * 20);
 
         return (
           <button
@@ -27,7 +31,8 @@ export function DurationSelector({ durations, selectedMinutes, onSelect, disable
             onClick={() => onSelect(minutes)}
             disabled={disabled}
             title={`${minutes} minutes`}
-            className={`flex h-[38px] flex-row items-center justify-center gap-1 rounded border px-1.5 transition-colors disabled:opacity-50 ${isSelected ? "border-emerald-600 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"
+            style={{ paddingLeft: paddingX, paddingRight: paddingX }}
+            className={`flex h-[34px] flex-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md border transition-colors disabled:opacity-50 ${isSelected ? "border-emerald-600 bg-emerald-50" : "border-slate-200 bg-white hover:bg-slate-50"
               }`}
           >
             <div
@@ -36,11 +41,8 @@ export function DurationSelector({ durations, selectedMinutes, onSelect, disable
             >
               <ClockIcon className="h-2.5 w-2.5 text-white" />
             </div>
-            <span
-              className={`truncate text-center text-[9px] leading-tight ${isSelected ? "font-medium text-emerald-700" : "text-slate-600"
-                }`}
-            >
-              {minutes}
+            <span className={`text-xs leading-tight ${isSelected ? "font-medium text-emerald-700" : "text-slate-600"}`}>
+              {minutes}m
             </span>
           </button>
         );
