@@ -33,6 +33,7 @@ const START_NOW_SUBMIT_BUFFER_MS = 5000;
 
 export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?: number, useCurrentTimeAsStart?: boolean) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
+  const [quickTimeBase, setQuickTimeBase] = useState("");
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set());
   const createMutation = useCreateWorkSessionMutation();
   const linkMutation = useLinkAssignmentMutation();
@@ -57,6 +58,7 @@ export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?:
       startDateTime: time,
       errors: { ...prev.errors, startDateDay: "", startDateTime: "" },
     }));
+    setQuickTimeBase(time);
   }, [date, hour, useCurrentTimeAsStart]);
 
   const updateField = (field: "startDateDay" | "startDateTime", value: string) => {
@@ -184,6 +186,7 @@ export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?:
     wasClamped,
     noFittingDuration,
     todayDateInput: dateToDateInput(new Date()),
+    quickTimeBase,
     selectedAssignmentIds,
     toggleAssignment,
   };

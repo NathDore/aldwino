@@ -1,80 +1,19 @@
 import { useEffect, useState, type ReactNode } from "react";
+import {
+  appendDigit,
+  backspaceDigit,
+  EMPTY_TIME_DIGITS,
+  formatDigits,
+  from24Hour,
+  isValidTimeFormat,
+  parseDigits,
+  TIME_FORMAT_ERROR,
+  to24Hour,
+  type Period,
+  type TimeDigits,
+} from "@/shared/lib/timeDigits";
 
-export const TIME_FORMAT_ERROR = "Enter a time as HH:MM";
-
-export function isValidTimeFormat(value: string): boolean {
-  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
-}
-
-type Period = "AM" | "PM";
-
-const TWO_DIGIT_HOURS = ["10", "11", "12"];
-
-// Builds up a raw "HMM"/"HHMM" digit buffer one character at a time, rejecting
-// any digit that could never lead to a valid 12-hour time (e.g. a minutes-tens
-// digit above 5), so an invalid time can't be typed in the first place.
-function appendDigit(digits: string, ch: string): string {
-  if (!/^[0-9]$/.test(ch)) return digits;
-
-  if (digits.length === 0) {
-    return ch === "0" ? digits : ch;
-  }
-
-  if (digits.length === 1) {
-    if (digits !== "1") {
-      return Number(ch) > 5 ? digits : digits + ch;
-    }
-    if (ch === "0" || ch === "1" || ch === "2") {
-      return digits + ch;
-    }
-    return Number(ch) > 5 ? digits : digits + ch;
-  }
-
-  const hourWidth = TWO_DIGIT_HOURS.includes(digits.slice(0, 2)) ? 2 : 1;
-
-  if (digits.length === hourWidth) {
-    return Number(ch) > 5 ? digits : digits + ch;
-  }
-
-  if (digits.length === hourWidth + 1) {
-    return digits + ch;
-  }
-
-  return digits;
-}
-
-function formatDigits(digits: string): string {
-  if (digits.length === 0) return "";
-  if (digits.length === 1) return digits;
-  const hourWidth = TWO_DIGIT_HOURS.includes(digits.slice(0, 2)) ? 2 : 1;
-  const hourPart = digits.slice(0, hourWidth);
-  const minutePart = digits.slice(hourWidth);
-  return minutePart.length === 0 ? `${hourPart}:` : `${hourPart}:${minutePart}`;
-}
-
-function parseDigits(digits: string): { hour12: number; minute: number } | null {
-  if (digits.length < 3) return null;
-  const hourWidth = TWO_DIGIT_HOURS.includes(digits.slice(0, 2)) ? 2 : 1;
-  if (digits.length !== hourWidth + 2) return null;
-  const hour12 = Number(digits.slice(0, hourWidth));
-  const minute = Number(digits.slice(hourWidth));
-  if (hour12 < 1 || hour12 > 12 || minute > 59) return null;
-  return { hour12, minute };
-}
-
-function to24Hour(hour12: number, minute: number, period: Period): string {
-  const hour24 = period === "PM" ? (hour12 % 12) + 12 : hour12 % 12;
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(hour24)}:${pad(minute)}`;
-}
-
-function from24Hour(time24: string): { digits: string; period: Period } | null {
-  if (!isValidTimeFormat(time24)) return null;
-  const [hh, mm] = time24.split(":").map(Number);
-  const period: Period = hh >= 12 ? "PM" : "AM";
-  const hour12 = hh % 12 === 0 ? 12 : hh % 12;
-  return { digits: `${hour12}${mm.toString().padStart(2, "0")}`, period };
-}
+export { TIME_FORMAT_ERROR, isValidTimeFormat };
 
 interface DateTimeFieldProps {
   label: string;
@@ -109,44 +48,44 @@ export function DateTimeField({
   min,
   renderDateInput,
 }: DateTimeFieldProps) {
-  const [digits, setDigits] = useState("");
+  const [entry, setEntry] = useState<TimeDigits>(EMPTY_TIME_DIGITS);
   const [period, setPeriod] = useState<Period>("AM");
 
   useEffect(() => {
     const parsed = from24Hour(timeValue);
-    setDigits(parsed?.digits ?? "");
+    setEntry(parsed?.state ?? EMPTY_TIME_DIGITS);
     setPeriod(parsed?.period ?? "AM");
   }, [timeValue]);
 
-  const commit = (nextDigits: string, nextPeriod: Period) => {
-    const parsed = parseDigits(nextDigits);
+  const commit = (nextEntry: TimeDigits, nextPeriod: Period) => {
+    const parsed = parseDigits(nextEntry);
     onTimeChange(parsed ? to24Hour(parsed.hour12, parsed.minute, nextPeriod) : "");
   };
 
   const handleTimeInputChange = (raw: string) => {
     const rawDigits = raw.replace(/\D/g, "");
-    let nextDigits: string;
-    if (rawDigits.length === digits.length + 1 && rawDigits.startsWith(digits)) {
-      nextDigits = appendDigit(digits, rawDigits[rawDigits.length - 1]);
+    let nextEntry: TimeDigits;
+    if (rawDigits.length === entry.digits.length + 1 && rawDigits.startsWith(entry.digits)) {
+      nextEntry = appendDigit(entry, rawDigits[rawDigits.length - 1]);
     } else {
-      nextDigits = "";
+      nextEntry = EMPTY_TIME_DIGITS;
       for (const ch of rawDigits) {
-        nextDigits = appendDigit(nextDigits, ch);
+        nextEntry = appendDigit(nextEntry, ch);
       }
     }
-    setDigits(nextDigits);
-    commit(nextDigits, period);
+    setEntry(nextEntry);
+    commit(nextEntry, period);
   };
 
   const handleBackspace = () => {
-    const nextDigits = digits.slice(0, -1);
-    setDigits(nextDigits);
-    commit(nextDigits, period);
+    const nextEntry = backspaceDigit(entry);
+    setEntry(nextEntry);
+    commit(nextEntry, period);
   };
 
   const selectPeriod = (nextPeriod: Period) => {
     setPeriod(nextPeriod);
-    commit(digits, nextPeriod);
+    commit(entry, nextPeriod);
   };
 
   return (
@@ -173,7 +112,7 @@ export function DateTimeField({
         <input
           id={`${id}-time`}
           type="text"
-          value={formatDigits(digits)}
+          value={formatDigits(entry)}
           onChange={(e) => handleTimeInputChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Backspace") {
