@@ -59,6 +59,16 @@ export function UnlinkIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   );
 }
 
+export function MoreIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className={className}>
+      <circle cx="8" cy="3.2" r="1.3" />
+      <circle cx="8" cy="8" r="1.3" />
+      <circle cx="8" cy="12.8" r="1.3" />
+    </svg>
+  );
+}
+
 export function RescheduleIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
