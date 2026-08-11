@@ -8,6 +8,7 @@ import { InlineCourseForm } from "@/features/courses/components/InlineCourseForm
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 import { DateCard } from "@/shared/components/DateCard";
+import { ArrowLeftIcon } from "@/features/calendar/components/icons";
 
 interface AssignmentFormPanelProps {
   onClose: () => void;
@@ -26,8 +27,8 @@ export function AssignmentFormPanel({ onClose, assignmentToEdit }: AssignmentFor
   };
 
   return (
-    <div className="grid">
-      <div className={`col-start-1 row-start-1 ${mode === "create-course" ? "invisible" : ""}`}>
+    <div className="grid h-full">
+      <div className={`col-start-1 row-start-1 h-full ${mode === "create-course" ? "invisible" : ""}`}>
         <AssignmentEditForm
           onClose={onClose}
           assignmentToEdit={assignmentToEdit}
@@ -36,7 +37,7 @@ export function AssignmentFormPanel({ onClose, assignmentToEdit }: AssignmentFor
         />
       </div>
       {mode === "create-course" && (
-        <div className="col-start-1 row-start-1">
+        <div className="col-start-1 row-start-1 h-full">
           <InlineCourseForm onCreated={handleCourseCreated} onBack={() => setMode("assignment")} />
         </div>
       )}
@@ -67,6 +68,16 @@ function AssignmentEditForm({ onClose, assignmentToEdit, onRequestCreateCourse, 
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-4">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-emerald-700 disabled:opacity-50"
+        >
+          <ArrowLeftIcon className="w-3 h-3" />
+          Back
+        </button>
+
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">Courses</label>
           {coursesLoading ? (
@@ -132,7 +143,7 @@ function AssignmentEditForm({ onClose, assignmentToEdit, onRequestCreateCourse, 
           Cancel
         </Button>
         <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isLoading || courses.length === 0}>
-          {isLoading ? "Saving..." : "Save Changes"}
+          {isLoading ? "Saving..." : "Save"}
         </Button>
       </div>
     </div>

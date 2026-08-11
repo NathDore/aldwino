@@ -35,7 +35,7 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
       }
     >
       {(handleClose) => (
-        <div className="px-10 py-4 overflow-hidden min-h-0">
+        <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
           <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
         </div>
       )}
