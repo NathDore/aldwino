@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
 import { WorkSessionFormPanel } from "./WorkSessionFormPanel";
+import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { CloseIcon } from "@/features/calendar/components/icons";
 import { parseISODate } from "@/features/calendar/hooks/useWeekDays";
+import type { AssignmentDto } from "@/features/assignments";
 
 const EXIT_TRANSITION_MS = 150;
 const EXIT_SAFETY_MARGIN_MS = 100;
@@ -32,11 +34,20 @@ function formatHeading(date: string): { weekday: string; dateLabel: string } {
   };
 }
 
+type Mode = "session" | "create-assignment";
+
 export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, onClose }: CreateWorkSessionPopoverProps) {
   const { weekday, dateLabel } = formatHeading(date);
   const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
+  const [mode, setMode] = useState<Mode>("session");
+  const [pendingAssignmentId, setPendingAssignmentId] = useState<string | undefined>(undefined);
+
+  const handleAssignmentCreated = (assignment: AssignmentDto) => {
+    setPendingAssignmentId(assignment.id);
+    setMode("session");
+  };
 
   useBodyScrollLock();
 
@@ -111,12 +122,23 @@ export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, on
         </div>
 
         <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-          <WorkSessionFormPanel
-            date={date}
-            hour={hour}
-            useCurrentTimeAsStart={useCurrentTimeAsStart}
-            onClose={handleClose}
-          />
+          <div className="grid h-full">
+            <div className={`col-start-1 row-start-1 h-full ${mode === "create-assignment" ? "invisible" : ""}`}>
+              <WorkSessionFormPanel
+                date={date}
+                hour={hour}
+                useCurrentTimeAsStart={useCurrentTimeAsStart}
+                onClose={handleClose}
+                onRequestCreateAssignment={() => setMode("create-assignment")}
+                pendingAssignmentId={pendingAssignmentId}
+              />
+            </div>
+            {mode === "create-assignment" && (
+              <div className="col-start-1 row-start-1 h-full">
+                <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode("session")} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>,

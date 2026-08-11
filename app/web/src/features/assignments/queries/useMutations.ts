@@ -1,6 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateAssignment, deleteAssignment, changeAssignmentState } from "../services/assignmentService";
+import { createAssignment, updateAssignment, deleteAssignment, changeAssignmentState } from "../services/assignmentService";
 import type { AssignmentEditData } from "../types/assignment.types";
+
+export function useCreateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
 
 export function useUpdateAssignmentMutation() {
   const queryClient = useQueryClient();

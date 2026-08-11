@@ -16,3 +16,9 @@ export interface AssignmentEditData {
   dueDate: string;
   assignmentStateId: string;
 }
+
+export interface AssignmentCreateData {
+  courseId: string;
+  name: string;
+  dueDate: string;
+}
