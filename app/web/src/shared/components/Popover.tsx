@@ -13,9 +13,6 @@ import { Button } from "@/shared/components/Button";
 import { useBodyScrollLock } from "@/shared/hooks/useBodyScrollLock";
 import { CloseIcon } from "@/features/calendar/components/icons";
 
-const EXIT_TRANSITION_MS = 150;
-const EXIT_SAFETY_MARGIN_MS = 100;
-
 interface PopoverProps {
   header: ReactNode;
   headerClassName?: string;
@@ -37,16 +34,11 @@ export function Popover({ header, headerClassName, panelClassName, panelStyle, o
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const closeNow = useCallback(() => {
+  const handleClose = useCallback(() => {
     if (hasClosedRef.current) return;
     hasClosedRef.current = true;
     onClose();
   }, [onClose]);
-
-  const handleClose = useCallback(() => {
-    setIsVisible(false);
-    window.setTimeout(closeNow, EXIT_TRANSITION_MS + EXIT_SAFETY_MARGIN_MS);
-  }, [closeNow]);
 
   const handleBackdropMouseDown = (e: MouseEvent) => {
     mouseDownOnBackdropRef.current = e.target === e.currentTarget;
@@ -86,9 +78,6 @@ export function Popover({ header, headerClassName, panelClassName, panelStyle, o
           } ${panelClassName ?? ""}`}
         style={panelStyle}
         onClick={stopClickPropagation}
-        onTransitionEnd={(e) => {
-          if (!isVisible && e.propertyName === "opacity") closeNow();
-        }}
       >
         <div className={`flex items-start justify-between gap-2 border-b border-slate-200 shrink-0 ${headerClassName ?? "px-6 py-3"}`}>
           {header}
