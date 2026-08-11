@@ -23,7 +23,7 @@ export function ColorPicker({
         <button
           key={color.hex}
           onClick={() => onChange(color.hex)}
-          className="relative w-6 h-6 rounded-sm border transition-all hover:scale-105"
+          className="relative w-6 h-6 rounded-sm border transition-transform hover:scale-105"
           style={{
             backgroundColor: color.hex,
             borderColor: selectedColor === color.hex ? "#059669" : "#94a3b8",

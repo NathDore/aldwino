@@ -20,7 +20,7 @@ export function Button({
   onClick,
   className = "",
 }: ButtonProps) {
-  const baseStyles = "font-medium transition-all rounded focus:outline-none disabled:opacity-50";
+  const baseStyles = "font-medium transition-colors rounded focus:outline-none disabled:opacity-50";
 
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
