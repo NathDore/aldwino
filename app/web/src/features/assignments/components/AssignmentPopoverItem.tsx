@@ -1,10 +1,9 @@
-import { memo, useState } from "react";
-import { useChangeAssignmentStateMutation, useDeleteAssignmentMutation } from "../queries/useMutations";
+import { memo, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useChangeAssignmentStateMutation } from "../queries/useMutations";
 import { useAssignmentStatesQuery } from "../queries/useAssignmentStatesQuery";
 import { Button } from "@/shared/components/Button";
-import { Modal } from "@/shared/components/Modal";
-import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
-import { ChevronDownIcon, PencilIcon, TrashIcon, UnlinkIcon } from "@/features/calendar/components/icons";
+import { ChevronDownIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
 import { getAssignmentColor, isAssignmentCompleted, isAssignmentOverdue, getAssignmentStateId } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
@@ -32,10 +31,12 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   const { assignment, course } = item;
   const { data: assignmentStates } = useAssignmentStatesQuery();
   const stateMutation = useChangeAssignmentStateMutation();
-  const deleteMutation = useDeleteAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuTriggerRef = useRef<HTMLSpanElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
   const borderColor = getAssignmentColor(assignment, course);
   const isOverdue = isAssignmentOverdue(assignment);
   const completed = isAssignmentCompleted(assignment);
@@ -47,10 +48,38 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
     await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
   };
 
-  const handleDelete = async () => {
-    await deleteMutation.mutateAsync(assignment.id);
-    setIsConfirmingDelete(false);
-  };
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    function updatePosition() {
+      const rect = menuTriggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setMenuPosition({ top: rect.bottom + 4, left: rect.right });
+    }
+
+    updatePosition();
+
+    function handlePointerDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (menuPanelRef.current?.contains(target) || menuTriggerRef.current?.contains(target)) return;
+      setIsMenuOpen(false);
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setIsMenuOpen(false);
+    }
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isMenuOpen]);
 
   return (
     <div
@@ -89,45 +118,55 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
             <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </Button>
         )}
-        <Button variant="ghost" size="sm" onClick={onUnlink} disabled={isUnlinking} className="shrink-0">
-          <span className="sr-only">Unlink {assignment.name} from this work session</span>
-          <UnlinkIcon />
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="shrink-0">
-          <span className="sr-only">Edit {assignment.name}</span>
-          <PencilIcon />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsConfirmingDelete(true)}
-          disabled={deleteMutation.isPending}
-          className="shrink-0"
-        >
-          <span className="sr-only">Delete {assignment.name}</span>
-          <TrashIcon />
-        </Button>
-        <input
-          type="checkbox"
-          checked={completed}
-          onChange={handleToggleComplete}
-          disabled={stateMutation.isPending}
-          className="mt-1 cursor-pointer shrink-0 disabled:cursor-not-allowed"
-          aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
-        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <input
+            type="checkbox"
+            checked={completed}
+            onChange={handleToggleComplete}
+            disabled={stateMutation.isPending}
+            className="cursor-pointer disabled:cursor-not-allowed"
+            aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
+          />
+          <span ref={menuTriggerRef} className="inline-flex">
+            <Button variant="ghost" size="xs" onClick={() => setIsMenuOpen((v) => !v)}>
+              <span className="sr-only">More actions for {assignment.name}</span>
+              <MoreIcon className="w-3.5 h-3.5" />
+            </Button>
+          </span>
+        </div>
+        {isMenuOpen &&
+          createPortal(
+            <div
+              ref={menuPanelRef}
+              className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
+              style={{ top: menuPosition.top, left: menuPosition.left, transform: "translateX(-100%)" }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsEditing(true);
+                }}
+                className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onUnlink();
+                }}
+                disabled={isUnlinking}
+                className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                Remove
+              </button>
+            </div>,
+            document.body
+          )}
       </div>
       {isEditing && <EditAssignmentModal item={item} onClose={() => setIsEditing(false)} />}
-      {isConfirmingDelete && (
-        <Modal maxWidth="max-w-md">
-          <DeleteConfirmation
-            title="Delete assignment"
-            description={`This will permanently delete "${assignment.name}".`}
-            isLoading={deleteMutation.isPending}
-            onConfirm={handleDelete}
-            onCancel={() => setIsConfirmingDelete(false)}
-          />
-        </Modal>
-      )}
     </div>
   );
 });
