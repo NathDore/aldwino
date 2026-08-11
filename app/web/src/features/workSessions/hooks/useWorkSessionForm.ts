@@ -31,7 +31,13 @@ const initialFormState: FormState = {
 // literal "now" captured on submit always loses that race to network/processing latency.
 const START_NOW_SUBMIT_BUFFER_MS = 5000;
 
-export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?: number, useCurrentTimeAsStart?: boolean) {
+export function useWorkSessionForm(
+  onSuccess?: () => void,
+  date?: string,
+  hour?: number,
+  useCurrentTimeAsStart?: boolean,
+  pendingAssignmentId?: string
+) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [quickTimeBase, setQuickTimeBase] = useState("");
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set());
@@ -48,6 +54,16 @@ export function useWorkSessionForm(onSuccess?: () => void, date?: string, hour?:
       return next;
     });
   };
+
+  useEffect(() => {
+    if (!pendingAssignmentId) return;
+    setSelectedAssignmentIds((prev) => {
+      if (prev.has(pendingAssignmentId)) return prev;
+      const next = new Set(prev);
+      next.add(pendingAssignmentId);
+      return next;
+    });
+  }, [pendingAssignmentId]);
 
   useEffect(() => {
     if (date === undefined || hour === undefined) return;

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Popover } from "@/shared/components/Popover";
 import { WorkSessionFormPanel } from "./WorkSessionFormPanel";
+import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { parseISODate } from "@/features/calendar/hooks/useWeekDays";
+import type { AssignmentDto } from "@/features/assignments";
 
 const FORM_WIDTH = 1200;
 const FORM_HEIGHT = 1000;
@@ -26,8 +29,17 @@ function formatHeading(date: string): { weekday: string; dateLabel: string } {
   };
 }
 
+type Mode = "session" | "create-assignment";
+
 export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, onClose }: CreateWorkSessionPopoverProps) {
   const { weekday, dateLabel } = formatHeading(date);
+  const [mode, setMode] = useState<Mode>("session");
+  const [pendingAssignmentId, setPendingAssignmentId] = useState<string | undefined>(undefined);
+
+  const handleAssignmentCreated = (assignment: AssignmentDto) => {
+    setPendingAssignmentId(assignment.id);
+    setMode("session");
+  };
 
   return (
     <Popover
@@ -45,12 +57,23 @@ export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, on
     >
       {(handleClose) => (
         <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-          <WorkSessionFormPanel
-            date={date}
-            hour={hour}
-            useCurrentTimeAsStart={useCurrentTimeAsStart}
-            onClose={handleClose}
-          />
+          <div className="grid h-full">
+            <div className={`col-start-1 row-start-1 h-full ${mode === "create-assignment" ? "invisible" : ""}`}>
+              <WorkSessionFormPanel
+                date={date}
+                hour={hour}
+                useCurrentTimeAsStart={useCurrentTimeAsStart}
+                onClose={handleClose}
+                onRequestCreateAssignment={() => setMode("create-assignment")}
+                pendingAssignmentId={pendingAssignmentId}
+              />
+            </div>
+            {mode === "create-assignment" && (
+              <div className="col-start-1 row-start-1 h-full">
+                <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode("session")} />
+              </div>
+            )}
+          </div>
         </div>
       )}
     </Popover>

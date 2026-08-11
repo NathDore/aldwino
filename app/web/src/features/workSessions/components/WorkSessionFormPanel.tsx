@@ -5,15 +5,25 @@ import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
 import { formatTime12h } from "@/shared/lib/timeDigits";
 import { AssignmentSelectionList } from "./AssignmentSelectionList";
 import { StartTimeField } from "./StartTimeField";
+import { PlusIcon } from "@/features/calendar/components/icons";
 
 interface WorkSessionFormPanelProps {
   onClose: () => void;
   date: string;
   hour: number;
   useCurrentTimeAsStart?: boolean;
+  onRequestCreateAssignment: () => void;
+  pendingAssignmentId?: string;
 }
 
-export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStart }: WorkSessionFormPanelProps) {
+export function WorkSessionFormPanel({
+  onClose,
+  date,
+  hour,
+  useCurrentTimeAsStart,
+  onRequestCreateAssignment,
+  pendingAssignmentId,
+}: WorkSessionFormPanelProps) {
   const {
     formState,
     updateField,
@@ -25,7 +35,7 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
     selectedAssignmentIds,
     toggleAssignment,
     effectiveEndTime,
-  } = useWorkSessionForm(onClose, date, hour, useCurrentTimeAsStart);
+  } = useWorkSessionForm(onClose, date, hour, useCurrentTimeAsStart, pendingAssignmentId);
 
   const startTimeParts = formState.startDateTime.split(":");
   const startTimeLabel =
@@ -78,7 +88,15 @@ export function WorkSessionFormPanel({ onClose, date, hour, useCurrentTimeAsStar
       </div>
 
       <div className="mt-6 flex-1 min-h-0 flex flex-col">
-        <label className="block text-sm font-semibold text-slate-700 mb-1.5 shrink-0">Link assignments (optional)</label>
+        <div className="flex items-baseline justify-between mb-1.5 shrink-0">
+          <label className="text-sm font-semibold text-slate-700">Link assignments (optional)</label>
+          <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={isLoading}>
+            <span className="flex items-center gap-1">
+              <PlusIcon className="w-3 h-3" />
+              New Assignment
+            </span>
+          </Button>
+        </div>
         <AssignmentSelectionList selectedIds={selectedAssignmentIds} onToggle={toggleAssignment} disabled={isLoading} />
       </div>
 
