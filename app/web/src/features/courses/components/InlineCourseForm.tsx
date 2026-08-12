@@ -3,6 +3,12 @@ import { ColorPicker } from "./ColorPicker";
 import { Button } from "@/shared/components/Button";
 import { useInlineCourseForm } from "../hooks/useInlineCourseForm";
 import { ArrowLeftIcon } from "@/features/calendar/components/icons";
+import {
+  LABEL_FONT_SIZE,
+  ONE_LINE_TEXT_INPUT_HEIGHT,
+  ONE_LINE_TEXT_INPUT_WIDTH,
+  TEXT_INPUT_FONT_SIZE,
+} from "@/shared/lib/formConstants";
 
 interface InlineCourseFormProps {
   onCreated: (course: CourseDto) => void;
@@ -27,7 +33,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </button>
 
         <div>
-          <label htmlFor="inline-course-code" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label htmlFor="inline-course-code" className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
             Course Code
           </label>
           <input
@@ -36,7 +42,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
             value={formState.code}
             onChange={(e) => updateField("code", e.target.value)}
             placeholder="MAT-101"
-            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.code
+            className={`${ONE_LINE_TEXT_INPUT_WIDTH} ${ONE_LINE_TEXT_INPUT_HEIGHT} px-4 py-3 ${TEXT_INPUT_FONT_SIZE} rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.code
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -46,7 +52,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </div>
 
         <div>
-          <label htmlFor="inline-course-title" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label htmlFor="inline-course-title" className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
             Course Title
           </label>
           <input
@@ -55,7 +61,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
             value={formState.title}
             onChange={(e) => updateField("title", e.target.value)}
             placeholder="Calculus I"
-            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.title
+            className={`${ONE_LINE_TEXT_INPUT_WIDTH} ${ONE_LINE_TEXT_INPUT_HEIGHT} px-4 py-3 ${TEXT_INPUT_FONT_SIZE} rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${formState.errors.title
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -65,7 +71,7 @@ export function InlineCourseForm({ onCreated, onBack }: InlineCourseFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Color</label>
+          <label className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>Color</label>
           <ColorPicker
             colors={colors}
             selectedColor={formState.color}

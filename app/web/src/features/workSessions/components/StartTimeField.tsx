@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DateCard } from "@/shared/components/DateCard";
+import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 import {
   appendDigit,
   backspaceDigit,
@@ -101,7 +102,7 @@ export function StartTimeField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 mb-1.5">
+      <label htmlFor={id} className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
         Start time
       </label>
 
@@ -125,9 +126,8 @@ export function StartTimeField({
             }}
             placeholder="HH:MM"
             inputMode="numeric"
-            className={`h-[38px] w-16 shrink-0 px-2 text-xs bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
-              timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
-            }`}
+            className={`h-[38px] w-16 shrink-0 px-2 text-xs bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
+              }`}
             disabled={disabled}
           />
           <div className="flex h-[38px] w-8 shrink-0 flex-col gap-0.5">
@@ -135,11 +135,10 @@ export function StartTimeField({
               type="button"
               onClick={() => selectPeriod("AM")}
               disabled={disabled}
-              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${
-                period === "AM"
+              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${period === "AM"
                   ? "bg-emerald-600 text-white hover:bg-emerald-700"
                   : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-              }`}
+                }`}
             >
               AM
             </button>
@@ -147,11 +146,10 @@ export function StartTimeField({
               type="button"
               onClick={() => selectPeriod("PM")}
               disabled={disabled}
-              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${
-                period === "PM"
+              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${period === "PM"
                   ? "bg-emerald-600 text-white hover:bg-emerald-700"
                   : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-              }`}
+                }`}
             >
               PM
             </button>
@@ -162,7 +160,7 @@ export function StartTimeField({
             disabled={disabled}
             className="h-[38px] px-2.5 rounded-md text-xs font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
-            Back to quick times
+            Back
           </button>
         </div>
       ) : (
@@ -175,11 +173,10 @@ export function StartTimeField({
                 type="button"
                 onClick={() => onTimeChange(time24)}
                 disabled={disabled}
-                className={`h-[34px] px-3 rounded-md text-[13px] transition-colors disabled:opacity-50 ${
-                  isSelected
+                className={`h-[34px] px-3 rounded-md text-[13px] transition-colors disabled:opacity-50 ${isSelected
                     ? "border border-emerald-600 bg-emerald-50 text-emerald-700 font-medium"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 {formatChipLabel(time24)}
               </button>

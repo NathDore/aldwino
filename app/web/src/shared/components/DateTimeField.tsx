@@ -1,4 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { DateCard } from "@/shared/components/DateCard";
+import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 import {
   appendDigit,
   backspaceDigit,
@@ -26,13 +28,6 @@ interface DateTimeFieldProps {
   timeError?: string;
   disabled?: boolean;
   min?: string;
-  renderDateInput?: (props: {
-    id: string;
-    value: string;
-    onChange: (value: string) => void;
-    disabled: boolean;
-    min?: string;
-  }) => ReactNode;
 }
 
 export function DateTimeField({
@@ -46,7 +41,6 @@ export function DateTimeField({
   timeError,
   disabled = false,
   min,
-  renderDateInput,
 }: DateTimeFieldProps) {
   const [entry, setEntry] = useState<TimeDigits>(EMPTY_TIME_DIGITS);
   const [period, setPeriod] = useState<Period>("AM");
@@ -90,25 +84,11 @@ export function DateTimeField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 mb-1.5">
+      <label htmlFor={id} className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
         {label}
       </label>
       <div className="flex items-end gap-1.5">
-        {renderDateInput ? (
-          renderDateInput({ id, value: dateValue, onChange: onDateChange, disabled, min })
-        ) : (
-          <input
-            id={id}
-            type="date"
-            value={dateValue}
-            onChange={(e) => onDateChange(e.target.value)}
-            min={min}
-            className={`w-28 shrink-0 px-2 py-1 text-xs bg-white border text-slate-900 focus:outline-none transition-colors ${
-              dateError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
-            }`}
-            disabled={disabled}
-          />
-        )}
+        <DateCard id={id} value={dateValue} onChange={onDateChange} disabled={disabled} min={min} />
         <input
           id={`${id}-time`}
           type="text"

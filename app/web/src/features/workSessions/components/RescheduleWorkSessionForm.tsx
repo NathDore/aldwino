@@ -4,6 +4,7 @@ import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
+import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 
 interface RescheduleWorkSessionFormProps {
   workSession: WorkSessionDto;
@@ -33,7 +34,7 @@ export function RescheduleWorkSessionForm({ workSession, onClose }: RescheduleWo
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Duration</label>
+          <label className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>Duration</label>
           <DurationSelector
             durations={ALLOWED_DURATIONS_MINUTES}
             selectedMinutes={formState.durationMinutes}
