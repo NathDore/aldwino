@@ -4,9 +4,7 @@ import { WorkSessionFormPanel } from "./WorkSessionFormPanel";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { parseISODate } from "@/features/calendar/hooks/useWeekDays";
 import type { AssignmentDto } from "@/features/assignments";
-
-const FORM_WIDTH = 1200;
-const FORM_HEIGHT = 1000;
+import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 
 interface CreateWorkSessionPopoverProps {
   date: string;
@@ -45,7 +43,7 @@ export function CreateWorkSessionPopover({ date, hour, useCurrentTimeAsStart, on
     <Popover
       onClose={onClose}
       panelClassName="max-w-full max-h-full"
-      panelStyle={{ width: FORM_WIDTH, height: FORM_HEIGHT }}
+      panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       headerClassName="px-10 py-3"
       header={
         <div className="min-w-0 flex items-baseline gap-2">

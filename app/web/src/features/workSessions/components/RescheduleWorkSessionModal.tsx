@@ -1,6 +1,7 @@
 import { Popover } from "@/shared/components/Popover";
 import { RescheduleWorkSessionForm } from "./RescheduleWorkSessionForm";
 import type { WorkSessionDto } from "../types/workSession.types";
+import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 
 interface RescheduleWorkSessionModalProps {
   workSession: WorkSessionDto;
@@ -11,12 +12,13 @@ export function RescheduleWorkSessionModal({ workSession, onClose }: RescheduleW
   return (
     <Popover
       onClose={onClose}
-      panelClassName="w-[34rem] max-w-full max-h-[80vh]"
+      panelClassName="max-w-full max-h-full"
+      panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
       headerClassName="px-10 py-3"
       header={<p className="text-sm font-bold text-slate-900 shrink-0">Reschedule Work Session</p>}
     >
       {(handleClose) => (
-        <div className="px-10 py-4 overflow-hidden min-h-0">
+        <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
           <RescheduleWorkSessionForm workSession={workSession} onClose={handleClose} />
         </div>
       )}

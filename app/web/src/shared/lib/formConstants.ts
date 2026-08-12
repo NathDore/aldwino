@@ -18,3 +18,7 @@ export const MULTI_LINE_TEXT_INPUT_HEIGHT = "h-20";
 /** Width and height for date pickers. */
 export const DATE_PICKER_WIDTH = "w-12";
 export const DATE_PICKER_HEIGHT = "h-[38px]";
+
+/** Width and height (in px) for form modals/popovers. */
+export const MODAL_WIDTH = 1200;
+export const MODAL_HEIGHT = 1000;
