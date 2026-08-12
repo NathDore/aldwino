@@ -6,6 +6,7 @@ import { formatTime12h } from "@/shared/lib/timeDigits";
 import { AssignmentSelectionList } from "./AssignmentSelectionList";
 import { StartTimeField } from "./StartTimeField";
 import { PlusIcon } from "@/features/calendar/components/icons";
+import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 
 interface WorkSessionFormPanelProps {
   onClose: () => void;
@@ -62,7 +63,7 @@ export function WorkSessionFormPanel({
 
         <div>
           <div className="flex items-baseline justify-between mb-1.5">
-            <label className="text-sm font-semibold text-slate-700">Duration</label>
+            <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>Duration</label>
             {startTimeLabel && endTimeLabel && (
               <p className="text-xs text-slate-500 whitespace-nowrap">
                 {startTimeLabel} → <span className="font-semibold text-slate-900">{endTimeLabel}</span>
@@ -89,7 +90,7 @@ export function WorkSessionFormPanel({
 
       <div className="mt-6 flex-1 min-h-0 flex flex-col">
         <div className="flex items-baseline justify-between mb-1.5 shrink-0">
-          <label className="text-sm font-semibold text-slate-700">Link assignments (optional)</label>
+          <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>Link assignments (optional)</label>
           <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={isLoading}>
             <span className="flex items-center gap-1">
               <PlusIcon className="w-3 h-3" />

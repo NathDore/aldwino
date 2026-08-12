@@ -4,6 +4,7 @@ import type { AssignmentDto } from "@/features/assignments";
 import { useCoursesQuery } from "@/features/courses";
 import type { CourseDto } from "@/features/courses";
 import { CourseFilterDropdown } from "./CourseFilterDropdown";
+import { ONE_LINE_TEXT_INPUT_HEIGHT } from "@/shared/lib/formConstants";
 
 interface AssignmentSelectionListProps {
   selectedIds: Set<string>;
@@ -63,7 +64,7 @@ export function AssignmentSelectionList({ selectedIds, onToggle, disabled = fals
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search assignments…"
           disabled={disabled || inProgress.length === 0}
-          className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-emerald-600 disabled:opacity-50"
+          className={`flex-1 min-w-0 ${ONE_LINE_TEXT_INPUT_HEIGHT} px-3 text-sm rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-emerald-600 disabled:opacity-50`}
         />
         <CourseFilterDropdown
           courses={courses}

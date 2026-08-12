@@ -7,8 +7,13 @@ import { useCoursesQuery } from "@/features/courses";
 import { InlineCourseForm } from "@/features/courses/components/InlineCourseForm";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
-import { DateCard } from "@/shared/components/DateCard";
 import { ArrowLeftIcon } from "@/features/calendar/components/icons";
+import {
+  LABEL_FONT_SIZE,
+  MULTI_LINE_TEXT_INPUT_HEIGHT,
+  MULTI_LINE_TEXT_INPUT_WIDTH,
+  TEXT_INPUT_FONT_SIZE,
+} from "@/shared/lib/formConstants";
 
 interface CreateAssignmentFormProps {
   onCreated: (assignment: AssignmentDto) => void;
@@ -76,7 +81,7 @@ function AssignmentCreateFields({ onCreated, onBack, onRequestCreateCourse, pend
         </button>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Courses</label>
+          <label className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>Courses</label>
           {coursesLoading ? (
             <p className="text-sm text-slate-400">Loading courses...</p>
           ) : (
@@ -92,7 +97,7 @@ function AssignmentCreateFields({ onCreated, onBack, onRequestCreateCourse, pend
         </div>
 
         <div>
-          <label htmlFor="create-assignment-name" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label htmlFor="create-assignment-name" className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
             Assignment
           </label>
           <textarea
@@ -100,8 +105,7 @@ function AssignmentCreateFields({ onCreated, onBack, onRequestCreateCourse, pend
             value={formState.name}
             onChange={(e) => updateField("name", e.target.value)}
             placeholder="Read chapters 1-3 and submit the exercises"
-            rows={2}
-            className={`w-full px-4 py-3 text-base rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.name
+            className={`${MULTI_LINE_TEXT_INPUT_WIDTH} ${MULTI_LINE_TEXT_INPUT_HEIGHT} px-4 py-3 ${TEXT_INPUT_FONT_SIZE} rounded-lg bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors resize-none ${formState.errors.name
               ? "border-red-500 focus:border-red-600"
               : "border-slate-300 focus:border-emerald-600"
               }`}
@@ -122,9 +126,6 @@ function AssignmentCreateFields({ onCreated, onBack, onRequestCreateCourse, pend
             timeError={formState.errors.dueDateTime}
             disabled={isLoading}
             min={todayDateInput}
-            renderDateInput={({ id, value, onChange, disabled, min }) => (
-              <DateCard id={id} value={value} onChange={onChange} disabled={disabled} min={min} />
-            )}
           />
         </div>
 

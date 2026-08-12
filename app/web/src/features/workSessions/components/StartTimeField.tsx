@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DateCard } from "@/shared/components/DateCard";
+import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 import {
   appendDigit,
   backspaceDigit,
@@ -101,7 +102,7 @@ export function StartTimeField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 mb-1.5">
+      <label htmlFor={id} className={`block ${LABEL_FONT_SIZE} font-semibold text-slate-700 mb-1.5`}>
         Start time
       </label>
 
