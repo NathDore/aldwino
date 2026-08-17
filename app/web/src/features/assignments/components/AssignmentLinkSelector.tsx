@@ -2,14 +2,18 @@ import { useMemo, useState } from "react";
 import { useAssignmentsQuery, isAssignmentCompleted, isAssignmentOverdue, getAssignmentColor } from "@/features/assignments";
 import type { AssignmentDto } from "@/features/assignments";
 import { useCoursesQuery } from "@/features/courses";
-import type { CourseDto } from "@/features/courses";
-import { CourseFilterDropdown } from "./CourseFilterDropdown";
-import { ONE_LINE_TEXT_INPUT_HEIGHT } from "@/shared/lib/formConstants";
+import { CourseFilterDropdown } from "@/features/courses/components/CourseFilterDropdown";
+import { Button } from "@/shared/components/Button";
+import { PlusIcon } from "@/features/calendar/components/icons";
+import { LABEL_FONT_SIZE, ONE_LINE_TEXT_INPUT_HEIGHT } from "@/shared/lib/formConstants";
 
-interface AssignmentSelectionListProps {
+interface AssignmentLinkSelectorProps {
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
+  onRequestCreateAssignment: () => void;
+  excludeIds?: Set<string>;
   disabled?: boolean;
+  optional?: boolean;
 }
 
 function formatDueDate(dueDate: string): string {
@@ -23,7 +27,14 @@ function matchesSearch(assignment: AssignmentDto, query: string): boolean {
   return assignment.name.toLowerCase().includes(query.toLowerCase());
 }
 
-export function AssignmentSelectionList({ selectedIds, onToggle, disabled = false }: AssignmentSelectionListProps) {
+export function AssignmentLinkSelector({
+  selectedIds,
+  onToggle,
+  onRequestCreateAssignment,
+  excludeIds,
+  disabled = false,
+  optional = false,
+}: AssignmentLinkSelectorProps) {
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
   const [search, setSearch] = useState("");
@@ -43,8 +54,12 @@ export function AssignmentSelectionList({ selectedIds, onToggle, disabled = fals
   const clearCourses = () => setSelectedCourseIds(new Set());
 
   const inProgress = useMemo(
-    () => assignments.filter((assignment) => !isAssignmentCompleted(assignment) && !isAssignmentOverdue(assignment)),
-    [assignments]
+    () =>
+      assignments.filter(
+        (assignment) =>
+          !isAssignmentCompleted(assignment) && !isAssignmentOverdue(assignment) && !excludeIds?.has(assignment.id)
+      ),
+    [assignments, excludeIds]
   );
 
   const visible = useMemo(
@@ -57,6 +72,18 @@ export function AssignmentSelectionList({ selectedIds, onToggle, disabled = fals
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex items-baseline justify-between mb-1.5 shrink-0">
+        <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>
+          Link assignments{optional ? " (optional)" : ""}
+        </label>
+        <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={disabled}>
+          <span className="flex items-center gap-1">
+            <PlusIcon className="w-3 h-3" />
+            New Assignment
+          </span>
+        </Button>
+      </div>
+
       <div className="flex items-center gap-2 shrink-0">
         <input
           type="text"

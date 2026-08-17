@@ -9,6 +9,8 @@ import { useChangeWorkSessionStateMutation, useDeleteWorkSessionMutation } from 
 import { LinkedAssignmentsList } from "./LinkedAssignmentsList";
 import { LinkAssignmentPicker } from "./LinkAssignmentPicker";
 import { RescheduleWorkSessionModal } from "./RescheduleWorkSessionModal";
+import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
+import type { AssignmentDto } from "@/features/assignments";
 import type { CalendarWorkSession } from "@/features/calendar/types/calendar.types";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 
@@ -16,6 +18,8 @@ interface WorkSessionPopoverProps {
   calendarWorkSession: CalendarWorkSession;
   onClose: () => void;
 }
+
+type Mode = "session" | "create-assignment";
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
@@ -38,6 +42,13 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const deleteMutation = useDeleteWorkSessionMutation();
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [mode, setMode] = useState<Mode>("session");
+  const [pendingAssignmentId, setPendingAssignmentId] = useState<string | undefined>(undefined);
+
+  const handleAssignmentCreated = (assignment: AssignmentDto) => {
+    setPendingAssignmentId(assignment.id);
+    setMode("session");
+  };
 
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
   const isCompleted = workSession.completedAt !== null;
@@ -84,36 +95,51 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
 
         return (
           <>
-            <div className="space-y-4 px-10 py-4 overflow-y-auto min-h-0 styled-scrollbar flex-1">
-              <LinkedAssignmentsList workSessionId={workSession.id} />
-              <LinkAssignmentPicker workSessionId={workSession.id} />
-
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
-                <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={isCompleted}
-                    onChange={handleMarkComplete}
-                    disabled={isCompleted || stateMutation.isPending}
-                    className="cursor-pointer disabled:cursor-not-allowed"
+            <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
+              <div className="grid h-full">
+                <div
+                  className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode === "create-assignment" ? "invisible" : ""}`}
+                >
+                  <LinkedAssignmentsList workSessionId={workSession.id} />
+                  <LinkAssignmentPicker
+                    workSessionId={workSession.id}
+                    onRequestCreateAssignment={() => setMode("create-assignment")}
+                    pendingAssignmentId={pendingAssignmentId}
                   />
-                  Mark session complete
-                </label>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsRescheduling(true)}
-                    disabled={isCompleted}
-                  >
-                    <RescheduleIcon />
-                    <span className="sr-only">Reschedule session</span>
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)}>
-                    <TrashIcon />
-                    <span className="sr-only">Delete session</span>
-                  </Button>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={isCompleted}
+                        onChange={handleMarkComplete}
+                        disabled={isCompleted || stateMutation.isPending}
+                        className="cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      Mark session complete
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsRescheduling(true)}
+                        disabled={isCompleted}
+                      >
+                        <RescheduleIcon />
+                        <span className="sr-only">Reschedule session</span>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)}>
+                        <TrashIcon />
+                        <span className="sr-only">Delete session</span>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+                {mode === "create-assignment" && (
+                  <div className="col-start-1 row-start-1 h-full">
+                    <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode("session")} />
+                  </div>
+                )}
               </div>
             </div>
 
