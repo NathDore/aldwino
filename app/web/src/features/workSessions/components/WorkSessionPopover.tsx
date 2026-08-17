@@ -53,10 +53,11 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
   const isCompleted = workSession.completedAt !== null;
 
-  const handleMarkComplete = async () => {
-    const completedId = workSessionStates?.find((s) => s.state === "COMPLETED")?.id;
-    if (!completedId) return;
-    await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: completedId });
+  const handleToggleComplete = async () => {
+    const targetState = isCompleted ? "INPROGRESS" : "COMPLETED";
+    const targetStateId = workSessionStates?.find((s) => s.state === targetState)?.id;
+    if (!targetStateId) return;
+    await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: targetStateId });
   };
 
   return (
@@ -108,16 +109,14 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                   />
 
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
-                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={isCompleted}
-                        onChange={handleMarkComplete}
-                        disabled={isCompleted || stateMutation.isPending}
-                        className="cursor-pointer disabled:cursor-not-allowed"
-                      />
-                      Mark session complete
-                    </label>
+                    <Button
+                      variant={isCompleted ? "primary" : "secondary"}
+                      size="sm"
+                      onClick={handleToggleComplete}
+                      disabled={stateMutation.isPending}
+                    >
+                      {isCompleted ? "Completed" : "Complete"}
+                    </Button>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
