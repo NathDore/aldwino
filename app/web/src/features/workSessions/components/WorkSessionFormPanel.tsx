@@ -3,9 +3,8 @@ import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
 import { formatTime12h } from "@/shared/lib/timeDigits";
-import { AssignmentSelectionList } from "./AssignmentSelectionList";
+import { AssignmentLinkSelector } from "@/features/assignments/components/AssignmentLinkSelector";
 import { StartTimeField } from "./StartTimeField";
-import { PlusIcon } from "@/features/calendar/components/icons";
 import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 
 interface WorkSessionFormPanelProps {
@@ -89,16 +88,13 @@ export function WorkSessionFormPanel({
       </div>
 
       <div className="mt-6 flex-1 min-h-0 flex flex-col">
-        <div className="flex items-baseline justify-between mb-1.5 shrink-0">
-          <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>Link assignments (optional)</label>
-          <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={isLoading}>
-            <span className="flex items-center gap-1">
-              <PlusIcon className="w-3 h-3" />
-              New Assignment
-            </span>
-          </Button>
-        </div>
-        <AssignmentSelectionList selectedIds={selectedAssignmentIds} onToggle={toggleAssignment} disabled={isLoading} />
+        <AssignmentLinkSelector
+          selectedIds={selectedAssignmentIds}
+          onToggle={toggleAssignment}
+          onRequestCreateAssignment={onRequestCreateAssignment}
+          disabled={isLoading}
+          optional
+        />
       </div>
 
       <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 shrink-0">
