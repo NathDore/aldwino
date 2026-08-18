@@ -93,8 +93,9 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
     <div
       ref={containerRef}
       onClick={handleBlockClick}
-      className={`absolute left-1 right-1 bg-white border rounded overflow-hidden p-1.5 transition-[box-shadow,border-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
-        } ${isActive ? "border-emerald-400 animate-glow" : isSkipped ? "border-red-300" : isCompleted ? "border-emerald-600" : "border-slate-300"
+      className={`absolute left-1 right-1 border rounded overflow-hidden p-1.5 transition-[box-shadow,border-color,background-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
+        } ${isSkipped ? "bg-red-50 border-red-300" : isCompleted ? "bg-emerald-50 border-emerald-600" : "bg-white border-slate-300"
+        } ${isActive ? "border-emerald-400 animate-glow" : ""
         } ${isSingleCompactAssignment || isCompact || !hasAssignments ? "flex items-center" : ""
         }`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
