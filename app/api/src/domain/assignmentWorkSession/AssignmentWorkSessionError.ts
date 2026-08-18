@@ -32,3 +32,10 @@ export class WorkSessionNotFoundError extends Error {
     this.name = "WorkSessionNotFoundError";
   }
 }
+
+export class WorkSessionCompletedError extends Error {
+  constructor(workSessionId: string) {
+    super(`WorkSession with id ${workSessionId} is completed and cannot be linked or unlinked`);
+    this.name = "WorkSessionCompletedError";
+  }
+}

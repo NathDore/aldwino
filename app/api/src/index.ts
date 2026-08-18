@@ -183,6 +183,7 @@ const app = createServer({
   ),
   deleteAssignmentWorkSessionUseCase: new DeleteAssignmentWorkSessionUseCase(
     assignmentWorkSessionRepository,
+    workSessionRepository,
     clock,
     db,
   ),

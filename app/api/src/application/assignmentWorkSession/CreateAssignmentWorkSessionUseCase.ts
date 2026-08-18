@@ -3,6 +3,7 @@ import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/Assign
 import {
   AssignmentNotFoundError,
   WorkSessionNotFoundError,
+  WorkSessionCompletedError,
 } from "../../domain/assignmentWorkSession/AssignmentWorkSessionError";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
@@ -23,8 +24,12 @@ export class CreateAssignmentWorkSessionUseCase {
       if (!this.assignmentRepository.getById(params.assignmentId)) {
         throw new AssignmentNotFoundError(params.assignmentId);
       }
-      if (!this.workSessionRepository.getById(params.workSessionId)) {
+      const workSession = this.workSessionRepository.getById(params.workSessionId);
+      if (!workSession) {
         throw new WorkSessionNotFoundError(params.workSessionId);
+      }
+      if (workSession.completedAt !== null) {
+        throw new WorkSessionCompletedError(params.workSessionId);
       }
 
       const id = crypto.randomUUID();

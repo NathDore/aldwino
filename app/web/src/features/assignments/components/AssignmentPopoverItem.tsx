@@ -13,6 +13,7 @@ interface AssignmentPopoverItemProps {
   item: CalendarAssignment;
   onUnlink: () => void;
   isUnlinking?: boolean;
+  unlinkDisabled?: boolean;
 }
 
 function formatDueDate(dueDate: string): string {
@@ -27,6 +28,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   item,
   onUnlink,
   isUnlinking = false,
+  unlinkDisabled = false,
 }: AssignmentPopoverItemProps) {
   const { assignment, course } = item;
   const { data: assignmentStates } = useAssignmentStatesQuery();
@@ -123,12 +125,15 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
             type="checkbox"
             checked={completed}
             onChange={handleToggleComplete}
-            disabled={stateMutation.isPending}
+            disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
             className="cursor-pointer disabled:cursor-not-allowed"
             aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
           />
           <span ref={menuTriggerRef} className="inline-flex">
-            <Button variant="ghost" size="xs" onClick={() => setIsMenuOpen((v) => !v)}>
+            <Button variant="ghost" size="xs" onClick={() => {
+              if (isUnlinking || unlinkDisabled) return;
+              setIsMenuOpen((v) => !v)
+            }}>
               <span className="sr-only">More actions for {assignment.name}</span>
               <MoreIcon className="w-3.5 h-3.5" />
             </Button>
@@ -144,6 +149,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               <button
                 type="button"
                 onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
                   setIsMenuOpen(false);
                   setIsEditing(true);
                 }}
@@ -154,10 +160,11 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               <button
                 type="button"
                 onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
                   setIsMenuOpen(false);
                   onUnlink();
                 }}
-                disabled={isUnlinking}
+                disabled={isUnlinking || unlinkDisabled}
                 className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
                 Remove

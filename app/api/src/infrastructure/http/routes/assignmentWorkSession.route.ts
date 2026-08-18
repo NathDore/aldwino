@@ -3,6 +3,7 @@ import {
   AssignmentWorkSessionValidationError,
   AssignmentNotFoundError,
   WorkSessionNotFoundError,
+  WorkSessionCompletedError,
 } from "../../../domain/assignmentWorkSession/AssignmentWorkSessionError";
 import type { CreateAssignmentWorkSessionUseCase } from "../../../application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
 import type { GetAssignmentWorkSessionByIdUseCase } from "../../../application/assignmentWorkSession/GetAssignmentWorkSessionByIdUseCase";
@@ -24,6 +25,9 @@ function handleAssignmentWorkSessionError(error: unknown) {
   }
   if (error instanceof AssignmentNotFoundError || error instanceof WorkSessionNotFoundError) {
     return { body: { error: error.message }, status: 404 as const };
+  }
+  if (error instanceof WorkSessionCompletedError) {
+    return { body: { error: error.message }, status: 409 as const };
   }
   if (error instanceof Error && error.message.includes("not found")) {
     return { body: { error: error.message }, status: 404 as const };
