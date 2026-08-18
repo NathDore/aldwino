@@ -74,7 +74,7 @@ export function AssignmentLinkSelector({
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex items-baseline justify-between mb-1.5 shrink-0">
         <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>
-          Link assignments{optional ? " (optional)" : ""}
+          Add assignments{optional ? " (optional)" : ""}
         </label>
         <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={disabled}>
           <span className="flex items-center gap-1">

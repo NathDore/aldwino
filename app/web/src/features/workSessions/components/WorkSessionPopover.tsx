@@ -101,11 +101,12 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 <div
                   className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode === "create-assignment" ? "invisible" : ""}`}
                 >
-                  <LinkedAssignmentsList workSessionId={workSession.id} />
+                  <LinkedAssignmentsList workSessionId={workSession.id} isLocked={isCompleted} />
                   <LinkAssignmentPicker
                     workSessionId={workSession.id}
                     onRequestCreateAssignment={() => setMode("create-assignment")}
                     pendingAssignmentId={pendingAssignmentId}
+                    disabled={isCompleted}
                   />
 
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
@@ -115,7 +116,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                       onClick={handleToggleComplete}
                       disabled={stateMutation.isPending}
                     >
-                      {isCompleted ? "Completed" : "Complete"}
+                      {isCompleted ? "Uncomplete" : "Complete"}
                     </Button>
                     <div className="flex items-center gap-1">
                       <Button

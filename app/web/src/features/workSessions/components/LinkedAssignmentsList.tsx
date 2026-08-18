@@ -8,9 +8,10 @@ import type { CalendarAssignment } from "@/features/calendar/types/calendar.type
 
 interface LinkedAssignmentsListProps {
   workSessionId: string;
+  isLocked?: boolean;
 }
 
-export function LinkedAssignmentsList({ workSessionId }: LinkedAssignmentsListProps) {
+export function LinkedAssignmentsList({ workSessionId, isLocked = false }: LinkedAssignmentsListProps) {
   const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSessionId);
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
@@ -35,12 +36,14 @@ export function LinkedAssignmentsList({ workSessionId }: LinkedAssignmentsListPr
 
   return (
     <div className="space-y-3">
+      {isLocked && <p className="text-xs text-slate-500">Reopen this session to change linked assignments.</p>}
       {items.map(({ link, item }) => (
         <AssignmentPopoverItem
           key={link.id}
           item={item}
           onUnlink={() => unlinkMutation.mutate(link.id)}
           isUnlinking={unlinkMutation.isPending && unlinkMutation.variables === link.id}
+          unlinkDisabled={isLocked}
         />
       ))}
     </div>
