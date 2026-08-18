@@ -10,12 +10,18 @@ import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 interface RescheduleWorkSessionFormProps {
   workSession: WorkSessionDto;
   onClose: () => void;
+  onRescheduled: (newStart: Date) => void;
   reactivateOnReschedule?: boolean;
 }
 
-export function RescheduleWorkSessionForm({ workSession, onClose, reactivateOnReschedule }: RescheduleWorkSessionFormProps) {
+export function RescheduleWorkSessionForm({
+  workSession,
+  onClose,
+  onRescheduled,
+  reactivateOnReschedule,
+}: RescheduleWorkSessionFormProps) {
   const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } =
-    useRescheduleWorkSessionForm(workSession, onClose, reactivateOnReschedule);
+    useRescheduleWorkSessionForm(workSession, onRescheduled, reactivateOnReschedule);
 
   return (
     <div className="flex h-full flex-col">

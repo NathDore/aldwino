@@ -29,15 +29,19 @@ function closestAllowedDuration(minutes: number): number {
 
 export function useRescheduleWorkSessionForm(
   workSession: WorkSessionDto,
-  onSuccess?: () => void,
+  onSuccess?: (newStart: Date) => void,
   reactivateOnReschedule?: boolean
 ) {
   const currentDurationMinutes = Math.round(
     (new Date(workSession.endTime).getTime() - new Date(workSession.startTime).getTime()) / 60000
   );
 
+  const defaultStartDate = reactivateOnReschedule
+    ? dateToDateInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+    : isoToDateInput(workSession.startTime);
+
   const [formState, setFormState] = useState<RescheduleFormState>({
-    startDateDay: isoToDateInput(workSession.startTime),
+    startDateDay: defaultStartDate,
     startDateTime: isoToTimeInput(workSession.startTime),
     durationMinutes: closestAllowedDuration(currentDurationMinutes),
     errors: {},
@@ -140,7 +144,7 @@ export function useRescheduleWorkSessionForm(
           await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: inProgressStateId });
         }
       }
-      onSuccess?.();
+      onSuccess?.(startTime);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setFormState((prev) => ({ ...prev, errors: { submit: error.message } }));

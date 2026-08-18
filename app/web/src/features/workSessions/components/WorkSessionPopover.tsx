@@ -5,6 +5,7 @@ import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { Button } from "@/shared/components/Button";
 import { MoreIcon } from "@/features/calendar/components/icons";
+import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import { useChangeWorkSessionStateMutation, useDeleteWorkSessionMutation } from "../queries/useWorkSessionMutations";
 import { useWorkSessionAssignmentLinksQuery } from "../queries/useAssignmentWorkSessionsQuery";
@@ -47,6 +48,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSession.id);
   const stateMutation = useChangeWorkSessionStateMutation();
   const deleteMutation = useDeleteWorkSessionMutation();
+  const goToWeekOf = useCalendarStore((s) => s.goToWeekOf);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -62,6 +64,11 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const handleAssignmentCreated = (assignment: AssignmentDto) => {
     setPendingAssignmentId(assignment.id);
     popMode();
+  };
+
+  const handleRescheduled = (newStart: Date) => {
+    onClose();
+    goToWeekOf(newStart);
   };
 
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
@@ -287,6 +294,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                     <RescheduleWorkSessionForm
                       workSession={workSession}
                       onClose={popMode}
+                      onRescheduled={handleRescheduled}
                       reactivateOnReschedule={isSkippedUncompleted}
                     />
                   </div>
