@@ -10,4 +10,8 @@ The frontend and backend communicate over a local-only HTTP API on `127.0.0.1`, 
 
 # Plan mode
 
-Only include the implementation plan and any risks or trade-offs. Skip background, context, and explanations.
+Only include the implementation plan and any risks or trade-offs. Skip background, context, and explanations — never write a "Context" section.
+
+# Commits
+
+Commit messages should be a clear title only. Skip the description/body. Never reference yourself (no Co-Authored-By, no mention of Claude/AI).
