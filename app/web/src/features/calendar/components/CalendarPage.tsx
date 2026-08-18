@@ -25,6 +25,7 @@ export function CalendarPage() {
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
   const goToPrevWeek = useCalendarStore((s) => s.goToPrevWeek);
   const goToNextWeek = useCalendarStore((s) => s.goToNextWeek);
+  const goToToday = useCalendarStore((s) => s.goToToday);
 
   return (
     <div className="h-screen flex flex-col p-8 max-w-[1200px] mx-auto">
@@ -34,6 +35,7 @@ export function CalendarPage() {
           weekStart={currentWeekStart}
           onPrevWeek={goToPrevWeek}
           onNextWeek={goToNextWeek}
+          onToday={goToToday}
         />
       </div>
 

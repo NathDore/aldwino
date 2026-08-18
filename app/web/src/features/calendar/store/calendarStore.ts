@@ -14,6 +14,7 @@ interface CalendarStore {
   goToNextWeek: () => void;
   goToPrevWeek: () => void;
   goToToday: () => void;
+  goToWeekOf: (date: Date) => void;
   expandWorkSession: (id: string) => void;
   collapseWorkSession: () => void;
   startCreatingWorkSession: (date: string, hour: number, useCurrentTimeAsStart?: boolean) => void;
@@ -33,6 +34,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   goToNextWeek: () => set({ currentWeekStart: shiftWeek(get().currentWeekStart, 7) }),
   goToPrevWeek: () => set({ currentWeekStart: shiftWeek(get().currentWeekStart, -7) }),
   goToToday: () => set({ currentWeekStart: toISODate(getWeekStart(new Date())) }),
+  goToWeekOf: (date) => set({ currentWeekStart: toISODate(getWeekStart(date)) }),
   expandWorkSession: (id) => set({ expandedWorkSessionId: id }),
   collapseWorkSession: () => set({ expandedWorkSessionId: null }),
   startCreatingWorkSession: (date, hour, useCurrentTimeAsStart) =>

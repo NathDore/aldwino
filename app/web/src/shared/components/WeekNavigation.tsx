@@ -7,6 +7,7 @@ interface WeekNavigationProps {
   weekStart: string;
   onPrevWeek: () => void;
   onNextWeek: () => void;
+  onToday: () => void;
 }
 
 function formatWeekRange(start: Date, end: Date): string {
@@ -15,13 +16,16 @@ function formatWeekRange(start: Date, end: Date): string {
   return `${startLabel} – ${endLabel}`;
 }
 
-export function WeekNavigation({ title, weekStart, onPrevWeek, onNextWeek }: WeekNavigationProps) {
+export function WeekNavigation({ title, weekStart, onPrevWeek, onNextWeek, onToday }: WeekNavigationProps) {
   const days = useWeekDays(weekStart);
 
   return (
     <div className="flex w-full items-center justify-between gap-4 flex-wrap">
       <h2 className="text-xl font-bold text-slate-900">{title}</h2>
       <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="ghost" size="sm" onClick={onToday}>
+          Today
+        </Button>
         <Button variant="ghost" size="sm" onClick={onPrevWeek}>
           <span className="sr-only">Previous week</span>
           <ChevronLeftIcon />
