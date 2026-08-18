@@ -19,7 +19,7 @@ interface WorkSessionPopoverProps {
   onClose: () => void;
 }
 
-type Mode = "session" | "create-assignment";
+type Mode = "session" | "create-assignment" | "link-assignment";
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
@@ -99,15 +99,14 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
             <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
               <div className="grid h-full">
                 <div
-                  className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode === "create-assignment" ? "invisible" : ""}`}
+                  className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode !== "session" ? "invisible" : ""}`}
                 >
                   <LinkedAssignmentsList workSessionId={workSession.id} isLocked={isCompleted} />
-                  <LinkAssignmentPicker
-                    workSessionId={workSession.id}
-                    onRequestCreateAssignment={() => setMode("create-assignment")}
-                    pendingAssignmentId={pendingAssignmentId}
-                    disabled={isCompleted}
-                  />
+                  {!isCompleted && (
+                    <Button variant="secondary" size="sm" onClick={() => setMode("link-assignment")}>
+                      Add assignments
+                    </Button>
+                  )}
 
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200">
                     <Button
@@ -138,6 +137,16 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 {mode === "create-assignment" && (
                   <div className="col-start-1 row-start-1 h-full">
                     <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode("session")} />
+                  </div>
+                )}
+                {mode === "link-assignment" && (
+                  <div className="col-start-1 row-start-1 h-full">
+                    <LinkAssignmentPicker
+                      workSessionId={workSession.id}
+                      onRequestCreateAssignment={() => setMode("create-assignment")}
+                      onBack={() => setMode("session")}
+                      pendingAssignmentId={pendingAssignmentId}
+                    />
                   </div>
                 )}
               </div>
