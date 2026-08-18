@@ -143,7 +143,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
               </span>
             )}
           </div>
-          {!isCompleted && (
+          {!isCompleted && !isSkippedUncompleted && (
             <span ref={menuTriggerRef} className="inline-flex shrink-0">
               <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen((v) => !v)}>
                 <span className="sr-only">More actions</span>
