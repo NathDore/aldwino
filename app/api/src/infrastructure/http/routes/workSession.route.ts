@@ -10,6 +10,7 @@ import type { ChangeWorkSessionStateUseCase } from "../../../application/workSes
 import type { DeleteWorkSessionUseCase } from "../../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../../application/workSession/RescheduleWorkSessionUseCase";
 import type { WorkSessionMergeResult } from "../../../application/workSession/WorkSessionMergeService";
+import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 
 interface WorkSessionRouteDeps {
   createWorkSessionUseCase: CreateWorkSessionUseCase;
@@ -18,6 +19,7 @@ interface WorkSessionRouteDeps {
   changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
+  getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
 }
 
 function handleWorkSessionError(error: unknown) {
@@ -74,6 +76,10 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
       }
       throw error;
     }
+  });
+
+  app.get("/work-sessions/completion-message", (c) => {
+    return c.json(deps.getRandomWorkSessionCompletionMessageUseCase.execute(), 200);
   });
 
   app.get("/work-sessions/:id", (c) => {

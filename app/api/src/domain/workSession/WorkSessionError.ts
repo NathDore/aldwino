@@ -40,6 +40,13 @@ export class SpansMultipleDaysError extends WorkSessionValidationError {
   }
 }
 
+export class CannotUncompletePastWorkSessionError extends WorkSessionValidationError {
+  constructor() {
+    super("Cannot mark a work session as incomplete once its end time has passed.");
+    this.name = "CannotUncompletePastWorkSessionError";
+  }
+}
+
 export class WorkSessionStateNotFoundError extends Error {
   constructor(workSessionStateId: string) {
     super(`WorkSessionState with id ${workSessionStateId} not found`);

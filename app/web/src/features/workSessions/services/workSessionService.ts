@@ -41,3 +41,7 @@ export async function changeWorkSessionState(id: string, workSessionStateId: str
 export async function deleteWorkSession(id: string): Promise<void> {
   await apiClient<void>(`/work-sessions/${id}`, { method: "DELETE" });
 }
+
+export async function fetchWorkSessionCompletionMessage(): Promise<{ message: string }> {
+  return apiClient<{ message: string }>("/work-sessions/completion-message");
+}

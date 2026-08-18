@@ -8,6 +8,8 @@ import { MoreIcon } from "@/features/calendar/components/icons";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import { useChangeWorkSessionStateMutation, useDeleteWorkSessionMutation } from "../queries/useWorkSessionMutations";
 import { useWorkSessionAssignmentLinksQuery } from "../queries/useAssignmentWorkSessionsQuery";
+import { useWorkSessionCompletionMessageQuery } from "../queries/useWorkSessionCompletionMessageQuery";
+import { FALLBACK_COMPLETION_MESSAGE } from "../constants/completionMessages";
 import { LinkedAssignmentsList } from "./LinkedAssignmentsList";
 import { LinkAssignmentPicker } from "./LinkAssignmentPicker";
 import { RescheduleWorkSessionForm } from "./RescheduleWorkSessionForm";
@@ -22,6 +24,8 @@ interface WorkSessionPopoverProps {
 }
 
 type Mode = "session" | "create-assignment" | "link-assignment" | "edit-session";
+
+const SKIPPED_UNCOMPLETED_MESSAGE = "You missed this one — reschedule it for a new time, or remove it for good.";
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
@@ -62,6 +66,15 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
 
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
   const isCompleted = workSession.completedAt !== null;
+  const isPastDue = new Date(workSession.endTime).getTime() < Date.now();
+  const isSkippedUncompleted = stateName === "SKIPPED";
+  const isCompletedCurrent = isCompleted && !isPastDue;
+  const isCompletedPastDue = isCompleted && isPastDue;
+
+  const { data: completionMessageData, isError: isCompletionMessageError } =
+    useWorkSessionCompletionMessageQuery(isCompletedPastDue);
+  const completionMessage =
+    !isCompletionMessageError && completionMessageData ? completionMessageData.message : FALLBACK_COMPLETION_MESSAGE;
 
   const handleToggleComplete = async () => {
     const targetState = isCompleted ? "INPROGRESS" : "COMPLETED";
@@ -130,7 +143,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
               </span>
             )}
           </div>
-          {!isCompleted && (
+          {!isCompleted && !isSkippedUncompleted && (
             <span ref={menuTriggerRef} className="inline-flex shrink-0">
               <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen((v) => !v)}>
                 <span className="sr-only">More actions</span>
@@ -185,21 +198,73 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                   className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode !== "session" ? "invisible" : ""}`}
                 >
                   <LinkedAssignmentsList workSessionId={workSession.id} isLocked={isCompleted} />
-                  {!isCompleted && (
+                  {!isCompleted && !isSkippedUncompleted && (
                     <Button variant="secondary" size="sm" onClick={() => pushMode("link-assignment")}>
                       Add assignments
                     </Button>
                   )}
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                    <Button
-                      variant={isCompleted ? "primary" : "secondary"}
-                      size="sm"
-                      onClick={handleToggleComplete}
-                      disabled={stateMutation.isPending}
-                    >
-                      {isCompleted ? "Uncomplete" : "Complete"}
-                    </Button>
+                  <div className="space-y-2 pt-2 border-t border-slate-200">
+                    {isSkippedUncompleted && <p className="text-sm text-slate-600">{SKIPPED_UNCOMPLETED_MESSAGE}</p>}
+                    {isCompletedPastDue && <p className="text-sm text-slate-600">{completionMessage}</p>}
+                    <div className="flex items-center gap-2">
+                      {isSkippedUncompleted && (
+                        <>
+                          <Button variant="secondary" size="sm" onClick={() => pushMode("edit-session")}>
+                            Reschedule
+                          </Button>
+                          <span className="text-sm text-slate-500">or</span>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setIsConfirmingDelete(true)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      )}
+                      {isCompletedCurrent && (
+                        <>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleToggleComplete}
+                            disabled={stateMutation.isPending}
+                          >
+                            Uncomplete
+                          </Button>
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={handleDelete}
+                            disabled={deleteMutation.isPending}
+                          >
+                            Wrap up
+                          </Button>
+                        </>
+                      )}
+                      {isCompletedPastDue && (
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={handleDelete}
+                          disabled={deleteMutation.isPending}
+                        >
+                          Wrap up
+                        </Button>
+                      )}
+                      {!isSkippedUncompleted && !isCompleted && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleToggleComplete}
+                          disabled={stateMutation.isPending}
+                        >
+                          Complete
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {mode === "create-assignment" && (
@@ -219,7 +284,11 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 )}
                 {mode === "edit-session" && (
                   <div className="col-start-1 row-start-1 h-full">
-                    <RescheduleWorkSessionForm workSession={workSession} onClose={popMode} />
+                    <RescheduleWorkSessionForm
+                      workSession={workSession}
+                      onClose={popMode}
+                      reactivateOnReschedule={isSkippedUncompleted}
+                    />
                   </div>
                 )}
               </div>
