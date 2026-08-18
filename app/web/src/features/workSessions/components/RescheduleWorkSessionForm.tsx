@@ -3,6 +3,7 @@ import { useRescheduleWorkSessionForm } from "../hooks/useRescheduleWorkSessionF
 import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
+import { ArrowLeftIcon } from "@/features/calendar/components/icons";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
 import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 
@@ -18,6 +19,16 @@ export function RescheduleWorkSessionForm({ workSession, onClose }: RescheduleWo
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-4">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-emerald-700 disabled:opacity-50"
+        >
+          <ArrowLeftIcon className="w-3 h-3" />
+          Back
+        </button>
+
         <div>
           <DateTimeField
             label="New start time"
@@ -53,10 +64,7 @@ export function RescheduleWorkSessionForm({ workSession, onClose }: RescheduleWo
         )}
       </div>
 
-      <div className="flex justify-end gap-2 mt-auto pt-4">
-        <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading}>
-          Cancel
-        </Button>
+      <div className="flex justify-end mt-auto pt-4">
         <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? "Rescheduling..." : "Reschedule"}
         </Button>
