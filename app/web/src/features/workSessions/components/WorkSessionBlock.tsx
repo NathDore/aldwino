@@ -9,6 +9,7 @@ import { AssignmentBlock } from "@/features/assignments/components/AssignmentBlo
 import { AssignmentChip } from "@/features/assignments/components/AssignmentChip";
 import { isAssignmentCompleted } from "@/features/assignments/utils/assignmentStatus";
 import { WorkSessionPopover } from "./WorkSessionPopover";
+import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
   COMPACT_EVENT_THRESHOLD_MINUTES,
   SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES,
@@ -28,6 +29,7 @@ function formatTimeRange(startTime: string, endTime: string): string {
 
 export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSession, rowLayout }: WorkSessionBlockProps) {
   const { workSession, assignments } = calendarWorkSession;
+  const { data: workSessionStates } = useWorkSessionStatesQuery();
   const { topPx, heightPx } = useSlotPosition(workSession.startTime, workSession.endTime, rowLayout);
   const expandedWorkSessionId = useCalendarStore((s) => s.expandedWorkSessionId);
   const expandWorkSession = useCalendarStore((s) => s.expandWorkSession);
@@ -35,6 +37,8 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const isExpanded = expandedWorkSessionId === workSession.id;
   const isActive = useIsEventActive(workSession.startTime, workSession.endTime);
   const isCompleted = workSession.completedAt !== null;
+  const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
+  const isSkipped = stateName === "SKIPPED";
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const chipRowRef = useRef<HTMLDivElement>(null);
@@ -89,8 +93,9 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
     <div
       ref={containerRef}
       onClick={handleBlockClick}
-      className={`absolute left-1 right-1 bg-white border rounded overflow-hidden p-1.5 transition-[box-shadow,border-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
-        } ${isActive ? "border-emerald-400 animate-glow" : isCompleted ? "border-slate-300" : "border-amber-500"
+      className={`absolute left-1 right-1 border rounded overflow-hidden p-1.5 transition-[box-shadow,border-color,background-color] duration-300 ease-in-out cursor-pointer ${isExpanded ? "shadow-lg z-30 ring-2 ring-emerald-500" : "shadow-sm z-10 hover:shadow-md"
+        } ${isSkipped ? "bg-red-50 border-red-300" : isCompleted ? "bg-emerald-50 border-emerald-600" : "bg-white border-slate-300"
+        } ${isActive ? "border-emerald-400 animate-glow" : ""
         } ${isSingleCompactAssignment || isCompact || !hasAssignments ? "flex items-center" : ""
         }`}
       style={{ top: topPx, height: Math.max(heightPx, 28) }}
