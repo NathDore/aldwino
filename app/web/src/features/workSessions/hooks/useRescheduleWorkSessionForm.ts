@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { WorkSessionDto } from "../types/workSession.types";
-import { useRescheduleWorkSessionMutation } from "../queries/useWorkSessionMutations";
+import { useRescheduleWorkSessionMutation, useChangeWorkSessionStateMutation } from "../queries/useWorkSessionMutations";
+import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSessionValidation";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 import {
@@ -26,7 +27,11 @@ function closestAllowedDuration(minutes: number): number {
   );
 }
 
-export function useRescheduleWorkSessionForm(workSession: WorkSessionDto, onSuccess?: () => void) {
+export function useRescheduleWorkSessionForm(
+  workSession: WorkSessionDto,
+  onSuccess?: () => void,
+  reactivateOnReschedule?: boolean
+) {
   const currentDurationMinutes = Math.round(
     (new Date(workSession.endTime).getTime() - new Date(workSession.startTime).getTime()) / 60000
   );
@@ -39,7 +44,9 @@ export function useRescheduleWorkSessionForm(workSession: WorkSessionDto, onSucc
   });
 
   const rescheduleMutation = useRescheduleWorkSessionMutation();
-  const isLoading = rescheduleMutation.isPending;
+  const stateMutation = useChangeWorkSessionStateMutation();
+  const { data: workSessionStates } = useWorkSessionStatesQuery();
+  const isLoading = rescheduleMutation.isPending || stateMutation.isPending;
 
   const updateField = (field: "startDateDay" | "startDateTime", value: string) => {
     setFormState((prev) => ({
@@ -127,6 +134,12 @@ export function useRescheduleWorkSessionForm(workSession: WorkSessionDto, onSucc
         id: workSession.id,
         data: { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
       });
+      if (reactivateOnReschedule) {
+        const inProgressStateId = workSessionStates?.find((s) => s.state === "INPROGRESS")?.id;
+        if (inProgressStateId) {
+          await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: inProgressStateId });
+        }
+      }
       onSuccess?.();
     } catch (error: unknown) {
       if (error instanceof Error) {

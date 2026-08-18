@@ -1,6 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
-import { WorkSessionStateNotFoundError } from "../../domain/workSession/WorkSessionError";
+import {
+  WorkSessionStateNotFoundError,
+  CannotUncompletePastWorkSessionError,
+} from "../../domain/workSession/WorkSessionError";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
 import type { Clock } from "../health/ports/Clock";
@@ -25,6 +28,10 @@ export class ChangeWorkSessionStateUseCase {
       const newState = this.workSessionStateRepository.getById(params.workSessionStateId);
       if (!newState) {
         throw new WorkSessionStateNotFoundError(params.workSessionStateId);
+      }
+
+      if (newState.state === "INPROGRESS" && existing.completedAt !== null && existing.endTime < this.clock.now()) {
+        throw new CannotUncompletePastWorkSessionError();
       }
 
       const completedAt =
