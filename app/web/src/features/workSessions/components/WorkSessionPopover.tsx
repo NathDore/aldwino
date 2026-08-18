@@ -198,7 +198,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                   className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode !== "session" ? "invisible" : ""}`}
                 >
                   <LinkedAssignmentsList workSessionId={workSession.id} isLocked={isCompleted} />
-                  {!isCompleted && (
+                  {!isCompleted && !isSkippedUncompleted && (
                     <Button variant="secondary" size="sm" onClick={() => pushMode("link-assignment")}>
                       Add assignments
                     </Button>
@@ -213,6 +213,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           <Button variant="secondary" size="sm" onClick={() => pushMode("edit-session")}>
                             Reschedule
                           </Button>
+                          <span className="text-sm text-slate-500">or</span>
                           <Button
                             variant="danger"
                             size="sm"
@@ -234,18 +235,23 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                             Uncomplete
                           </Button>
                           <Button
-                            variant="danger"
+                            variant="success"
                             size="sm"
                             onClick={() => setIsConfirmingDelete(true)}
                             disabled={deleteMutation.isPending}
                           >
-                            Remove
+                            Wrap up
                           </Button>
                         </>
                       )}
                       {isCompletedPastDue && (
-                        <Button variant="danger" size="sm" onClick={handleDelete} disabled={deleteMutation.isPending}>
-                          Remove
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={handleDelete}
+                          disabled={deleteMutation.isPending}
+                        >
+                          Wrap up
                         </Button>
                       )}
                       {!isSkippedUncompleted && !isCompleted && (
