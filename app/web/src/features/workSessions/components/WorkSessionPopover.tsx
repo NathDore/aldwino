@@ -43,11 +43,17 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [mode, setMode] = useState<Mode>("session");
+  const [returnMode, setReturnMode] = useState<Mode>("session");
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | undefined>(undefined);
+
+  const handleRequestCreateAssignment = () => {
+    setReturnMode(mode);
+    setMode("create-assignment");
+  };
 
   const handleAssignmentCreated = (assignment: AssignmentDto) => {
     setPendingAssignmentId(assignment.id);
-    setMode("session");
+    setMode(returnMode);
   };
 
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
@@ -136,14 +142,14 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 </div>
                 {mode === "create-assignment" && (
                   <div className="col-start-1 row-start-1 h-full">
-                    <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode("session")} />
+                    <CreateAssignmentForm onCreated={handleAssignmentCreated} onBack={() => setMode(returnMode)} />
                   </div>
                 )}
                 {mode === "link-assignment" && (
                   <div className="col-start-1 row-start-1 h-full">
                     <LinkAssignmentPicker
                       workSessionId={workSession.id}
-                      onRequestCreateAssignment={() => setMode("create-assignment")}
+                      onRequestCreateAssignment={handleRequestCreateAssignment}
                       onBack={() => setMode("session")}
                       pendingAssignmentId={pendingAssignmentId}
                     />
