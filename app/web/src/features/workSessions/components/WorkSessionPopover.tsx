@@ -237,7 +237,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           <Button
                             variant="success"
                             size="sm"
-                            onClick={() => setIsConfirmingDelete(true)}
+                            onClick={handleDelete}
                             disabled={deleteMutation.isPending}
                           >
                             Wrap up
