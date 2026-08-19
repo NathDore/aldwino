@@ -20,6 +20,8 @@ import { migrate as migrateAssignmentWorkSessionTable } from "./infrastructure/d
 import { migrate as migrateWorkSessionOverlapIndex } from "./infrastructure/database/migrations/016_add_work_session_overlap_index";
 import { migrate as migrateAssignmentWrapUpAt } from "./infrastructure/database/migrations/017_add_assignment_wrap_up_at_column";
 import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database/migrations/018_add_work_session_wrap_up_at_column";
+import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
+import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -82,6 +84,8 @@ migrateAssignmentWorkSessionTable(db);
 migrateWorkSessionOverlapIndex(db);
 migrateAssignmentWrapUpAt(db);
 migrateWorkSessionWrapUpAt(db);
+migrateAssignmentRescheduleAt(db);
+migrateWorkSessionRescheduleAt(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
