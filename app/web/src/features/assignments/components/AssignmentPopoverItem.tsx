@@ -172,14 +172,16 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
             </>
           ) : (
             <>
-              <Button
-                variant="secondary"
-                size="xs"
-                onClick={handleToggleComplete}
-                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
-              >
-                Complete
-              </Button>
+              {!isOverdue && (
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={handleToggleComplete}
+                  disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+                >
+                  Complete
+                </Button>
+              )}
               <span ref={menuTriggerRef} className="inline-flex">
                 <Button variant="ghost" size="xs" onClick={() => {
                   if (isUnlinking || unlinkDisabled) return;
