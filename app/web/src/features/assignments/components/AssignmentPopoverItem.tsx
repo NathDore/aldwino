@@ -115,16 +115,16 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
 
   return (
     <div
-      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${statusBg} ${completed ? "opacity-50" : ""}`}
+      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${statusBg}`}
       style={{ borderLeftColor: borderColor }}
     >
       <div className="flex items-start gap-2">
         <div
-          className="w-3.5 h-3.5 mt-0.5 shrink-0 rounded-sm border border-slate-400"
+          className={`w-3.5 h-3.5 mt-0.5 shrink-0 rounded-sm border border-slate-400 ${completed ? "opacity-50" : ""}`}
           style={{ backgroundColor: borderColor }}
           aria-hidden="true"
         />
-        <div className="min-w-0 flex-1">
+        <div className={`min-w-0 flex-1 ${completed ? "opacity-50" : ""}`}>
           {isCollapsed ? (
             <p className="text-sm text-slate-700 truncate line-through">
               {course ? `${course.code} - ` : ""}
@@ -145,7 +145,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
           )}
         </div>
         {completed && (
-          <Button variant="ghost" size="sm" onClick={() => setIsExpanded((v) => !v)} className="shrink-0">
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded((v) => !v)} className="shrink-0 opacity-50">
             <span className="sr-only">{isExpanded ? "Collapse assignment details" : "Expand assignment details"}</span>
             <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </Button>
