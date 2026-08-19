@@ -24,7 +24,9 @@ export function useCalendarWorkSessions(
       }
     }
 
-    return workSessions.map((workSession) => {
+    const uniqueWorkSessions = Array.from(new Map(workSessions.map((ws) => [ws.id, ws])).values());
+
+    return uniqueWorkSessions.map((workSession) => {
       const linkedAssignments = (assignmentIdsByWorkSession.get(workSession.id) ?? [])
         .map((assignmentId) => assignmentById.get(assignmentId))
         .filter((assignment): assignment is AssignmentDto => assignment !== undefined)
