@@ -75,6 +75,16 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
     setDeletingAssignment(null);
   };
 
+  const handleComplete = async (assignment: AssignmentDto) => {
+    const targetStateId = getAssignmentStateId(assignmentStates, "COMPLETED");
+    if (!targetStateId) return;
+    try {
+      await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
   const handleUncomplete = async (assignment: AssignmentDto) => {
     const targetStateId = getAssignmentStateId(assignmentStates, "UNCOMPLETED");
     if (!targetStateId) return;
@@ -214,6 +224,14 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                           </>
                         ) : (
                           <>
+                            <Button
+                              variant="secondary"
+                              size="xs"
+                              onClick={() => handleComplete(assignment)}
+                              disabled={stateMutation.isPending}
+                            >
+                              Complete
+                            </Button>
                             <button
                               type="button"
                               aria-label="Edit assignment"
