@@ -1,11 +1,12 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
 import { AssignmentStateNotFoundError } from "../../domain/assignment/AssignmentError";
+import { assertCanComplete } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { IAssignmentStateRepository } from "../../infrastructure/database/repositories/AssignmentStateRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class ChangeAssignmentStateUseCase {
+export class CompleteAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
     private readonly assignmentStateRepository: IAssignmentStateRepository,
@@ -13,32 +14,28 @@ export class ChangeAssignmentStateUseCase {
     private readonly db: Database,
   ) {}
 
-  execute(params: { id: string; assignmentStateId: string }): Assignment {
+  execute(id: string): Assignment {
     return this.db.transaction(() => {
-      const existing = this.repository.getById(params.id);
+      const existing = this.repository.getById(id);
       if (!existing) {
-        throw new Error(`Assignment with id ${params.id} not found`);
+        throw new Error(`Assignment with id ${id} not found`);
       }
 
-      const assignmentState = this.assignmentStateRepository.getById(params.assignmentStateId);
-      if (!assignmentState) {
-        throw new AssignmentStateNotFoundError(params.assignmentStateId);
-      }
+      const now = this.clock.now();
+      assertCanComplete(existing, now);
 
-      const completedAt =
-        assignmentState.state === "COMPLETED"
-          ? existing.assignmentStateId === assignmentState.id
-            ? existing.completedAt
-            : this.clock.now()
-          : null;
+      const completedState = this.assignmentStateRepository.findByState("COMPLETED");
+      if (!completedState) {
+        throw new AssignmentStateNotFoundError("COMPLETED");
+      }
 
       const updated = Assignment.create({
         id: existing.id,
         courseId: existing.courseId,
-        assignmentStateId: assignmentState.id,
+        assignmentStateId: completedState.id,
         name: existing.name,
         dueDate: existing.dueDate,
-        completedAt,
+        completedAt: now,
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,

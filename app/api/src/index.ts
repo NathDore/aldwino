@@ -37,7 +37,9 @@ import { GetAssignmentByIdUseCase } from "./application/assignment/GetAssignment
 import { ListAssignmentsUseCase } from "./application/assignment/ListAssignmentsUseCase";
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
-import { ChangeAssignmentStateUseCase } from "./application/assignment/ChangeAssignmentStateUseCase";
+import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { UncompleteAssignmentUseCase } from "./application/assignment/UncompleteAssignmentUseCase";
+import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "./application/assignment/WrapUpLateAssignmentUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
@@ -134,20 +136,16 @@ const app = createServer({
   ),
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
-  updateAssignmentUseCase: new UpdateAssignmentUseCase(
-    assignmentRepository,
-    courseRepository,
-    assignmentStateRepository,
-    clock,
-    db,
-  ),
+  updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
-  changeAssignmentStateUseCase: new ChangeAssignmentStateUseCase(
+  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, assignmentStateRepository, clock, db),
+  uncompleteAssignmentUseCase: new UncompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
     clock,
     db,
   ),
+  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, clock, db),
   wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, clock, db),
   wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, clock, db),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
@@ -176,7 +174,7 @@ const app = createServer({
   rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
-    workSessionMergeService,
+    clock,
     db,
   ),
   wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
@@ -199,6 +197,7 @@ const app = createServer({
   ),
   deleteAssignmentWorkSessionUseCase: new DeleteAssignmentWorkSessionUseCase(
     assignmentWorkSessionRepository,
+    assignmentRepository,
     workSessionRepository,
     clock,
     db,

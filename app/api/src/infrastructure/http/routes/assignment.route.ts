@@ -10,7 +10,9 @@ import type { GetAssignmentByIdUseCase } from "../../../application/assignment/G
 import type { ListAssignmentsUseCase } from "../../../application/assignment/ListAssignmentsUseCase";
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
-import type { ChangeAssignmentStateUseCase } from "../../../application/assignment/ChangeAssignmentStateUseCase";
+import type { CompleteAssignmentUseCase } from "../../../application/assignment/CompleteAssignmentUseCase";
+import type { UncompleteAssignmentUseCase } from "../../../application/assignment/UncompleteAssignmentUseCase";
+import type { RescheduleAssignmentUseCase } from "../../../application/assignment/RescheduleAssignmentUseCase";
 import type { WrapUpAssignmentUseCase } from "../../../application/assignment/WrapUpAssignmentUseCase";
 import type { WrapUpLateAssignmentUseCase } from "../../../application/assignment/WrapUpLateAssignmentUseCase";
 
@@ -20,7 +22,9 @@ interface AssignmentRouteDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
-  changeAssignmentStateUseCase: ChangeAssignmentStateUseCase;
+  completeAssignmentUseCase: CompleteAssignmentUseCase;
+  uncompleteAssignmentUseCase: UncompleteAssignmentUseCase;
+  rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
   wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
   wrapUpLateAssignmentUseCase: WrapUpLateAssignmentUseCase;
 }
@@ -48,7 +52,6 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         courseId?: string;
         name?: string;
         dueDate?: string;
-        assignmentStateId?: string;
       };
 
       if (!body.courseId || !body.name || !body.dueDate) {
@@ -64,7 +67,6 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         courseId: body.courseId,
         name: body.name,
         dueDate,
-        assignmentStateId: body.assignmentStateId,
       });
       return c.json(assignment.toJSON(), 201);
     } catch (error) {
@@ -97,11 +99,10 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         courseId?: string;
         name?: string;
         dueDate?: string;
-        assignmentStateId?: string;
       };
 
-      if (!body.courseId || !body.name || !body.dueDate || !body.assignmentStateId) {
-        return c.json({ error: "courseId, name, dueDate and assignmentStateId are required" }, 400);
+      if (!body.courseId || !body.name || !body.dueDate) {
+        return c.json({ error: "courseId, name and dueDate are required" }, 400);
       }
 
       const dueDate = new Date(body.dueDate);
@@ -114,7 +115,6 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         courseId: body.courseId,
         name: body.name,
         dueDate,
-        assignmentStateId: body.assignmentStateId,
       });
       return c.json(assignment.toJSON(), 200);
     } catch (error) {
@@ -140,19 +140,47 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
     }
   });
 
-  app.patch("/assignments/:id/state", async (c) => {
+  app.patch("/assignments/:id/reschedule", async (c) => {
     try {
       const id = c.req.param("id");
-      const body = (await c.req.json()) as { assignmentStateId?: string };
+      const body = (await c.req.json()) as { dueDate?: string };
 
-      if (!body.assignmentStateId) {
-        return c.json({ error: "assignmentStateId is required" }, 400);
+      if (!body.dueDate) {
+        return c.json({ error: "dueDate is required" }, 400);
       }
 
-      const assignment = deps.changeAssignmentStateUseCase.execute({
-        id,
-        assignmentStateId: body.assignmentStateId,
-      });
+      const dueDate = new Date(body.dueDate);
+      if (isNaN(dueDate.getTime())) {
+        return c.json({ error: "dueDate must be a valid ISO 8601 date" }, 400);
+      }
+
+      const assignment = deps.rescheduleAssignmentUseCase.execute({ id, dueDate });
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignments/:id/complete", (c) => {
+    try {
+      const assignment = deps.completeAssignmentUseCase.execute(c.req.param("id"));
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignments/:id/uncomplete", (c) => {
+    try {
+      const assignment = deps.uncompleteAssignmentUseCase.execute(c.req.param("id"));
       return c.json(assignment.toJSON(), 200);
     } catch (error) {
       const handled = handleAssignmentError(error);

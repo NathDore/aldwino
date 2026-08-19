@@ -1,26 +1,18 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
-import { CourseNotFoundError } from "../../domain/assignment/AssignmentError";
-import { assertCanEdit } from "../../domain/assignment/AssignmentLifecycle";
+import { assertCanReschedule } from "../../domain/assignment/AssignmentLifecycle";
 import { validateDueDateNotInPast } from "../../domain/assignment/AssignmentRules";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
-import type { ICourseRepository } from "../../infrastructure/database/repositories/CourseRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class UpdateAssignmentUseCase {
+export class RescheduleAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
-    private readonly courseRepository: ICourseRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
 
-  /**
-   * Editing never changes completion: it is only reachable while the assignment
-   * is UPCOMING, and complete/uncomplete are the only doors into and out of the
-   * completed states.
-   */
-  execute(params: { id: string; courseId: string; name: string; dueDate: Date }): Assignment {
+  execute(params: { id: string; dueDate: Date }): Assignment {
     return this.db.transaction(() => {
       const existing = this.repository.getById(params.id);
       if (!existing) {
@@ -28,29 +20,24 @@ export class UpdateAssignmentUseCase {
       }
 
       const now = this.clock.now();
-      assertCanEdit(existing, now);
-
-      if (params.courseId !== existing.courseId && !this.courseRepository.getById(params.courseId)) {
-        throw new CourseNotFoundError(params.courseId);
-      }
-
+      assertCanReschedule(existing, now);
       validateDueDateNotInPast(params.dueDate, now);
 
-      const updated = Assignment.create({
+      const rescheduled = Assignment.create({
         id: existing.id,
-        courseId: params.courseId,
+        courseId: existing.courseId,
         assignmentStateId: existing.assignmentStateId,
-        name: params.name,
+        name: existing.name,
         dueDate: params.dueDate,
         completedAt: existing.completedAt,
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,
-        rescheduleAt: existing.rescheduleAt,
+        rescheduleAt: now,
         createdAt: existing.createdAt,
       });
 
-      return this.repository.update(updated);
+      return this.repository.update(rescheduled);
     })();
   }
 }
