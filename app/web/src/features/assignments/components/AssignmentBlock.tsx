@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { AssignmentChip } from "./AssignmentChip";
-import { getAssignmentColor, isAssignmentCompleted } from "../utils/assignmentStatus";
+import { getCourseColor, getAssignmentStatusBackgroundClass, isAssignmentCompleted } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentBlockProps {
@@ -15,12 +15,13 @@ export const AssignmentBlock = memo(function AssignmentBlock({ item, state = "de
     return <AssignmentChip item={item} />;
   }
 
-  const borderColor = getAssignmentColor(assignment, course);
+  const borderColor = getCourseColor(course);
   const completed = isAssignmentCompleted(assignment);
+  const statusBg = getAssignmentStatusBackgroundClass(assignment);
 
   return (
     <div
-      className={`min-w-0 border-l-2 pl-1.5 py-0.5 ${completed ? "opacity-50" : ""}`}
+      className={`min-w-0 border-l-2 pl-1.5 py-0.5 ${statusBg} ${completed ? "opacity-50" : ""}`}
       style={{ borderLeftColor: borderColor }}
     >
       <p

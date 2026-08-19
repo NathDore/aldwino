@@ -5,7 +5,13 @@ import { useAssignmentStatesQuery } from "../queries/useAssignmentStatesQuery";
 import { Button } from "@/shared/components/Button";
 import { ChevronDownIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
-import { getAssignmentColor, isAssignmentCompleted, isAssignmentOverdue, getAssignmentStateId } from "../utils/assignmentStatus";
+import {
+  getCourseColor,
+  getAssignmentStatusBackgroundClass,
+  isAssignmentCompleted,
+  isAssignmentOverdue,
+  getAssignmentStateId,
+} from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
 
@@ -39,10 +45,11 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuTriggerRef = useRef<HTMLSpanElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
-  const borderColor = getAssignmentColor(assignment, course);
+  const borderColor = getCourseColor(course);
   const isOverdue = isAssignmentOverdue(assignment);
   const completed = isAssignmentCompleted(assignment);
   const isCollapsed = completed && !isExpanded;
+  const statusBg = getAssignmentStatusBackgroundClass(assignment);
 
   const handleToggleComplete = async () => {
     const targetStateId = getAssignmentStateId(assignmentStates, completed ? "UNCOMPLETED" : "COMPLETED");
@@ -85,7 +92,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
 
   return (
     <div
-      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${completed ? "opacity-50" : ""}`}
+      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${statusBg} ${completed ? "opacity-50" : ""}`}
       style={{ borderLeftColor: borderColor }}
     >
       <div className="flex items-start gap-2">
@@ -108,7 +115,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               <p className={`text-base mt-0.5 whitespace-normal break-words text-slate-900 ${completed ? "line-through" : ""}`}>
                 {assignment.name}
               </p>
-              <p className={`text-xs mt-1.5 ${isOverdue ? "text-amber-600 font-semibold" : "text-slate-600"}`}>
+              <p className={`text-xs mt-1.5 ${isOverdue ? "text-red-600 font-semibold" : "text-slate-600"}`}>
                 Due {formatDueDate(assignment.dueDate)}
               </p>
             </>

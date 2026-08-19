@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useAssignmentsQuery, isAssignmentCompleted, isAssignmentOverdue, getAssignmentColor } from "@/features/assignments";
+import { useAssignmentsQuery, isAssignmentCompleted, isAssignmentOverdue, getCourseColor } from "@/features/assignments";
 import type { AssignmentDto } from "@/features/assignments";
 import { useCoursesQuery } from "@/features/courses";
 import { CourseFilterDropdown } from "@/features/courses/components/CourseFilterDropdown";
@@ -125,7 +125,7 @@ export function AssignmentLinkSelector({
                 />
                 <span
                   className="w-3 h-3 shrink-0 rounded-sm border border-slate-400"
-                  style={{ backgroundColor: getAssignmentColor(assignment, course) }}
+                  style={{ backgroundColor: getCourseColor(course) }}
                   aria-hidden="true"
                 />
                 <span className="min-w-0 flex-1 truncate text-slate-900">{assignment.name}</span>
