@@ -151,33 +151,45 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
           </Button>
         )}
         <div className="flex items-center gap-1.5 shrink-0">
-          <input
-            type="checkbox"
-            checked={completed}
-            onChange={handleToggleComplete}
-            disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
-            className="cursor-pointer disabled:cursor-not-allowed"
-            aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
-          />
           {completed ? (
-            <Button
-              variant="success"
-              size="xs"
-              onClick={handleWrapUp}
-              disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
-            >
-              Wrap up
-            </Button>
-          ) : (
-            <span ref={menuTriggerRef} className="inline-flex">
-              <Button variant="ghost" size="xs" onClick={() => {
-                if (isUnlinking || unlinkDisabled) return;
-                setIsMenuOpen((v) => !v)
-              }}>
-                <span className="sr-only">More actions for {assignment.name}</span>
-                <MoreIcon className="w-3.5 h-3.5" />
+            <>
+              <Button
+                variant="primary"
+                size="xs"
+                onClick={handleToggleComplete}
+                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+              >
+                Uncomplete
               </Button>
-            </span>
+              <Button
+                variant="success"
+                size="xs"
+                onClick={handleWrapUp}
+                disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
+              >
+                Wrap up
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={handleToggleComplete}
+                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+              >
+                Complete
+              </Button>
+              <span ref={menuTriggerRef} className="inline-flex">
+                <Button variant="ghost" size="xs" onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsMenuOpen((v) => !v)
+                }}>
+                  <span className="sr-only">More actions for {assignment.name}</span>
+                  <MoreIcon className="w-3.5 h-3.5" />
+                </Button>
+              </span>
+            </>
           )}
         </div>
         {isMenuOpen &&

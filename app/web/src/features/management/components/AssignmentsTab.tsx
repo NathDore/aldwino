@@ -181,14 +181,14 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                       <div className="flex items-center gap-1.5 justify-end">
                         {isAssignmentCompleted(assignment) ? (
                           <>
-                            <input
-                              type="checkbox"
-                              checked
-                              onChange={() => handleUncomplete(assignment)}
+                            <Button
+                              variant="primary"
+                              size="xs"
+                              onClick={() => handleUncomplete(assignment)}
                               disabled={stateMutation.isPending}
-                              className="cursor-pointer disabled:cursor-not-allowed"
-                              aria-label={`Mark ${assignment.name} as incomplete`}
-                            />
+                            >
+                              Uncomplete
+                            </Button>
                             <Button
                               variant="success"
                               size="xs"
