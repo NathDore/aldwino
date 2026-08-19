@@ -232,7 +232,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                     <div className="flex items-center gap-2">
                       {isSkippedUncompleted && (
                         <>
-                          <Button variant="secondary" size="sm" onClick={() => pushMode("edit-session")}>
+                          <Button variant="warning" size="sm" onClick={() => pushMode("edit-session")}>
                             Reschedule
                           </Button>
                           <span className="text-sm text-slate-500">or</span>

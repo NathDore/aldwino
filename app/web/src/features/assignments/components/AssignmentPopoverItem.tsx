@@ -208,7 +208,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
                       setIsMenuOpen(false);
                       setIsEditing(true);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                    className="w-full text-left px-3 py-1.5 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100"
                   >
                     Reschedule
                   </button>

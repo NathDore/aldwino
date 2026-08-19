@@ -72,7 +72,7 @@ export function RescheduleWorkSessionForm({
       </div>
 
       <div className="flex justify-end mt-auto pt-4">
-        <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isLoading}>
+        <Button variant="warning" size="sm" onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? "Rescheduling..." : "Reschedule"}
         </Button>
       </div>

@@ -210,7 +210,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                           </>
                         ) : isAssignmentOverdue(assignment) ? (
                           <>
-                            <Button variant="secondary" size="xs" onClick={() => setEditingAssignment(assignment)}>
+                            <Button variant="warning" size="xs" onClick={() => setEditingAssignment(assignment)}>
                               Reschedule
                             </Button>
                             <Button
