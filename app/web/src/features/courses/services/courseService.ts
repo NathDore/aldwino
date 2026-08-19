@@ -16,3 +16,15 @@ export async function createCourse(data: CourseFormData): Promise<CourseDto> {
     body: JSON.stringify(data),
   });
 }
+
+export async function updateCourse(id: string, data: CourseFormData): Promise<CourseDto> {
+  return apiClient<CourseDto>(`/courses/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteCourse(id: string): Promise<void> {
+  await apiClient<void>(`/courses/${id}`, { method: "DELETE" });
+}

@@ -27,8 +27,6 @@ const initialFormState: FormState = {
   errors: {},
 };
 
-// The backend rejects any startTime strictly before its own clock at request time, so a
-// literal "now" captured on submit always loses that race to network/processing latency.
 const START_NOW_SUBMIT_BUFFER_MS = 5000;
 
 export function useWorkSessionForm(
@@ -41,6 +39,8 @@ export function useWorkSessionForm(
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [quickTimeBase, setQuickTimeBase] = useState("");
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set());
+  const [hasEditedStart, setHasEditedStart] = useState(false);
+  const effectiveUseCurrentTimeAsStart = useCurrentTimeAsStart && !hasEditedStart;
   const createMutation = useCreateWorkSessionMutation();
   const linkMutation = useLinkAssignmentMutation();
   const { data: assignments = [] } = useAssignmentsQuery();
@@ -78,6 +78,7 @@ export function useWorkSessionForm(
   }, [date, hour, useCurrentTimeAsStart]);
 
   const updateField = (field: "startDateDay" | "startDateTime", value: string) => {
+    setHasEditedStart(true);
     setFormState((prev) => ({
       ...prev,
       [field]: value,
@@ -120,10 +121,10 @@ export function useWorkSessionForm(
     }
 
     if (!errors.startDateDay && !errors.startDateTime && effectiveEndTime) {
-      const startValue = useCurrentTimeAsStart
+      const startValue = effectiveUseCurrentTimeAsStart
         ? new Date(Date.now() + START_NOW_SUBMIT_BUFFER_MS)
         : combineDateAndTime(formState.startDateDay, formState.startDateTime);
-      const pastError = useCurrentTimeAsStart ? undefined : validateStartNotInPast(startValue);
+      const pastError = effectiveUseCurrentTimeAsStart ? undefined : validateStartNotInPast(startValue);
       if (pastError) {
         errors.submit = pastError;
       } else {
@@ -158,7 +159,7 @@ export function useWorkSessionForm(
       return;
     }
 
-    const startDateTime = useCurrentTimeAsStart
+    const startDateTime = effectiveUseCurrentTimeAsStart
       ? new Date(Date.now() + START_NOW_SUBMIT_BUFFER_MS)
       : combineDateAndTime(formState.startDateDay, formState.startDateTime);
     const endDateTime = new Date(startDateTime.getTime() + fittingDuration.minutes * 60000);

@@ -3,7 +3,6 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@/shared/components/icons";
 import { useWeekDays } from "@/features/calendar/hooks/useWeekDays";
 
 interface WeekNavigationProps {
-  title: string;
   weekStart: string;
   onPrevWeek: () => void;
   onNextWeek: () => void;
@@ -16,12 +15,11 @@ function formatWeekRange(start: Date, end: Date): string {
   return `${startLabel} – ${endLabel}`;
 }
 
-export function WeekNavigation({ title, weekStart, onPrevWeek, onNextWeek, onToday }: WeekNavigationProps) {
+export function WeekNavigation({ weekStart, onPrevWeek, onNextWeek, onToday }: WeekNavigationProps) {
   const days = useWeekDays(weekStart);
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 flex-wrap">
-      <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+    <div className="flex w-full items-center justify-end gap-4 flex-wrap">
       <div className="flex items-center gap-2 flex-wrap">
         <Button variant="ghost" size="sm" onClick={onToday}>
           Today
