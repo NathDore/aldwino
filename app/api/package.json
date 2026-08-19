@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --config ../../eslint.config.mjs .",
     "compile:host": "bun run scripts/compile-sidecar.ts",
