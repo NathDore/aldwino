@@ -197,24 +197,6 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                             >
                               Wrap up
                             </Button>
-                            <button
-                              type="button"
-                              aria-label="Edit assignment"
-                              disabled
-                              title="Mark incomplete to edit"
-                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 cursor-not-allowed"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Delete assignment"
-                              disabled
-                              title="Mark incomplete to delete"
-                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 cursor-not-allowed"
-                            >
-                              <TrashIcon />
-                            </button>
                           </>
                         ) : isAssignmentOverdue(assignment) ? (
                           <>

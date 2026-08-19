@@ -159,15 +159,26 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
             className="cursor-pointer disabled:cursor-not-allowed"
             aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
           />
-          <span ref={menuTriggerRef} className="inline-flex">
-            <Button variant="ghost" size="xs" onClick={() => {
-              if (isUnlinking || unlinkDisabled) return;
-              setIsMenuOpen((v) => !v)
-            }}>
-              <span className="sr-only">More actions for {assignment.name}</span>
-              <MoreIcon className="w-3.5 h-3.5" />
+          {completed ? (
+            <Button
+              variant="success"
+              size="xs"
+              onClick={handleWrapUp}
+              disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
+            >
+              Wrap up
             </Button>
-          </span>
+          ) : (
+            <span ref={menuTriggerRef} className="inline-flex">
+              <Button variant="ghost" size="xs" onClick={() => {
+                if (isUnlinking || unlinkDisabled) return;
+                setIsMenuOpen((v) => !v)
+              }}>
+                <span className="sr-only">More actions for {assignment.name}</span>
+                <MoreIcon className="w-3.5 h-3.5" />
+              </Button>
+            </span>
+          )}
         </div>
         {isMenuOpen &&
           createPortal(
@@ -176,38 +187,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
               style={{ top: menuPosition.top, left: menuPosition.left, transform: "translateX(-100%)" }}
             >
-              {completed ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isUnlinking || unlinkDisabled) return;
-                      setIsMenuOpen(false);
-                      handleWrapUp();
-                    }}
-                    disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
-                    className="w-full text-left px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-                  >
-                    Wrap up
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    title="Mark incomplete to edit"
-                    className="w-full text-left px-3 py-1.5 text-sm text-slate-400 cursor-not-allowed"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    title="Mark incomplete to remove"
-                    className="w-full text-left px-3 py-1.5 text-sm text-slate-400 cursor-not-allowed"
-                  >
-                    Remove
-                  </button>
-                </>
-              ) : isOverdue ? (
+              {isOverdue ? (
                 <>
                   <button
                     type="button"
