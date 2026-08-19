@@ -14,7 +14,7 @@ export class DeleteAssignmentWorkSessionUseCase {
     private readonly workSessionRepository: IWorkSessionRepository,
     private readonly clock: Clock,
     private readonly db: Database,
-  ) {}
+  ) { }
 
   execute(id: string): AssignmentWorkSession {
     return this.db.transaction(() => {
@@ -25,8 +25,6 @@ export class DeleteAssignmentWorkSessionUseCase {
 
       const now = this.clock.now();
 
-      // Unlinking is the popover's "Remove" action, so it follows the same
-      // lifecycle rule as removing the assignment itself.
       const assignment = this.assignmentRepository.getById(existing.assignmentId);
       if (assignment) {
         assertCanLink(assignment, now);

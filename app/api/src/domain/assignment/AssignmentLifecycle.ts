@@ -10,15 +10,6 @@ import {
   AssignmentNotOverdueError,
 } from "./AssignmentError";
 
-/**
- * The lifecycle state of an assignment is always derived from completedAt and
- * dueDate against the current time. It is never stored, so it can never drift
- * from the data it describes.
- *
- * An assignment counts as completed when completedAt is set. assignmentStateId
- * is not consulted here: a SKIPPED assignment has no completedAt and is treated
- * as uncompleted.
- */
 export type AssignmentLifecycleState = "UPCOMING" | "OVERDUE" | "COMPLETED" | "COMPLETED_OVERDUE";
 
 export function resolveLifecycle(assignment: Assignment, now: Date): AssignmentLifecycleState {
@@ -66,7 +57,6 @@ export function assertCanReschedule(assignment: Assignment, now: Date): void {
   }
 }
 
-/** Linking and unlinking a work session both count as mutating the assignment. */
 export function assertCanLink(assignment: Assignment, now: Date): void {
   const state = resolveLifecycle(assignment, now);
   if (state !== "UPCOMING") {

@@ -14,7 +14,7 @@ export class CreateAssignmentUseCase {
     private readonly assignmentStateRepository: IAssignmentStateRepository,
     private readonly clock: Clock,
     private readonly db: Database,
-  ) {}
+  ) { }
 
   execute(params: { courseId: string; name: string; dueDate: Date }): Assignment {
     return this.db.transaction(() => {
@@ -25,8 +25,6 @@ export class CreateAssignmentUseCase {
       const now = this.clock.now();
       validateDueDateNotInPast(params.dueDate, now);
 
-      // An assignment is always born UPCOMING: completion is only reachable
-      // through CompleteAssignmentUseCase, which is guarded.
       const assignmentState = this.assignmentStateRepository.findByState("UNCOMPLETED");
       if (!assignmentState) {
         throw new AssignmentStateNotFoundError("UNCOMPLETED");

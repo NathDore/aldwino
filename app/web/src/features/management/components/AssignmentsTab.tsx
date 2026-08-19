@@ -4,12 +4,11 @@ import {
   type AssignmentDto,
   isAssignmentCompleted,
   isAssignmentOverdue,
-  getAssignmentStateId,
   useDeleteAssignmentMutation,
-  useChangeAssignmentStateMutation,
+  useCompleteAssignmentMutation,
+  useUncompleteAssignmentMutation,
   useWrapUpAssignmentMutation,
   useWrapUpLateAssignmentMutation,
-  useAssignmentStatesQuery,
 } from "@/features/assignments";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { AssignmentFormPanel } from "@/features/assignments/components/AssignmentFormPanel";
@@ -47,10 +46,11 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   const [courseFilterIds, setCourseFilterIds] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<AssignmentDto | null>(null);
+  const [reschedulingAssignment, setReschedulingAssignment] = useState<AssignmentDto | null>(null);
   const [deletingAssignment, setDeletingAssignment] = useState<AssignmentDto | null>(null);
   const deleteMutation = useDeleteAssignmentMutation();
-  const { data: assignmentStates } = useAssignmentStatesQuery();
-  const stateMutation = useChangeAssignmentStateMutation();
+  const completeMutation = useCompleteAssignmentMutation();
+  const uncompleteMutation = useUncompleteAssignmentMutation();
   const wrapUpMutation = useWrapUpAssignmentMutation();
   const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
 
@@ -76,20 +76,16 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   };
 
   const handleComplete = async (assignment: AssignmentDto) => {
-    const targetStateId = getAssignmentStateId(assignmentStates, "COMPLETED");
-    if (!targetStateId) return;
     try {
-      await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+      await completeMutation.mutateAsync(assignment.id);
     } catch (error) {
       if (error instanceof Error) showToast(error.message, "error");
     }
   };
 
   const handleUncomplete = async (assignment: AssignmentDto) => {
-    const targetStateId = getAssignmentStateId(assignmentStates, "UNCOMPLETED");
-    if (!targetStateId) return;
     try {
-      await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+      await uncompleteMutation.mutateAsync(assignment.id);
     } catch (error) {
       if (error instanceof Error) showToast(error.message, "error");
     }
@@ -195,7 +191,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                               variant="primary"
                               size="xs"
                               onClick={() => handleUncomplete(assignment)}
-                              disabled={stateMutation.isPending}
+                              disabled={uncompleteMutation.isPending}
                             >
                               Uncomplete
                             </Button>
@@ -210,7 +206,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                           </>
                         ) : isAssignmentOverdue(assignment) ? (
                           <>
-                            <Button variant="warning" size="xs" onClick={() => setEditingAssignment(assignment)}>
+                            <Button variant="warning" size="xs" onClick={() => setReschedulingAssignment(assignment)}>
                               Reschedule
                             </Button>
                             <Button
@@ -228,7 +224,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                               variant="secondary"
                               size="xs"
                               onClick={() => handleComplete(assignment)}
-                              disabled={stateMutation.isPending}
+                              disabled={completeMutation.isPending}
                             >
                               Complete
                             </Button>
@@ -287,6 +283,26 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
           {(handleClose) => (
             <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
               <AssignmentFormPanel assignmentToEdit={editingAssignment} onClose={handleClose} />
+            </div>
+          )}
+        </Popover>
+      )}
+
+      {reschedulingAssignment && (
+        <Popover
+          onClose={() => setReschedulingAssignment(null)}
+          panelClassName="max-w-full max-h-full"
+          panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
+          headerClassName="px-10 py-3"
+          header={<p className="text-sm font-bold text-slate-900">Reschedule assignment</p>}
+        >
+          {(handleClose) => (
+            <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
+              <AssignmentFormPanel
+                assignmentToEdit={reschedulingAssignment}
+                onClose={handleClose}
+                intent="reschedule"
+              />
             </div>
           )}
         </Popover>

@@ -13,13 +13,7 @@ export class UpdateAssignmentUseCase {
     private readonly courseRepository: ICourseRepository,
     private readonly clock: Clock,
     private readonly db: Database,
-  ) {}
-
-  /**
-   * Editing never changes completion: it is only reachable while the assignment
-   * is UPCOMING, and complete/uncomplete are the only doors into and out of the
-   * completed states.
-   */
+  ) { }
   execute(params: { id: string; courseId: string; name: string; dueDate: Date }): Assignment {
     return this.db.transaction(() => {
       const existing = this.repository.getById(params.id);

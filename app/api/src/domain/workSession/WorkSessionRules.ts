@@ -41,10 +41,6 @@ export function validateSameDay(startTime: Date, endTime: Date): void {
   }
 }
 
-/**
- * Tolerance mirroring the web client's START_NOW_SUBMIT_BUFFER_MS, so a
- * "start now" submission that spends a moment in flight is not rejected.
- */
 const START_TIME_PAST_TOLERANCE_MS = 5000;
 
 export function validateStartTimeNotInPast(startTime: Date, now: Date): void {

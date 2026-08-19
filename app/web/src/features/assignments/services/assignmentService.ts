@@ -30,11 +30,19 @@ export async function deleteAssignment(id: string): Promise<void> {
   await apiClient<void>(`/assignments/${id}`, { method: "DELETE" });
 }
 
-export async function changeAssignmentState(id: string, assignmentStateId: string): Promise<AssignmentDto> {
-  return apiClient<AssignmentDto>(`/assignments/${id}/state`, {
+export async function completeAssignment(id: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/complete`, { method: "POST" });
+}
+
+export async function uncompleteAssignment(id: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/uncomplete`, { method: "POST" });
+}
+
+export async function rescheduleAssignment(id: string, dueDate: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/reschedule`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ assignmentStateId }),
+    body: JSON.stringify({ dueDate }),
   });
 }
 

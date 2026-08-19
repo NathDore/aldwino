@@ -18,13 +18,8 @@ export class RescheduleWorkSessionUseCase {
     private readonly workSessionStateRepository: IWorkSessionStateRepository,
     private readonly clock: Clock,
     private readonly db: Database,
-  ) {}
+  ) { }
 
-  /**
-   * Only a skipped session can be rescheduled. Overlap merging is therefore not
-   * handled here: the caller reactivates the session with a follow-up state
-   * change to INPROGRESS, and that path already merges.
-   */
   execute(params: { id: string; startTime: Date; endTime: Date }): WorkSessionMergeResult {
     return this.db.transaction(() => {
       const existing = this.repository.getById(params.id);

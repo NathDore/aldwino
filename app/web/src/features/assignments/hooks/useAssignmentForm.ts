@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { AssignmentDto, AssignmentEditData } from "../types/assignment.types";
-import { useUpdateAssignmentMutation } from "../queries/useMutations";
+import { useRescheduleAssignmentMutation, useUpdateAssignmentMutation } from "../queries/useMutations";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 import { combineDateAndTime, dateToDateInput, isoToDateInput, isoToTimeInput } from "@/shared/lib/dateTimeForm";
 
@@ -11,6 +11,8 @@ interface FormState {
   dueDateTime: string;
   errors: Record<string, string>;
 }
+
+export type AssignmentFormIntent = "edit" | "reschedule";
 
 const NAME_MAX_LENGTH = 250;
 
@@ -23,11 +25,17 @@ function assignmentToFields(assignment: AssignmentDto): Omit<FormState, "errors"
   };
 }
 
-export function useAssignmentForm(assignmentToEdit: AssignmentDto, onSuccess?: () => void) {
+export function useAssignmentForm(
+  assignmentToEdit: AssignmentDto,
+  onSuccess?: () => void,
+  intent: AssignmentFormIntent = "edit",
+) {
   const [formState, setFormState] = useState<FormState>({ ...assignmentToFields(assignmentToEdit), errors: {} });
 
   const updateMutation = useUpdateAssignmentMutation();
-  const isLoading = updateMutation.isPending;
+  const rescheduleMutation = useRescheduleAssignmentMutation();
+  const isRescheduling = intent === "reschedule";
+  const isLoading = isRescheduling ? rescheduleMutation.isPending : updateMutation.isPending;
 
   useEffect(() => {
     setFormState({ ...assignmentToFields(assignmentToEdit), errors: {} });
@@ -44,14 +52,16 @@ export function useAssignmentForm(assignmentToEdit: AssignmentDto, onSuccess?: (
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formState.courseId) {
-      errors.courseId = "Course is required";
-    }
+    if (!isRescheduling) {
+      if (!formState.courseId) {
+        errors.courseId = "Course is required";
+      }
 
-    if (!formState.name.trim()) {
-      errors.name = "Name is required";
-    } else if (formState.name.trim().length > NAME_MAX_LENGTH) {
-      errors.name = `Name must be ${NAME_MAX_LENGTH} characters or fewer`;
+      if (!formState.name.trim()) {
+        errors.name = "Name is required";
+      } else if (formState.name.trim().length > NAME_MAX_LENGTH) {
+        errors.name = `Name must be ${NAME_MAX_LENGTH} characters or fewer`;
+      }
     }
 
     if (!formState.dueDateDay) {
@@ -65,7 +75,7 @@ export function useAssignmentForm(assignmentToEdit: AssignmentDto, onSuccess?: (
     if (!errors.dueDateDay && !errors.dueDateTime) {
       const dueDateTimeValue = combineDateAndTime(formState.dueDateDay, formState.dueDateTime);
       const originalDueTime = new Date(assignmentToEdit.dueDate);
-      const dueTimeUnchanged = dueDateTimeValue.getTime() === originalDueTime.getTime();
+      const dueTimeUnchanged = !isRescheduling && dueDateTimeValue.getTime() === originalDueTime.getTime();
       if (!dueTimeUnchanged && dueDateTimeValue < new Date()) {
         errors.dueDateTime = "Due date cannot be in the past";
       }
@@ -82,15 +92,17 @@ export function useAssignmentForm(assignmentToEdit: AssignmentDto, onSuccess?: (
 
     const dueDate = combineDateAndTime(formState.dueDateDay, formState.dueDateTime).toISOString();
 
-    const data: AssignmentEditData = {
-      courseId: formState.courseId,
-      name: formState.name.trim(),
-      dueDate,
-      assignmentStateId: assignmentToEdit.assignmentStateId,
-    };
-
     try {
-      await updateMutation.mutateAsync({ id: assignmentToEdit.id, data });
+      if (isRescheduling) {
+        await rescheduleMutation.mutateAsync({ id: assignmentToEdit.id, dueDate });
+      } else {
+        const data: AssignmentEditData = {
+          courseId: formState.courseId,
+          name: formState.name.trim(),
+          dueDate,
+        };
+        await updateMutation.mutateAsync({ id: assignmentToEdit.id, data });
+      }
       onSuccess?.();
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -107,6 +119,7 @@ export function useAssignmentForm(assignmentToEdit: AssignmentDto, onSuccess?: (
     updateField,
     handleSubmit,
     isLoading,
+    isRescheduling,
     todayDateInput: dateToDateInput(new Date()),
   };
 }

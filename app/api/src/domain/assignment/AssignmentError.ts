@@ -49,12 +49,6 @@ export class DueDateInPastError extends AssignmentValidationError {
   }
 }
 
-/**
- * Raised when an action is not allowed from the assignment's current lifecycle
- * state. Kept separate from AssignmentValidationError so routes can answer 409
- * (the request is well formed, it just conflicts with the current state) while
- * payload validation stays 400.
- */
 export class AssignmentStateTransitionError extends Error {
   constructor(
     message: string,

@@ -8,6 +8,7 @@ export interface AssignmentDto {
   isDeleted: boolean;
   deletedAt: string | null;
   wrapUpAt: string | null;
+  rescheduleAt: string | null;
   createdAt: string;
 }
 
@@ -15,7 +16,6 @@ export interface AssignmentEditData {
   courseId: string;
   name: string;
   dueDate: string;
-  assignmentStateId: string;
 }
 
 export interface AssignmentCreateData {

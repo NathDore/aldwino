@@ -1,5 +1,6 @@
 import { Popover } from "@/shared/components/Popover";
 import { AssignmentFormPanel } from "./AssignmentFormPanel";
+import type { AssignmentFormIntent } from "../hooks/useAssignmentForm";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
@@ -7,9 +8,10 @@ import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 interface EditAssignmentModalProps {
   item: CalendarAssignment;
   onClose: () => void;
+  intent?: AssignmentFormIntent;
 }
 
-export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps) {
+export function EditAssignmentModal({ item, onClose, intent = "edit" }: EditAssignmentModalProps) {
   const { assignment, course } = item;
 
   return (
@@ -28,13 +30,15 @@ export function EditAssignmentModal({ item, onClose }: EditAssignmentModalProps)
             />
           )}
           <p className="text-xs text-slate-600 truncate">{course ? formatCourseLabel(course) : ""}</p>
-          <p className="text-sm font-bold text-slate-900 shrink-0">Edit Assignment</p>
+          <p className="text-sm font-bold text-slate-900 shrink-0">
+            {intent === "reschedule" ? "Reschedule Assignment" : "Edit Assignment"}
+          </p>
         </div>
       }
     >
       {(handleClose) => (
         <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-          <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} />
+          <AssignmentFormPanel assignmentToEdit={assignment} onClose={handleClose} intent={intent} />
         </div>
       )}
     </Popover>
