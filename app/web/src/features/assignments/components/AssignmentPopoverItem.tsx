@@ -1,8 +1,13 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useChangeAssignmentStateMutation } from "../queries/useMutations";
+import {
+  useChangeAssignmentStateMutation,
+  useWrapUpAssignmentMutation,
+  useWrapUpLateAssignmentMutation,
+} from "../queries/useMutations";
 import { useAssignmentStatesQuery } from "../queries/useAssignmentStatesQuery";
 import { Button } from "@/shared/components/Button";
+import { showToast } from "@/shared/store/toastStore";
 import { ChevronDownIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
 import {
@@ -39,6 +44,8 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   const { assignment, course } = item;
   const { data: assignmentStates } = useAssignmentStatesQuery();
   const stateMutation = useChangeAssignmentStateMutation();
+  const wrapUpMutation = useWrapUpAssignmentMutation();
+  const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,6 +62,22 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
     const targetStateId = getAssignmentStateId(assignmentStates, completed ? "UNCOMPLETED" : "COMPLETED");
     if (!targetStateId) return;
     await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+  };
+
+  const handleWrapUp = async () => {
+    try {
+      await wrapUpMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
+  const handleWrapUpLate = async () => {
+    try {
+      await wrapUpLateMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
   };
 
   useEffect(() => {
@@ -92,16 +115,16 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
 
   return (
     <div
-      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${statusBg} ${completed ? "opacity-50" : ""}`}
+      className={`border border-slate-200 rounded-md ${isCollapsed ? "py-1.5 px-3" : "p-3"} ${statusBg}`}
       style={{ borderLeftColor: borderColor }}
     >
       <div className="flex items-start gap-2">
         <div
-          className="w-3.5 h-3.5 mt-0.5 shrink-0 rounded-sm border border-slate-400"
+          className={`w-3.5 h-3.5 mt-0.5 shrink-0 rounded-sm border border-slate-400 ${completed ? "opacity-50" : ""}`}
           style={{ backgroundColor: borderColor }}
           aria-hidden="true"
         />
-        <div className="min-w-0 flex-1">
+        <div className={`min-w-0 flex-1 ${completed ? "opacity-50" : ""}`}>
           {isCollapsed ? (
             <p className="text-sm text-slate-700 truncate line-through">
               {course ? `${course.code} - ` : ""}
@@ -122,29 +145,74 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
           )}
         </div>
         {completed && (
-          <Button variant="ghost" size="sm" onClick={() => setIsExpanded((v) => !v)} className="shrink-0">
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded((v) => !v)} className="shrink-0 opacity-50">
             <span className="sr-only">{isExpanded ? "Collapse assignment details" : "Expand assignment details"}</span>
             <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </Button>
         )}
         <div className="flex items-center gap-1.5 shrink-0">
-          <input
-            type="checkbox"
-            checked={completed}
-            onChange={handleToggleComplete}
-            disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
-            className="cursor-pointer disabled:cursor-not-allowed"
-            aria-label={`Mark ${assignment.name} as ${completed ? "incomplete" : "complete"}`}
-          />
-          <span ref={menuTriggerRef} className="inline-flex">
-            <Button variant="ghost" size="xs" onClick={() => {
-              if (isUnlinking || unlinkDisabled) return;
-              setIsMenuOpen((v) => !v)
-            }}>
-              <span className="sr-only">More actions for {assignment.name}</span>
-              <MoreIcon className="w-3.5 h-3.5" />
-            </Button>
-          </span>
+          {completed ? (
+            <>
+              <Button
+                variant="primary"
+                size="xs"
+                onClick={handleToggleComplete}
+                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+              >
+                Uncomplete
+              </Button>
+              <Button
+                variant="success"
+                size="xs"
+                onClick={handleWrapUp}
+                disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
+              >
+                Wrap up
+              </Button>
+            </>
+          ) : isOverdue ? (
+            <>
+              <Button
+                variant="warning"
+                size="xs"
+                onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsEditing(true);
+                }}
+                disabled={isUnlinking || unlinkDisabled}
+              >
+                Reschedule
+              </Button>
+              <Button
+                variant="success"
+                size="xs"
+                onClick={handleWrapUpLate}
+                disabled={isUnlinking || unlinkDisabled || wrapUpLateMutation.isPending}
+              >
+                Wrap up - late
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={handleToggleComplete}
+                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+              >
+                Complete
+              </Button>
+              <span ref={menuTriggerRef} className="inline-flex">
+                <Button variant="ghost" size="xs" onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsMenuOpen((v) => !v)
+                }}>
+                  <span className="sr-only">More actions for {assignment.name}</span>
+                  <MoreIcon className="w-3.5 h-3.5" />
+                </Button>
+              </span>
+            </>
+          )}
         </div>
         {isMenuOpen &&
           createPortal(

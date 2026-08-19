@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "success";
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "success" | "warning";
 type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 interface ButtonProps {
@@ -31,6 +31,7 @@ export function Button({
       "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm",
     ghost: "text-slate-700 hover:bg-slate-100 active:bg-slate-200",
     success: "bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 active:bg-emerald-200",
+    warning: "bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 active:bg-amber-200",
   };
 
   const sizeStyles: Record<ButtonSize, string> = {

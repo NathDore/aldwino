@@ -47,6 +47,13 @@ export class CannotUncompletePastWorkSessionError extends WorkSessionValidationE
   }
 }
 
+export class WorkSessionNotCompletedError extends WorkSessionValidationError {
+  constructor() {
+    super("WorkSession must be completed before it can be wrapped up");
+    this.name = "WorkSessionNotCompletedError";
+  }
+}
+
 export class WorkSessionStateNotFoundError extends Error {
   constructor(workSessionStateId: string) {
     super(`WorkSessionState with id ${workSessionStateId} not found`);

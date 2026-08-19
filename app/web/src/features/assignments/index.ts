@@ -5,6 +5,8 @@ export {
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
   useChangeAssignmentStateMutation,
+  useWrapUpAssignmentMutation,
+  useWrapUpLateAssignmentMutation,
 } from "./queries/useMutations";
 export { useAssignmentForm } from "./hooks/useAssignmentForm";
 export {

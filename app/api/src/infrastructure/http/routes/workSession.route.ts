@@ -9,6 +9,7 @@ import type { ListWorkSessionsUseCase } from "../../../application/workSession/L
 import type { ChangeWorkSessionStateUseCase } from "../../../application/workSession/ChangeWorkSessionStateUseCase";
 import type { DeleteWorkSessionUseCase } from "../../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../../application/workSession/RescheduleWorkSessionUseCase";
+import type { WrapUpWorkSessionUseCase } from "../../../application/workSession/WrapUpWorkSessionUseCase";
 import type { WorkSessionMergeResult } from "../../../application/workSession/WorkSessionMergeService";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 
@@ -19,6 +20,7 @@ interface WorkSessionRouteDeps {
   changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
+  wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
 }
 
@@ -154,6 +156,20 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
 
       const result = deps.rescheduleWorkSessionUseCase.execute({ id, startTime, endTime });
       return c.json(toWorkSessionResponse(result), 200);
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/work-sessions/:id/wrap-up", (c) => {
+    try {
+      const id = c.req.param("id");
+      const workSession = deps.wrapUpWorkSessionUseCase.execute(id);
+      return c.json(workSession.toJSON(), 200);
     } catch (error) {
       const handled = handleWorkSessionError(error);
       if (handled) {

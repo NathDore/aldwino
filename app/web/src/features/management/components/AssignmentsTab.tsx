@@ -4,7 +4,12 @@ import {
   type AssignmentDto,
   isAssignmentCompleted,
   isAssignmentOverdue,
+  getAssignmentStateId,
   useDeleteAssignmentMutation,
+  useChangeAssignmentStateMutation,
+  useWrapUpAssignmentMutation,
+  useWrapUpLateAssignmentMutation,
+  useAssignmentStatesQuery,
 } from "@/features/assignments";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { AssignmentFormPanel } from "@/features/assignments/components/AssignmentFormPanel";
@@ -14,6 +19,7 @@ import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { PlusIcon, PencilIcon, TrashIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
+import { showToast } from "@/shared/store/toastStore";
 
 interface AssignmentsTabProps {
   assignments: AssignmentDto[];
@@ -43,6 +49,10 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   const [editingAssignment, setEditingAssignment] = useState<AssignmentDto | null>(null);
   const [deletingAssignment, setDeletingAssignment] = useState<AssignmentDto | null>(null);
   const deleteMutation = useDeleteAssignmentMutation();
+  const { data: assignmentStates } = useAssignmentStatesQuery();
+  const stateMutation = useChangeAssignmentStateMutation();
+  const wrapUpMutation = useWrapUpAssignmentMutation();
+  const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
 
   const toggleFilter = (id: string) => {
     setCourseFilterIds((prev) => {
@@ -63,6 +73,42 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
     if (!deletingAssignment) return;
     await deleteMutation.mutateAsync(deletingAssignment.id);
     setDeletingAssignment(null);
+  };
+
+  const handleComplete = async (assignment: AssignmentDto) => {
+    const targetStateId = getAssignmentStateId(assignmentStates, "COMPLETED");
+    if (!targetStateId) return;
+    try {
+      await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
+  const handleUncomplete = async (assignment: AssignmentDto) => {
+    const targetStateId = getAssignmentStateId(assignmentStates, "UNCOMPLETED");
+    if (!targetStateId) return;
+    try {
+      await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
+  const handleWrapUp = async (assignment: AssignmentDto) => {
+    try {
+      await wrapUpMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
+  const handleWrapUpLate = async (assignment: AssignmentDto) => {
+    try {
+      await wrapUpLateMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
   };
 
   return (
@@ -142,23 +188,68 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                       </span>
                     </td>
                     <td className="p-3">
-                      <div className="flex gap-0.5 justify-end">
-                        <button
-                          type="button"
-                          aria-label="Edit assignment"
-                          onClick={() => setEditingAssignment(assignment)}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
-                        >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Delete assignment"
-                          onClick={() => setDeletingAssignment(assignment)}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <TrashIcon />
-                        </button>
+                      <div className="flex items-center gap-1.5 justify-end">
+                        {isAssignmentCompleted(assignment) ? (
+                          <>
+                            <Button
+                              variant="primary"
+                              size="xs"
+                              onClick={() => handleUncomplete(assignment)}
+                              disabled={stateMutation.isPending}
+                            >
+                              Uncomplete
+                            </Button>
+                            <Button
+                              variant="success"
+                              size="xs"
+                              onClick={() => handleWrapUp(assignment)}
+                              disabled={wrapUpMutation.isPending}
+                            >
+                              Wrap up
+                            </Button>
+                          </>
+                        ) : isAssignmentOverdue(assignment) ? (
+                          <>
+                            <Button variant="warning" size="xs" onClick={() => setEditingAssignment(assignment)}>
+                              Reschedule
+                            </Button>
+                            <Button
+                              variant="success"
+                              size="xs"
+                              onClick={() => handleWrapUpLate(assignment)}
+                              disabled={wrapUpLateMutation.isPending}
+                            >
+                              Wrap up - late
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="secondary"
+                              size="xs"
+                              onClick={() => handleComplete(assignment)}
+                              disabled={stateMutation.isPending}
+                            >
+                              Complete
+                            </Button>
+                            <button
+                              type="button"
+                              aria-label="Edit assignment"
+                              onClick={() => setEditingAssignment(assignment)}
+                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Delete assignment"
+                              onClick={() => setDeletingAssignment(assignment)}
+                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-red-50 hover:text-red-600"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

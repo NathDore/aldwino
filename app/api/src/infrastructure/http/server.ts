@@ -14,6 +14,8 @@ import type { ListAssignmentsUseCase } from "../../application/assignment/ListAs
 import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
 import type { ChangeAssignmentStateUseCase } from "../../application/assignment/ChangeAssignmentStateUseCase";
+import type { WrapUpAssignmentUseCase } from "../../application/assignment/WrapUpAssignmentUseCase";
+import type { WrapUpLateAssignmentUseCase } from "../../application/assignment/WrapUpLateAssignmentUseCase";
 import { registerAssignmentRoutes } from "./routes/assignment.route";
 import type { ListAssignmentStatesUseCase } from "../../application/assignmentState/ListAssignmentStatesUseCase";
 import { registerAssignmentStateRoutes } from "./routes/assignmentState.route";
@@ -23,6 +25,7 @@ import type { ListWorkSessionsUseCase } from "../../application/workSession/List
 import type { ChangeWorkSessionStateUseCase } from "../../application/workSession/ChangeWorkSessionStateUseCase";
 import type { DeleteWorkSessionUseCase } from "../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../application/workSession/RescheduleWorkSessionUseCase";
+import type { WrapUpWorkSessionUseCase } from "../../application/workSession/WrapUpWorkSessionUseCase";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { registerWorkSessionRoutes } from "./routes/workSession.route";
 import type { ListWorkSessionStatesUseCase } from "../../application/workSessionState/ListWorkSessionStatesUseCase";
@@ -47,6 +50,8 @@ export interface ServerDeps {
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
   changeAssignmentStateUseCase: ChangeAssignmentStateUseCase;
+  wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
+  wrapUpLateAssignmentUseCase: WrapUpLateAssignmentUseCase;
   listAssignmentStatesUseCase: ListAssignmentStatesUseCase;
   createWorkSessionUseCase: CreateWorkSessionUseCase;
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
@@ -54,6 +59,7 @@ export interface ServerDeps {
   changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
+  wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
   listWorkSessionStatesUseCase: ListWorkSessionStatesUseCase;
   createAssignmentWorkSessionUseCase: CreateAssignmentWorkSessionUseCase;

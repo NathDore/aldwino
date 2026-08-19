@@ -42,6 +42,10 @@ export async function deleteWorkSession(id: string): Promise<void> {
   await apiClient<void>(`/work-sessions/${id}`, { method: "DELETE" });
 }
 
+export async function wrapUpWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/wrap-up`, { method: "POST" });
+}
+
 export async function fetchWorkSessionCompletionMessage(): Promise<{ message: string }> {
   return apiClient<{ message: string }>("/work-sessions/completion-message");
 }
