@@ -30,6 +30,8 @@ export class DeleteWorkSessionUseCase {
         completedAt: existing.completedAt,
         isDeleted: true,
         deletedAt: now,
+        wrapUpAt: existing.wrapUpAt,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
       const updated = this.repository.update(deleted);

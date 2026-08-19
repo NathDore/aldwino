@@ -41,6 +41,8 @@ export class ChangeAssignmentStateUseCase {
         completedAt,
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
+        wrapUpAt: existing.wrapUpAt,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
 
