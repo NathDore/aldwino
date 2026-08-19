@@ -5,6 +5,7 @@ export {
   useRescheduleWorkSessionMutation,
   useChangeWorkSessionStateMutation,
   useDeleteWorkSessionMutation,
+  useWrapUpWorkSessionMutation,
 } from "./queries/useWorkSessionMutations";
 export {
   useAssignmentWorkSessionsQuery,

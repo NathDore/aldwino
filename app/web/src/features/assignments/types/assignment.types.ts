@@ -7,6 +7,7 @@ export interface AssignmentDto {
   completedAt: string | null;
   isDeleted: boolean;
   deletedAt: string | null;
+  wrapUpAt: string | null;
   createdAt: string;
 }
 

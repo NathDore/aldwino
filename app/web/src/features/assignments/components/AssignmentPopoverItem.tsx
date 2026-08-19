@@ -1,8 +1,13 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useChangeAssignmentStateMutation } from "../queries/useMutations";
+import {
+  useChangeAssignmentStateMutation,
+  useWrapUpAssignmentMutation,
+  useWrapUpLateAssignmentMutation,
+} from "../queries/useMutations";
 import { useAssignmentStatesQuery } from "../queries/useAssignmentStatesQuery";
 import { Button } from "@/shared/components/Button";
+import { showToast } from "@/shared/store/toastStore";
 import { ChevronDownIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { EditAssignmentModal } from "./EditAssignmentModal";
 import {
@@ -39,6 +44,8 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   const { assignment, course } = item;
   const { data: assignmentStates } = useAssignmentStatesQuery();
   const stateMutation = useChangeAssignmentStateMutation();
+  const wrapUpMutation = useWrapUpAssignmentMutation();
+  const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,6 +62,22 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
     const targetStateId = getAssignmentStateId(assignmentStates, completed ? "UNCOMPLETED" : "COMPLETED");
     if (!targetStateId) return;
     await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+  };
+
+  const handleWrapUp = async () => {
+    try {
+      await wrapUpMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
+  };
+
+  const handleWrapUpLate = async () => {
+    try {
+      await wrapUpLateMutation.mutateAsync(assignment.id);
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
   };
 
   useEffect(() => {
@@ -153,29 +176,90 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
               style={{ top: menuPosition.top, left: menuPosition.left, transform: "translateX(-100%)" }}
             >
-              <button
-                type="button"
-                onClick={() => {
-                  if (isUnlinking || unlinkDisabled) return;
-                  setIsMenuOpen(false);
-                  setIsEditing(true);
-                }}
-                className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isUnlinking || unlinkDisabled) return;
-                  setIsMenuOpen(false);
-                  onUnlink();
-                }}
-                disabled={isUnlinking || unlinkDisabled}
-                className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-              >
-                Remove
-              </button>
+              {completed ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isUnlinking || unlinkDisabled) return;
+                      setIsMenuOpen(false);
+                      handleWrapUp();
+                    }}
+                    disabled={isUnlinking || unlinkDisabled || wrapUpMutation.isPending}
+                    className="w-full text-left px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                  >
+                    Wrap up
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    title="Mark incomplete to edit"
+                    className="w-full text-left px-3 py-1.5 text-sm text-slate-400 cursor-not-allowed"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    title="Mark incomplete to remove"
+                    className="w-full text-left px-3 py-1.5 text-sm text-slate-400 cursor-not-allowed"
+                  >
+                    Remove
+                  </button>
+                </>
+              ) : isOverdue ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isUnlinking || unlinkDisabled) return;
+                      setIsMenuOpen(false);
+                      setIsEditing(true);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    Reschedule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isUnlinking || unlinkDisabled) return;
+                      setIsMenuOpen(false);
+                      handleWrapUpLate();
+                    }}
+                    disabled={isUnlinking || unlinkDisabled || wrapUpLateMutation.isPending}
+                    className="w-full text-left px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                  >
+                    Wrap up - late
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isUnlinking || unlinkDisabled) return;
+                      setIsMenuOpen(false);
+                      setIsEditing(true);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isUnlinking || unlinkDisabled) return;
+                      setIsMenuOpen(false);
+                      onUnlink();
+                    }}
+                    disabled={isUnlinking || unlinkDisabled}
+                    className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                </>
+              )}
             </div>,
             document.body
           )}

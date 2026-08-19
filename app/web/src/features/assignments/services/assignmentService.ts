@@ -37,3 +37,11 @@ export async function changeAssignmentState(id: string, assignmentStateId: strin
     body: JSON.stringify({ assignmentStateId }),
   });
 }
+
+export async function wrapUpAssignment(id: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/wrap-up`, { method: "POST" });
+}
+
+export async function wrapUpLateAssignment(id: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/wrap-up-late`, { method: "POST" });
+}

@@ -1,5 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createAssignment, updateAssignment, deleteAssignment, changeAssignmentState } from "../services/assignmentService";
+import {
+  createAssignment,
+  updateAssignment,
+  deleteAssignment,
+  changeAssignmentState,
+  wrapUpAssignment,
+  wrapUpLateAssignment,
+} from "../services/assignmentService";
 import type { AssignmentEditData } from "../types/assignment.types";
 
 export function useCreateAssignmentMutation() {
@@ -44,6 +51,30 @@ export function useChangeAssignmentStateMutation() {
       changeAssignmentState(id, assignmentStateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
+export function useWrapUpAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: wrapUpAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useWrapUpLateAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: wrapUpLateAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
     },
   });
 }

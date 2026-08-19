@@ -7,7 +7,12 @@ import { Button } from "@/shared/components/Button";
 import { MoreIcon } from "@/features/calendar/components/icons";
 import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
-import { useChangeWorkSessionStateMutation, useDeleteWorkSessionMutation } from "../queries/useWorkSessionMutations";
+import {
+  useChangeWorkSessionStateMutation,
+  useDeleteWorkSessionMutation,
+  useWrapUpWorkSessionMutation,
+} from "../queries/useWorkSessionMutations";
+import { showToast } from "@/shared/store/toastStore";
 import { useWorkSessionAssignmentLinksQuery } from "../queries/useAssignmentWorkSessionsQuery";
 import { useWorkSessionCompletionMessageQuery } from "../queries/useWorkSessionCompletionMessageQuery";
 import { FALLBACK_COMPLETION_MESSAGE } from "../constants/completionMessages";
@@ -48,6 +53,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSession.id);
   const stateMutation = useChangeWorkSessionStateMutation();
   const deleteMutation = useDeleteWorkSessionMutation();
+  const wrapUpMutation = useWrapUpWorkSessionMutation();
   const goToWeekOf = useCalendarStore((s) => s.goToWeekOf);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -197,6 +203,15 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
           handleClose();
         };
 
+        const handleWrapUp = async () => {
+          try {
+            await wrapUpMutation.mutateAsync(workSession.id);
+            handleClose();
+          } catch (error) {
+            if (error instanceof Error) showToast(error.message, "error");
+          }
+        };
+
         return (
           <>
             <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
@@ -244,8 +259,8 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           <Button
                             variant="success"
                             size="sm"
-                            onClick={handleDelete}
-                            disabled={deleteMutation.isPending}
+                            onClick={handleWrapUp}
+                            disabled={wrapUpMutation.isPending}
                           >
                             Wrap up
                           </Button>
@@ -255,8 +270,8 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                         <Button
                           variant="success"
                           size="sm"
-                          onClick={handleDelete}
-                          disabled={deleteMutation.isPending}
+                          onClick={handleWrapUp}
+                          disabled={wrapUpMutation.isPending}
                         >
                           Wrap up
                         </Button>

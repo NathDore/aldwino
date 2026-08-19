@@ -4,6 +4,7 @@ import {
   rescheduleWorkSession,
   changeWorkSessionState,
   deleteWorkSession,
+  wrapUpWorkSession,
 } from "../services/workSessionService";
 import type { CreateWorkSessionData, RescheduleWorkSessionData } from "../types/workSession.types";
 
@@ -49,6 +50,18 @@ export function useDeleteWorkSessionMutation() {
 
   return useMutation({
     mutationFn: deleteWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useWrapUpWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: wrapUpWorkSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });

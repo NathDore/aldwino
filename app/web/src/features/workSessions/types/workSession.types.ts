@@ -13,6 +13,7 @@ export interface WorkSessionDto {
   completedAt: string | null;
   isDeleted: boolean;
   deletedAt: string | null;
+  wrapUpAt: string | null;
   createdAt: string;
   mergedFrom?: string[];
 }
