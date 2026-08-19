@@ -7,6 +7,13 @@ export {
   useChangeAssignmentStateMutation,
 } from "./queries/useMutations";
 export { useAssignmentForm } from "./hooks/useAssignmentForm";
-export { isAssignmentCompleted, isAssignmentOverdue, getAssignmentColor, getAssignmentStateId } from "./utils/assignmentStatus";
+export {
+  isAssignmentCompleted,
+  isAssignmentOverdue,
+  getCourseColor,
+  getAssignmentStatusBackgroundClass,
+  getAssignmentStatusRingClass,
+  getAssignmentStateId,
+} from "./utils/assignmentStatus";
 export type { AssignmentDto, AssignmentEditData, AssignmentCreateData } from "./types/assignment.types";
 export type { AssignmentStateDto, AssignmentStateName } from "./types/assignmentState.types";
