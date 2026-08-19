@@ -170,18 +170,38 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
                 Wrap up
               </Button>
             </>
+          ) : isOverdue ? (
+            <>
+              <Button
+                variant="warning"
+                size="xs"
+                onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsEditing(true);
+                }}
+                disabled={isUnlinking || unlinkDisabled}
+              >
+                Reschedule
+              </Button>
+              <Button
+                variant="success"
+                size="xs"
+                onClick={handleWrapUpLate}
+                disabled={isUnlinking || unlinkDisabled || wrapUpLateMutation.isPending}
+              >
+                Wrap up - late
+              </Button>
+            </>
           ) : (
             <>
-              {!isOverdue && (
-                <Button
-                  variant="secondary"
-                  size="xs"
-                  onClick={handleToggleComplete}
-                  disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
-                >
-                  Complete
-                </Button>
-              )}
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={handleToggleComplete}
+                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+              >
+                Complete
+              </Button>
               <span ref={menuTriggerRef} className="inline-flex">
                 <Button variant="ghost" size="xs" onClick={() => {
                   if (isUnlinking || unlinkDisabled) return;
@@ -201,59 +221,29 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
               className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
               style={{ top: menuPosition.top, left: menuPosition.left, transform: "translateX(-100%)" }}
             >
-              {isOverdue ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isUnlinking || unlinkDisabled) return;
-                      setIsMenuOpen(false);
-                      setIsEditing(true);
-                    }}
-                    className="w-full text-left px-3 py-1.5 text-sm text-amber-700 bg-amber-50 hover:bg-amber-100"
-                  >
-                    Reschedule
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isUnlinking || unlinkDisabled) return;
-                      setIsMenuOpen(false);
-                      handleWrapUpLate();
-                    }}
-                    disabled={isUnlinking || unlinkDisabled || wrapUpLateMutation.isPending}
-                    className="w-full text-left px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-                  >
-                    Wrap up - late
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isUnlinking || unlinkDisabled) return;
-                      setIsMenuOpen(false);
-                      setIsEditing(true);
-                    }}
-                    className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isUnlinking || unlinkDisabled) return;
-                      setIsMenuOpen(false);
-                      onUnlink();
-                    }}
-                    disabled={isUnlinking || unlinkDisabled}
-                    className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-                  >
-                    Remove
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsMenuOpen(false);
+                  setIsEditing(true);
+                }}
+                className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isUnlinking || unlinkDisabled) return;
+                  setIsMenuOpen(false);
+                  onUnlink();
+                }}
+                disabled={isUnlinking || unlinkDisabled}
+                className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                Remove
+              </button>
             </div>,
             document.body
           )}
