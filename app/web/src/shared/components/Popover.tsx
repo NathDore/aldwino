@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
@@ -23,16 +22,10 @@ interface PopoverProps {
 }
 
 export function Popover({ header, headerClassName, panelClassName, panelStyle, onClose, children }: PopoverProps) {
-  const [isVisible, setIsVisible] = useState(false);
   const hasClosedRef = useRef(false);
   const mouseDownOnBackdropRef = useRef(false);
 
   useBodyScrollLock();
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setIsVisible(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
 
   const handleClose = useCallback(() => {
     if (hasClosedRef.current) return;
@@ -67,15 +60,13 @@ export function Popover({ header, headerClassName, panelClassName, panelStyle, o
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 transition-opacity duration-150 ease-out ${isVisible ? "opacity-100" : "opacity-0"
-        }`}
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
       onKeyDown={stopKeyDownPropagation}
     >
       <div
-        className={`flex flex-col bg-white border border-slate-200 rounded-lg shadow-lg transition-[opacity,transform] duration-150 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-          } ${panelClassName ?? ""}`}
+        className={`flex flex-col bg-white border border-slate-200 rounded-lg shadow-lg ${panelClassName ?? ""}`}
         style={panelStyle}
         onClick={stopClickPropagation}
       >
