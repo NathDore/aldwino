@@ -1,3 +1,5 @@
+import type { AssignmentLifecycleState } from "./AssignmentLifecycle";
+
 export class AssignmentValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -40,16 +42,81 @@ export class DueDateInvalidError extends AssignmentValidationError {
   }
 }
 
-export class AssignmentNotCompletedError extends AssignmentValidationError {
+export class DueDateInPastError extends AssignmentValidationError {
   constructor() {
-    super("Assignment must be completed before it can be wrapped up");
+    super("dueDate must be in the future");
+    this.name = "DueDateInPastError";
+  }
+}
+
+/**
+ * Raised when an action is not allowed from the assignment's current lifecycle
+ * state. Kept separate from AssignmentValidationError so routes can answer 409
+ * (the request is well formed, it just conflicts with the current state) while
+ * payload validation stays 400.
+ */
+export class AssignmentStateTransitionError extends Error {
+  constructor(
+    message: string,
+    public readonly state: AssignmentLifecycleState,
+  ) {
+    super(message);
+    this.name = "AssignmentStateTransitionError";
+  }
+}
+
+export class CannotCompleteAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot complete an assignment in the ${state} state`, state);
+    this.name = "CannotCompleteAssignmentError";
+  }
+}
+
+export class CannotUncompleteAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot mark an assignment in the ${state} state as incomplete`, state);
+    this.name = "CannotUncompleteAssignmentError";
+  }
+}
+
+export class CannotEditAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot edit an assignment in the ${state} state`, state);
+    this.name = "CannotEditAssignmentError";
+  }
+}
+
+export class CannotDeleteAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot remove an assignment in the ${state} state`, state);
+    this.name = "CannotDeleteAssignmentError";
+  }
+}
+
+export class CannotRescheduleAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot reschedule an assignment in the ${state} state`, state);
+    this.name = "CannotRescheduleAssignmentError";
+  }
+}
+
+export class CannotLinkAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot link or unlink a work session for an assignment in the ${state} state`, state);
+    this.name = "CannotLinkAssignmentError";
+  }
+}
+
+export class AssignmentNotCompletedError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Assignment must be completed before it can be wrapped up (state: ${state})`, state);
     this.name = "AssignmentNotCompletedError";
   }
 }
 
-export class AssignmentNotOverdueError extends AssignmentValidationError {
-  constructor() {
-    super("Assignment must be overdue and not already completed to be wrapped up late");
+export class AssignmentNotOverdueError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Assignment must be overdue and not already completed to be wrapped up late (state: ${state})`, state);
     this.name = "AssignmentNotOverdueError";
   }
 }

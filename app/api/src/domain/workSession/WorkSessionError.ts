@@ -54,6 +54,20 @@ export class WorkSessionNotCompletedError extends WorkSessionValidationError {
   }
 }
 
+export class StartTimeInPastError extends WorkSessionValidationError {
+  constructor() {
+    super("startTime must not be in the past");
+    this.name = "StartTimeInPastError";
+  }
+}
+
+export class CannotRescheduleNonSkippedWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only a skipped work session can be rescheduled (state: ${state})`);
+    this.name = "CannotRescheduleNonSkippedWorkSessionError";
+  }
+}
+
 export class WorkSessionStateNotFoundError extends Error {
   constructor(workSessionStateId: string) {
     super(`WorkSessionState with id ${workSessionStateId} not found`);

@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
-import { AssignmentNotCompletedError } from "../../domain/assignment/AssignmentError";
+import { assertCanWrapUp } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { Clock } from "../health/ports/Clock";
 
@@ -17,11 +17,10 @@ export class WrapUpAssignmentUseCase {
       if (!existing) {
         throw new Error(`Assignment with id ${id} not found`);
       }
-      if (existing.completedAt === null) {
-        throw new AssignmentNotCompletedError();
-      }
 
       const now = this.clock.now();
+      assertCanWrapUp(existing, now);
+
       const wrappedUp = Assignment.create({
         id: existing.id,
         courseId: existing.courseId,

@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 import {
   AssignmentValidationError,
+  AssignmentStateTransitionError,
   CourseNotFoundError,
   AssignmentStateNotFoundError,
 } from "../../../domain/assignment/AssignmentError";
@@ -25,6 +26,9 @@ interface AssignmentRouteDeps {
 }
 
 function handleAssignmentError(error: unknown) {
+  if (error instanceof AssignmentStateTransitionError) {
+    return { body: { error: error.message }, status: 409 as const };
+  }
   if (error instanceof AssignmentValidationError) {
     return { body: { error: error.message }, status: 400 as const };
   }
