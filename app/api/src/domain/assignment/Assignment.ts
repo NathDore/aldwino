@@ -10,6 +10,7 @@ export class Assignment {
     public readonly completedAt: Date | null,
     public readonly isDeleted: boolean,
     public readonly deletedAt: Date | null,
+    public readonly wrapUpAt: Date | null,
     public readonly createdAt: Date,
   ) {}
 
@@ -22,6 +23,7 @@ export class Assignment {
     completedAt?: Date | null;
     isDeleted?: boolean;
     deletedAt?: Date | null;
+    wrapUpAt?: Date | null;
     createdAt: Date;
   }): Assignment {
     validateCourseId(params.courseId);
@@ -37,6 +39,7 @@ export class Assignment {
       params.completedAt ?? null,
       params.isDeleted ?? false,
       params.deletedAt ?? null,
+      params.wrapUpAt ?? null,
       params.createdAt,
     );
   }
@@ -51,6 +54,7 @@ export class Assignment {
       completedAt: this.completedAt ? this.completedAt.toISOString() : null,
       isDeleted: this.isDeleted,
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
+      wrapUpAt: this.wrapUpAt ? this.wrapUpAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
     };
   }

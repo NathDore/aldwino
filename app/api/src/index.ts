@@ -18,6 +18,8 @@ import { migrate as migrateRecreateAssignment } from "./infrastructure/database/
 import { migrate as migrateWorkSessionTable } from "./infrastructure/database/migrations/014_create_work_session_table";
 import { migrate as migrateAssignmentWorkSessionTable } from "./infrastructure/database/migrations/015_create_assignment_work_session_table";
 import { migrate as migrateWorkSessionOverlapIndex } from "./infrastructure/database/migrations/016_add_work_session_overlap_index";
+import { migrate as migrateAssignmentWrapUpAt } from "./infrastructure/database/migrations/017_add_assignment_wrap_up_at_column";
+import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database/migrations/018_add_work_session_wrap_up_at_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -34,6 +36,8 @@ import { ListAssignmentsUseCase } from "./application/assignment/ListAssignments
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
 import { ChangeAssignmentStateUseCase } from "./application/assignment/ChangeAssignmentStateUseCase";
+import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
+import { WrapUpLateAssignmentUseCase } from "./application/assignment/WrapUpLateAssignmentUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
 import { ListAssignmentStatesUseCase } from "./application/assignmentState/ListAssignmentStatesUseCase";
 import { WorkSessionRepository } from "./infrastructure/database/repositories/WorkSessionRepository";
@@ -45,6 +49,7 @@ import { ChangeWorkSessionStateUseCase } from "./application/workSession/ChangeW
 import { GetRandomWorkSessionCompletionMessageUseCase } from "./application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
+import { WrapUpWorkSessionUseCase } from "./application/workSession/WrapUpWorkSessionUseCase";
 import { WorkSessionMergeService } from "./application/workSession/WorkSessionMergeService";
 import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
 import { AssignmentWorkSessionRepository } from "./infrastructure/database/repositories/AssignmentWorkSessionRepository";
@@ -75,6 +80,8 @@ migrateRecreateAssignment(db);
 migrateWorkSessionTable(db);
 migrateAssignmentWorkSessionTable(db);
 migrateWorkSessionOverlapIndex(db);
+migrateAssignmentWrapUpAt(db);
+migrateWorkSessionWrapUpAt(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -137,6 +144,8 @@ const app = createServer({
     clock,
     db,
   ),
+  wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, clock, db),
+  wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, clock, db),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
   createWorkSessionUseCase: new CreateWorkSessionUseCase(
     workSessionRepository,
@@ -166,6 +175,7 @@ const app = createServer({
     workSessionMergeService,
     db,
   ),
+  wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
   getRandomWorkSessionCompletionMessageUseCase: new GetRandomWorkSessionCompletionMessageUseCase(),
   listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),
   createAssignmentWorkSessionUseCase: new CreateAssignmentWorkSessionUseCase(

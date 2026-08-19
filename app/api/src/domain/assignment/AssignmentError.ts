@@ -40,6 +40,20 @@ export class DueDateInvalidError extends AssignmentValidationError {
   }
 }
 
+export class AssignmentNotCompletedError extends AssignmentValidationError {
+  constructor() {
+    super("Assignment must be completed before it can be wrapped up");
+    this.name = "AssignmentNotCompletedError";
+  }
+}
+
+export class AssignmentNotOverdueError extends AssignmentValidationError {
+  constructor() {
+    super("Assignment must be overdue and not already completed to be wrapped up late");
+    this.name = "AssignmentNotOverdueError";
+  }
+}
+
 export class CourseNotFoundError extends Error {
   constructor(courseId: string) {
     super(`Course with id ${courseId} not found`);

@@ -10,6 +10,8 @@ import type { ListAssignmentsUseCase } from "../../../application/assignment/Lis
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
 import type { ChangeAssignmentStateUseCase } from "../../../application/assignment/ChangeAssignmentStateUseCase";
+import type { WrapUpAssignmentUseCase } from "../../../application/assignment/WrapUpAssignmentUseCase";
+import type { WrapUpLateAssignmentUseCase } from "../../../application/assignment/WrapUpLateAssignmentUseCase";
 
 interface AssignmentRouteDeps {
   createAssignmentUseCase: CreateAssignmentUseCase;
@@ -18,6 +20,8 @@ interface AssignmentRouteDeps {
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
   changeAssignmentStateUseCase: ChangeAssignmentStateUseCase;
+  wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
+  wrapUpLateAssignmentUseCase: WrapUpLateAssignmentUseCase;
 }
 
 function handleAssignmentError(error: unknown) {
@@ -145,6 +149,34 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
         id,
         assignmentStateId: body.assignmentStateId,
       });
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignments/:id/wrap-up", (c) => {
+    try {
+      const id = c.req.param("id");
+      const assignment = deps.wrapUpAssignmentUseCase.execute(id);
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignments/:id/wrap-up-late", (c) => {
+    try {
+      const id = c.req.param("id");
+      const assignment = deps.wrapUpLateAssignmentUseCase.execute(id);
       return c.json(assignment.toJSON(), 200);
     } catch (error) {
       const handled = handleAssignmentError(error);

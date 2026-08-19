@@ -16,7 +16,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   create(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO assignments (id, courseId, assignmentStateId, name, dueDate, completedAt, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO assignments (id, courseId, assignmentStateId, name, dueDate, completedAt, isDeleted, deletedAt, wrapUpAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -27,6 +27,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.completedAt,
       json.isDeleted ? 1 : 0,
       json.deletedAt,
+      json.wrapUpAt,
       json.createdAt,
     );
     return assignment;
@@ -56,7 +57,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   update(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE assignments SET courseId = ?, assignmentStateId = ?, name = ?, dueDate = ?, completedAt = ?, isDeleted = ?, deletedAt = ? WHERE id = ?",
+      "UPDATE assignments SET courseId = ?, assignmentStateId = ?, name = ?, dueDate = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ? WHERE id = ?",
     );
     stmt.run(
       json.courseId,
@@ -66,6 +67,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.completedAt,
       json.isDeleted ? 1 : 0,
       json.deletedAt,
+      json.wrapUpAt,
       json.id,
     );
     return assignment;
@@ -87,6 +89,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       completedAt: row.completedAt ? new Date(row.completedAt as string) : null,
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
+      wrapUpAt: row.wrapUpAt ? new Date(row.wrapUpAt as string) : null,
       createdAt: new Date(row.createdAt as string),
     });
   }
