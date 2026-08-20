@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { CourseDto } from "@/features/courses";
 import {
   type AssignmentDto,
@@ -17,7 +18,7 @@ import { Button } from "@/shared/components/Button";
 import { Popover } from "@/shared/components/Popover";
 import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
-import { PlusIcon, PencilIcon, TrashIcon } from "@/features/calendar/components/icons";
+import { PlusIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 import { showToast } from "@/shared/store/toastStore";
 
@@ -44,6 +45,97 @@ function formatDue(dueDate: string): string {
   const dateLabel = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   return `${dateLabel}, ${timeLabel}`;
+}
+
+interface AssignmentRowMenuProps {
+  assignmentName: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function AssignmentRowMenu({ assignmentName, onEdit, onDelete }: AssignmentRowMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function updatePosition() {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({ top: rect.bottom + 4, left: rect.right });
+    }
+
+    updatePosition();
+
+    function handlePointerDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+      setIsOpen(false);
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setIsOpen(false);
+    }
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <span ref={triggerRef} className="inline-flex">
+        <button
+          type="button"
+          aria-label={`More actions for ${assignmentName}`}
+          onClick={() => setIsOpen((v) => !v)}
+          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
+        >
+          <MoreIcon />
+        </button>
+      </span>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
+            style={{ top: position.top, left: position.left, transform: "translateX(-100%)" }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onEdit();
+              }}
+              className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onDelete();
+              }}
+              className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+            >
+              Delete
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
 }
 
 export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
@@ -255,22 +347,11 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                             >
                               Complete
                             </Button>
-                            <button
-                              type="button"
-                              aria-label="Edit assignment"
-                              onClick={() => setEditingAssignment(assignment)}
-                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Delete assignment"
-                              onClick={() => setDeletingAssignment(assignment)}
-                              className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-red-50 hover:text-red-600"
-                            >
-                              <TrashIcon />
-                            </button>
+                            <AssignmentRowMenu
+                              assignmentName={assignment.name}
+                              onEdit={() => setEditingAssignment(assignment)}
+                              onDelete={() => setDeletingAssignment(assignment)}
+                            />
                           </>
                         )}
                       </div>
