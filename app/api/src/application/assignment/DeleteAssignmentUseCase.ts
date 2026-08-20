@@ -1,6 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
+import { assertCanDelete } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { Clock } from "../health/ports/Clock";
@@ -21,6 +22,7 @@ export class DeleteAssignmentUseCase {
       }
 
       const now = this.clock.now();
+      assertCanDelete(existing, now);
 
       const deleted = Assignment.create({
         id: existing.id,
@@ -31,6 +33,8 @@ export class DeleteAssignmentUseCase {
         completedAt: existing.completedAt,
         isDeleted: true,
         deletedAt: now,
+        wrapUpAt: existing.wrapUpAt,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
       const updated = this.repository.update(deleted);

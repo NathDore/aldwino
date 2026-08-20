@@ -16,7 +16,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   create(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO assignments (id, courseId, assignmentStateId, name, dueDate, completedAt, isDeleted, deletedAt, wrapUpAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO assignments (id, courseId, assignmentStateId, name, dueDate, completedAt, isDeleted, deletedAt, wrapUpAt, rescheduleAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -28,6 +28,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.wrapUpAt,
+      json.rescheduleAt,
       json.createdAt,
     );
     return assignment;
@@ -57,7 +58,7 @@ export class AssignmentRepository implements IAssignmentRepository {
   update(assignment: Assignment): Assignment {
     const json = assignment.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE assignments SET courseId = ?, assignmentStateId = ?, name = ?, dueDate = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ? WHERE id = ?",
+      "UPDATE assignments SET courseId = ?, assignmentStateId = ?, name = ?, dueDate = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ?, rescheduleAt = ? WHERE id = ?",
     );
     stmt.run(
       json.courseId,
@@ -68,6 +69,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.wrapUpAt,
+      json.rescheduleAt,
       json.id,
     );
     return assignment;
@@ -90,6 +92,7 @@ export class AssignmentRepository implements IAssignmentRepository {
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       wrapUpAt: row.wrapUpAt ? new Date(row.wrapUpAt as string) : null,
+      rescheduleAt: row.rescheduleAt ? new Date(row.rescheduleAt as string) : null,
       createdAt: new Date(row.createdAt as string),
     });
   }

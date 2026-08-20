@@ -5,6 +5,7 @@ import {
   WorkSessionNotFoundError,
   WorkSessionCompletedError,
 } from "../../../domain/assignmentWorkSession/AssignmentWorkSessionError";
+import { AssignmentStateTransitionError } from "../../../domain/assignment/AssignmentError";
 import type { CreateAssignmentWorkSessionUseCase } from "../../../application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
 import type { GetAssignmentWorkSessionByIdUseCase } from "../../../application/assignmentWorkSession/GetAssignmentWorkSessionByIdUseCase";
 import type { ListAssignmentWorkSessionsUseCase } from "../../../application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
@@ -20,6 +21,9 @@ interface AssignmentWorkSessionRouteDeps {
 }
 
 function handleAssignmentWorkSessionError(error: unknown) {
+  if (error instanceof AssignmentStateTransitionError) {
+    return { body: { error: error.message }, status: 409 as const };
+  }
   if (error instanceof AssignmentWorkSessionValidationError) {
     return { body: { error: error.message }, status: 400 as const };
   }

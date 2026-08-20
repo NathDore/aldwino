@@ -13,7 +13,9 @@ import type { GetAssignmentByIdUseCase } from "../../application/assignment/GetA
 import type { ListAssignmentsUseCase } from "../../application/assignment/ListAssignmentsUseCase";
 import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
-import type { ChangeAssignmentStateUseCase } from "../../application/assignment/ChangeAssignmentStateUseCase";
+import type { CompleteAssignmentUseCase } from "../../application/assignment/CompleteAssignmentUseCase";
+import type { UncompleteAssignmentUseCase } from "../../application/assignment/UncompleteAssignmentUseCase";
+import type { RescheduleAssignmentUseCase } from "../../application/assignment/RescheduleAssignmentUseCase";
 import type { WrapUpAssignmentUseCase } from "../../application/assignment/WrapUpAssignmentUseCase";
 import type { WrapUpLateAssignmentUseCase } from "../../application/assignment/WrapUpLateAssignmentUseCase";
 import { registerAssignmentRoutes } from "./routes/assignment.route";
@@ -49,7 +51,9 @@ export interface ServerDeps {
   listAssignmentsUseCase: ListAssignmentsUseCase;
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
-  changeAssignmentStateUseCase: ChangeAssignmentStateUseCase;
+  completeAssignmentUseCase: CompleteAssignmentUseCase;
+  uncompleteAssignmentUseCase: UncompleteAssignmentUseCase;
+  rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
   wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
   wrapUpLateAssignmentUseCase: WrapUpLateAssignmentUseCase;
   listAssignmentStatesUseCase: ListAssignmentStatesUseCase;

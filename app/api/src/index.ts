@@ -20,6 +20,8 @@ import { migrate as migrateAssignmentWorkSessionTable } from "./infrastructure/d
 import { migrate as migrateWorkSessionOverlapIndex } from "./infrastructure/database/migrations/016_add_work_session_overlap_index";
 import { migrate as migrateAssignmentWrapUpAt } from "./infrastructure/database/migrations/017_add_assignment_wrap_up_at_column";
 import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database/migrations/018_add_work_session_wrap_up_at_column";
+import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
+import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -35,7 +37,9 @@ import { GetAssignmentByIdUseCase } from "./application/assignment/GetAssignment
 import { ListAssignmentsUseCase } from "./application/assignment/ListAssignmentsUseCase";
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
-import { ChangeAssignmentStateUseCase } from "./application/assignment/ChangeAssignmentStateUseCase";
+import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { UncompleteAssignmentUseCase } from "./application/assignment/UncompleteAssignmentUseCase";
+import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "./application/assignment/WrapUpLateAssignmentUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
@@ -82,6 +86,8 @@ migrateAssignmentWorkSessionTable(db);
 migrateWorkSessionOverlapIndex(db);
 migrateAssignmentWrapUpAt(db);
 migrateWorkSessionWrapUpAt(db);
+migrateAssignmentRescheduleAt(db);
+migrateWorkSessionRescheduleAt(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -130,20 +136,16 @@ const app = createServer({
   ),
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
-  updateAssignmentUseCase: new UpdateAssignmentUseCase(
-    assignmentRepository,
-    courseRepository,
-    assignmentStateRepository,
-    clock,
-    db,
-  ),
+  updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
-  changeAssignmentStateUseCase: new ChangeAssignmentStateUseCase(
+  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, assignmentStateRepository, clock, db),
+  uncompleteAssignmentUseCase: new UncompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
     clock,
     db,
   ),
+  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, clock, db),
   wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, clock, db),
   wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, clock, db),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
@@ -172,7 +174,7 @@ const app = createServer({
   rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
-    workSessionMergeService,
+    clock,
     db,
   ),
   wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
@@ -195,6 +197,7 @@ const app = createServer({
   ),
   deleteAssignmentWorkSessionUseCase: new DeleteAssignmentWorkSessionUseCase(
     assignmentWorkSessionRepository,
+    assignmentRepository,
     workSessionRepository,
     clock,
     db,

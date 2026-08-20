@@ -5,6 +5,7 @@ import {
   WorkSessionNotFoundError,
   WorkSessionCompletedError,
 } from "../../domain/assignmentWorkSession/AssignmentWorkSessionError";
+import { assertCanLink } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
@@ -21,9 +22,14 @@ export class CreateAssignmentWorkSessionUseCase {
 
   execute(params: { assignmentId: string; workSessionId: string }): AssignmentWorkSession {
     return this.db.transaction(() => {
-      if (!this.assignmentRepository.getById(params.assignmentId)) {
+      const assignment = this.assignmentRepository.getById(params.assignmentId);
+      if (!assignment) {
         throw new AssignmentNotFoundError(params.assignmentId);
       }
+
+      const now = this.clock.now();
+      assertCanLink(assignment, now);
+
       const workSession = this.workSessionRepository.getById(params.workSessionId);
       if (!workSession) {
         throw new WorkSessionNotFoundError(params.workSessionId);
@@ -32,12 +38,11 @@ export class CreateAssignmentWorkSessionUseCase {
         throw new WorkSessionCompletedError(params.workSessionId);
       }
 
-      const id = crypto.randomUUID();
       const link = AssignmentWorkSession.create({
-        id,
+        id: crypto.randomUUID(),
         assignmentId: params.assignmentId,
         workSessionId: params.workSessionId,
-        createdAt: this.clock.now(),
+        createdAt: now,
       });
       return this.repository.create(link);
     })();

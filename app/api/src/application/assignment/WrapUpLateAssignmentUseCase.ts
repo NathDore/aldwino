@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
-import { AssignmentNotOverdueError } from "../../domain/assignment/AssignmentError";
+import { assertCanWrapUpLate } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { Clock } from "../health/ports/Clock";
 
@@ -19,9 +19,7 @@ export class WrapUpLateAssignmentUseCase {
       }
 
       const now = this.clock.now();
-      if (existing.completedAt !== null || existing.dueDate >= now) {
-        throw new AssignmentNotOverdueError();
-      }
+      assertCanWrapUpLate(existing, now);
 
       const wrappedUp = Assignment.create({
         id: existing.id,

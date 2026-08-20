@@ -4,7 +4,9 @@ export {
   useCreateAssignmentMutation,
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
-  useChangeAssignmentStateMutation,
+  useCompleteAssignmentMutation,
+  useUncompleteAssignmentMutation,
+  useRescheduleAssignmentMutation,
   useWrapUpAssignmentMutation,
   useWrapUpLateAssignmentMutation,
 } from "./queries/useMutations";
@@ -15,7 +17,6 @@ export {
   getCourseColor,
   getAssignmentStatusBackgroundClass,
   getAssignmentStatusRingClass,
-  getAssignmentStateId,
 } from "./utils/assignmentStatus";
 export type { AssignmentDto, AssignmentEditData, AssignmentCreateData } from "./types/assignment.types";
 export type { AssignmentStateDto, AssignmentStateName } from "./types/assignmentState.types";

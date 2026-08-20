@@ -15,7 +15,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
   create(workSession: WorkSession): WorkSession {
     const json = workSession.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO workSessions (id, workSessionStateId, startTime, endTime, completedAt, isDeleted, deletedAt, wrapUpAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO workSessions (id, workSessionStateId, startTime, endTime, completedAt, isDeleted, deletedAt, wrapUpAt, rescheduleAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -26,6 +26,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.wrapUpAt,
+      json.rescheduleAt,
       json.createdAt,
     );
     return workSession;
@@ -49,7 +50,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
   update(workSession: WorkSession): WorkSession {
     const json = workSession.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE workSessions SET workSessionStateId = ?, startTime = ?, endTime = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ? WHERE id = ?",
+      "UPDATE workSessions SET workSessionStateId = ?, startTime = ?, endTime = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ?, rescheduleAt = ? WHERE id = ?",
     );
     stmt.run(
       json.workSessionStateId,
@@ -59,6 +60,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.wrapUpAt,
+      json.rescheduleAt,
       json.id,
     );
     return workSession;
@@ -102,6 +104,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       wrapUpAt: row.wrapUpAt ? new Date(row.wrapUpAt as string) : null,
+      rescheduleAt: row.rescheduleAt ? new Date(row.rescheduleAt as string) : null,
       createdAt: new Date(row.createdAt as string),
     });
   }

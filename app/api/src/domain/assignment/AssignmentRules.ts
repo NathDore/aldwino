@@ -4,6 +4,7 @@ import {
   NameEmptyError,
   NameTooLongError,
   DueDateInvalidError,
+  DueDateInPastError,
 } from "./AssignmentError";
 
 const NAME_MAX_LENGTH = 250;
@@ -32,5 +33,12 @@ export function validateName(name: string): void {
 export function validateDueDate(dueDate: Date): void {
   if (isNaN(dueDate.getTime())) {
     throw new DueDateInvalidError();
+  }
+}
+
+export function validateDueDateNotInPast(dueDate: Date, now: Date): void {
+  validateDueDate(dueDate);
+  if (dueDate < now) {
+    throw new DueDateInPastError();
   }
 }

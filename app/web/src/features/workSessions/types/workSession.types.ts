@@ -14,6 +14,7 @@ export interface WorkSessionDto {
   isDeleted: boolean;
   deletedAt: string | null;
   wrapUpAt: string | null;
+  rescheduleAt: string | null;
   createdAt: string;
   mergedFrom?: string[];
 }

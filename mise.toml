@@ -31,3 +31,7 @@ run = "bun run typecheck"
 [tasks.lint]
 description = "Lint both packages"
 run = "bun run lint"
+
+[tasks.test]
+description = "Run the app/api test suite"
+run = "bun run --cwd app/api test"

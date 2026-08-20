@@ -44,6 +44,8 @@ export class DeleteCourseUseCase {
             completedAt: assignment.completedAt,
             isDeleted: true,
             deletedAt: now,
+            wrapUpAt: assignment.wrapUpAt,
+            rescheduleAt: assignment.rescheduleAt,
             createdAt: assignment.createdAt,
           }),
         );

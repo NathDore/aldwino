@@ -60,6 +60,8 @@ export class ChangeWorkSessionStateUseCase {
         completedAt,
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
+        wrapUpAt: existing.wrapUpAt,
+        rescheduleAt: existing.rescheduleAt,
         createdAt: existing.createdAt,
       });
 

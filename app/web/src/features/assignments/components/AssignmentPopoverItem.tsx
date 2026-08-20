@@ -1,11 +1,12 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  useChangeAssignmentStateMutation,
+  useCompleteAssignmentMutation,
+  useUncompleteAssignmentMutation,
   useWrapUpAssignmentMutation,
   useWrapUpLateAssignmentMutation,
 } from "../queries/useMutations";
-import { useAssignmentStatesQuery } from "../queries/useAssignmentStatesQuery";
+
 import { Button } from "@/shared/components/Button";
 import { showToast } from "@/shared/store/toastStore";
 import { ChevronDownIcon, MoreIcon } from "@/features/calendar/components/icons";
@@ -15,7 +16,6 @@ import {
   getAssignmentStatusBackgroundClass,
   isAssignmentCompleted,
   isAssignmentOverdue,
-  getAssignmentStateId,
 } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 import { formatCourseLabel } from "@/features/courses";
@@ -42,12 +42,13 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   unlinkDisabled = false,
 }: AssignmentPopoverItemProps) {
   const { assignment, course } = item;
-  const { data: assignmentStates } = useAssignmentStatesQuery();
-  const stateMutation = useChangeAssignmentStateMutation();
+  const completeMutation = useCompleteAssignmentMutation();
+  const uncompleteMutation = useUncompleteAssignmentMutation();
   const wrapUpMutation = useWrapUpAssignmentMutation();
   const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const menuTriggerRef = useRef<HTMLSpanElement>(null);
@@ -58,10 +59,18 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
   const isCollapsed = completed && !isExpanded;
   const statusBg = getAssignmentStatusBackgroundClass(assignment);
 
+  const isTogglingComplete = completeMutation.isPending || uncompleteMutation.isPending;
+
   const handleToggleComplete = async () => {
-    const targetStateId = getAssignmentStateId(assignmentStates, completed ? "UNCOMPLETED" : "COMPLETED");
-    if (!targetStateId) return;
-    await stateMutation.mutateAsync({ id: assignment.id, assignmentStateId: targetStateId });
+    try {
+      if (completed) {
+        await uncompleteMutation.mutateAsync(assignment.id);
+      } else {
+        await completeMutation.mutateAsync(assignment.id);
+      }
+    } catch (error) {
+      if (error instanceof Error) showToast(error.message, "error");
+    }
   };
 
   const handleWrapUp = async () => {
@@ -157,7 +166,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
                 variant="primary"
                 size="xs"
                 onClick={handleToggleComplete}
-                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+                disabled={isTogglingComplete || isUnlinking || unlinkDisabled}
               >
                 Uncomplete
               </Button>
@@ -177,7 +186,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
                 size="xs"
                 onClick={() => {
                   if (isUnlinking || unlinkDisabled) return;
-                  setIsEditing(true);
+                  setIsRescheduling(true);
                 }}
                 disabled={isUnlinking || unlinkDisabled}
               >
@@ -198,7 +207,7 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
                 variant="secondary"
                 size="xs"
                 onClick={handleToggleComplete}
-                disabled={stateMutation.isPending || isUnlinking || unlinkDisabled}
+                disabled={isTogglingComplete || isUnlinking || unlinkDisabled}
               >
                 Complete
               </Button>
@@ -249,6 +258,9 @@ export const AssignmentPopoverItem = memo(function AssignmentPopoverItem({
           )}
       </div>
       {isEditing && <EditAssignmentModal item={item} onClose={() => setIsEditing(false)} />}
+      {isRescheduling && (
+        <EditAssignmentModal item={item} intent="reschedule" onClose={() => setIsRescheduling(false)} />
+      )}
     </div>
   );
 });

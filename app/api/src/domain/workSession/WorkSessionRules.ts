@@ -4,6 +4,7 @@ import {
   EndTimeInvalidError,
   StartTimeNotBeforeEndTimeError,
   SpansMultipleDaysError,
+  StartTimeInPastError,
 } from "./WorkSessionError";
 
 export function validateWorkSessionStateId(workSessionStateId: string): void {
@@ -37,5 +38,14 @@ export function validateSameDay(startTime: Date, endTime: Date): void {
     startTime.getDate() === endTime.getDate();
   if (!sameDay) {
     throw new SpansMultipleDaysError();
+  }
+}
+
+const START_TIME_PAST_TOLERANCE_MS = 5000;
+
+export function validateStartTimeNotInPast(startTime: Date, now: Date): void {
+  validateStartTime(startTime);
+  if (startTime.getTime() < now.getTime() - START_TIME_PAST_TOLERANCE_MS) {
+    throw new StartTimeInPastError();
   }
 }

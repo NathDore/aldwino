@@ -3,7 +3,9 @@ import {
   createAssignment,
   updateAssignment,
   deleteAssignment,
-  changeAssignmentState,
+  completeAssignment,
+  uncompleteAssignment,
+  rescheduleAssignment,
   wrapUpAssignment,
   wrapUpLateAssignment,
 } from "../services/assignmentService";
@@ -43,14 +45,36 @@ export function useDeleteAssignmentMutation() {
   });
 }
 
-export function useChangeAssignmentStateMutation() {
+export function useCompleteAssignmentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, assignmentStateId }: { id: string; assignmentStateId: string }) =>
-      changeAssignmentState(id, assignmentStateId),
+    mutationFn: completeAssignment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
+export function useUncompleteAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: uncompleteAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+  });
+}
+
+export function useRescheduleAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dueDate }: { id: string; dueDate: string }) => rescheduleAssignment(id, dueDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
     },
   });
 }

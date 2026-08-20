@@ -1,5 +1,4 @@
 import type { AssignmentDto } from "../types/assignment.types";
-import type { AssignmentStateDto, AssignmentStateName } from "../types/assignmentState.types";
 import type { CourseDto } from "@/features/courses";
 
 const DEFAULT_COLOR = "#cbd5e1";
@@ -26,11 +25,4 @@ export function getAssignmentStatusRingClass(assignment: AssignmentDto): string 
   if (isAssignmentOverdue(assignment)) return "ring-2 ring-red-400";
   if (isAssignmentCompleted(assignment)) return "ring-2 ring-green-400";
   return "";
-}
-
-export function getAssignmentStateId(
-  states: AssignmentStateDto[] | undefined,
-  name: AssignmentStateName
-): string | undefined {
-  return states?.find((state) => state.state === name)?.id;
 }
