@@ -29,7 +29,7 @@ interface AssignmentsTabProps {
 
 function statusFor(assignment: AssignmentDto): { label: string; className: string } {
   if (isAssignmentCompletedOverdue(assignment)) {
-    return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-amber-400" };
+    return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-300" };
   }
   if (isAssignmentCompleted(assignment)) {
     return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-300" };
@@ -124,9 +124,8 @@ function AssignmentRowMenu({ assignmentName, items }: AssignmentRowMenuProps) {
                   setIsOpen(false);
                   item.onClick();
                 }}
-                className={`w-full text-left px-3 py-1.5 text-sm ${
-                  item.variant === "danger" ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
-                }`}
+                className={`w-full text-left px-3 py-1.5 text-sm ${item.variant === "danger" ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+                  }`}
               >
                 {item.label}
               </button>
@@ -224,9 +223,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                 key={course.id}
                 type="button"
                 onClick={() => toggleFilter(course.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                  active ? "text-slate-900" : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${active ? "text-slate-900" : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
+                  }`}
                 style={active ? { borderColor: course.color, backgroundColor: `${course.color}1a` } : undefined}
               >
                 <span
