@@ -294,55 +294,61 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                       </span>
                     </td>
                     <td className="p-3">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        {isAssignmentCompletedOverdue(assignment) ? (
-                          <Button
-                            variant="success"
-                            size="xs"
-                            onClick={() => handleWrapUp(assignment)}
-                            disabled={wrapUpMutation.isPending}
-                          >
-                            Wrap up
-                          </Button>
-                        ) : isAssignmentCompleted(assignment) ? (
-                          <>
+                      <div className="grid grid-cols-[6rem_1.75rem] items-center gap-1.5">
+                        <div className="flex justify-end">
+                          {isAssignmentCompletedOverdue(assignment) ? (
+                            <Button
+                              variant="success"
+                              size="xs"
+                              className="w-full"
+                              onClick={() => handleWrapUp(assignment)}
+                              disabled={wrapUpMutation.isPending}
+                            >
+                              Wrap up
+                            </Button>
+                          ) : isAssignmentCompleted(assignment) ? (
                             <Button
                               variant="primary"
                               size="xs"
+                              className="w-full"
                               onClick={() => handleUncomplete(assignment)}
                               disabled={uncompleteMutation.isPending}
                             >
                               Uncomplete
                             </Button>
-                            <AssignmentRowMenu
-                              assignmentName={assignment.name}
-                              items={[{ label: "Wrap up", onClick: () => handleWrapUp(assignment) }]}
-                            />
-                          </>
-                        ) : isAssignmentOverdue(assignment) ? (
-                          <>
-                            <Button variant="warning" size="xs" onClick={() => setReschedulingAssignment(assignment)}>
+                          ) : isAssignmentOverdue(assignment) ? (
+                            <Button
+                              variant="warning"
+                              size="xs"
+                              className="w-full"
+                              onClick={() => setReschedulingAssignment(assignment)}
+                            >
                               Reschedule
                             </Button>
-                            <Button
-                              variant="success"
-                              size="xs"
-                              onClick={() => handleWrapUpLate(assignment)}
-                              disabled={wrapUpLateMutation.isPending}
-                            >
-                              Wrap up - late
-                            </Button>
-                          </>
-                        ) : (
-                          <>
+                          ) : (
                             <Button
                               variant="secondary"
                               size="xs"
+                              className="w-full"
                               onClick={() => handleComplete(assignment)}
                               disabled={completeMutation.isPending}
                             >
                               Complete
                             </Button>
+                          )}
+                        </div>
+                        <div className="flex justify-end">
+                          {isAssignmentCompletedOverdue(assignment) ? null : isAssignmentCompleted(assignment) ? (
+                            <AssignmentRowMenu
+                              assignmentName={assignment.name}
+                              items={[{ label: "Wrap up", onClick: () => handleWrapUp(assignment) }]}
+                            />
+                          ) : isAssignmentOverdue(assignment) ? (
+                            <AssignmentRowMenu
+                              assignmentName={assignment.name}
+                              items={[{ label: "Wrap up - late", onClick: () => handleWrapUpLate(assignment) }]}
+                            />
+                          ) : (
                             <AssignmentRowMenu
                               assignmentName={assignment.name}
                               items={[
@@ -354,8 +360,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                                 },
                               ]}
                             />
-                          </>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
