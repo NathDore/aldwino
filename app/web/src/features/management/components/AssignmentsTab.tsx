@@ -47,13 +47,18 @@ function formatDue(dueDate: string): string {
   return `${dateLabel}, ${timeLabel}`;
 }
 
-interface AssignmentRowMenuProps {
-  assignmentName: string;
-  onEdit: () => void;
-  onDelete: () => void;
+interface AssignmentRowMenuItem {
+  label: string;
+  onClick: () => void;
+  variant?: "default" | "danger";
 }
 
-function AssignmentRowMenu({ assignmentName, onEdit, onDelete }: AssignmentRowMenuProps) {
+interface AssignmentRowMenuProps {
+  assignmentName: string;
+  items: AssignmentRowMenuItem[];
+}
+
+function AssignmentRowMenu({ assignmentName, items }: AssignmentRowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLSpanElement>(null);
@@ -111,26 +116,21 @@ function AssignmentRowMenu({ assignmentName, onEdit, onDelete }: AssignmentRowMe
             className="fixed z-[60] w-32 bg-white border border-slate-200 rounded-lg shadow-lg py-1"
             style={{ top: position.top, left: position.left, transform: "translateX(-100%)" }}
           >
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onEdit();
-              }}
-              className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onDelete();
-              }}
-              className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-            >
-              Delete
-            </button>
+            {items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  item.onClick();
+                }}
+                className={`w-full text-left px-3 py-1.5 text-sm ${
+                  item.variant === "danger" ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>,
           document.body,
         )}
@@ -314,14 +314,10 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                             >
                               Uncomplete
                             </Button>
-                            <Button
-                              variant="success"
-                              size="xs"
-                              onClick={() => handleWrapUp(assignment)}
-                              disabled={wrapUpMutation.isPending}
-                            >
-                              Wrap up
-                            </Button>
+                            <AssignmentRowMenu
+                              assignmentName={assignment.name}
+                              items={[{ label: "Wrap up", onClick: () => handleWrapUp(assignment) }]}
+                            />
                           </>
                         ) : isAssignmentOverdue(assignment) ? (
                           <>
@@ -349,8 +345,14 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                             </Button>
                             <AssignmentRowMenu
                               assignmentName={assignment.name}
-                              onEdit={() => setEditingAssignment(assignment)}
-                              onDelete={() => setDeletingAssignment(assignment)}
+                              items={[
+                                { label: "Edit", onClick: () => setEditingAssignment(assignment) },
+                                {
+                                  label: "Delete",
+                                  onClick: () => setDeletingAssignment(assignment),
+                                  variant: "danger",
+                                },
+                              ]}
                             />
                           </>
                         )}
