@@ -11,6 +11,10 @@ export function isAssignmentOverdue(assignment: AssignmentDto): boolean {
   return !isAssignmentCompleted(assignment) && new Date(assignment.dueDate) < new Date();
 }
 
+export function isAssignmentCompletedOverdue(assignment: AssignmentDto): boolean {
+  return isAssignmentCompleted(assignment) && new Date(assignment.dueDate) < new Date();
+}
+
 export function getCourseColor(course: CourseDto | undefined): string {
   return course?.color ?? DEFAULT_COLOR;
 }
