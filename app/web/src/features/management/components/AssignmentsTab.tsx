@@ -4,6 +4,7 @@ import {
   type AssignmentDto,
   isAssignmentCompleted,
   isAssignmentOverdue,
+  isAssignmentCompletedOverdue,
   useDeleteAssignmentMutation,
   useCompleteAssignmentMutation,
   useUncompleteAssignmentMutation,
@@ -26,6 +27,9 @@ interface AssignmentsTabProps {
 }
 
 function statusFor(assignment: AssignmentDto): { label: string; className: string } {
+  if (isAssignmentCompletedOverdue(assignment)) {
+    return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-amber-400" };
+  }
   if (isAssignmentCompleted(assignment)) {
     return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-300" };
   }
@@ -199,7 +203,16 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 justify-end">
-                        {isAssignmentCompleted(assignment) ? (
+                        {isAssignmentCompletedOverdue(assignment) ? (
+                          <Button
+                            variant="success"
+                            size="xs"
+                            onClick={() => handleWrapUp(assignment)}
+                            disabled={wrapUpMutation.isPending}
+                          >
+                            Wrap up
+                          </Button>
+                        ) : isAssignmentCompleted(assignment) ? (
                           <>
                             <Button
                               variant="primary"

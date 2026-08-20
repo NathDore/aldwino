@@ -14,6 +14,7 @@ export { useAssignmentForm } from "./hooks/useAssignmentForm";
 export {
   isAssignmentCompleted,
   isAssignmentOverdue,
+  isAssignmentCompletedOverdue,
   getCourseColor,
   getAssignmentStatusBackgroundClass,
   getAssignmentStatusRingClass,
