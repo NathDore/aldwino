@@ -69,6 +69,16 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
     .slice()
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
+  const overdueAssignments = visibleAssignments.filter((a) => isAssignmentOverdue(a));
+  const upcomingAssignments = visibleAssignments.filter(
+    (a) => !isAssignmentCompleted(a) && !isAssignmentOverdue(a),
+  );
+  const completedAssignments = visibleAssignments.filter((a) => isAssignmentCompleted(a));
+
+  const groupedRows = [overdueAssignments, upcomingAssignments, completedAssignments]
+    .filter((group) => group.length > 0)
+    .flatMap((group) => group.map((assignment, index) => ({ assignment, isGroupStart: index === 0 })));
+
   const handleDelete = async () => {
     if (!deletingAssignment) return;
     await deleteMutation.mutateAsync(deletingAssignment.id);
@@ -159,11 +169,15 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
               </tr>
             </thead>
             <tbody>
-              {visibleAssignments.map((assignment) => {
+              {groupedRows.map(({ assignment, isGroupStart }, rowIndex) => {
                 const course = courses.find((c) => c.id === assignment.courseId);
                 const status = statusFor(assignment);
+                const dividerClassName = isGroupStart && rowIndex !== 0 ? "border-t-2 border-t-slate-300" : "";
                 return (
-                  <tr key={assignment.id} className="border-b border-slate-200 last:border-b-0 hover:bg-slate-50">
+                  <tr
+                    key={assignment.id}
+                    className={`border-b border-slate-200 last:border-b-0 hover:bg-slate-50 ${dividerClassName}`}
+                  >
                     <td className="p-3 font-medium text-slate-900">{assignment.name}</td>
                     <td className="p-3 text-slate-700">
                       <span className="inline-flex items-center gap-1.5">
