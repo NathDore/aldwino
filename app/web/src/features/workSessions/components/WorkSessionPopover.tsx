@@ -144,8 +144,8 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
               {formatTimeRange(workSession.startTime, workSession.endTime)}
             </p>
             {stateName === "SKIPPED" && (
-              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-red-700">
-                <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-amber-700">
+                <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
                 Skipped
               </span>
             )}
