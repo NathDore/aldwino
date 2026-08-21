@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { getCourseColor, getAssignmentStatusRingClass, isAssignmentCompleted } from "../utils/assignmentStatus";
+import { getCourseColor } from "../utils/assignmentStatus";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentChipProps {
@@ -16,12 +16,10 @@ export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }
   const { assignment, course } = item;
   const letter = course?.code?.charAt(0).toUpperCase() ?? "?";
   const backgroundColor = getCourseColor(course);
-  const completed = isAssignmentCompleted(assignment);
-  const statusRing = getAssignmentStatusRingClass(assignment);
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${statusRing} ${completed ? "opacity-50 line-through" : ""}`}
+      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]}`}
       style={{ backgroundColor }}
       title={assignment.name}
     >
