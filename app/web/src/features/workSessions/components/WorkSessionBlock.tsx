@@ -74,8 +74,13 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const isExpanded = expandedWorkSessionId === workSession.id;
   const isActive = useIsEventActive(workSession.startTime, workSession.endTime);
   const isCompleted = workSession.completedAt !== null;
+  const isPastDue = new Date(workSession.endTime).getTime() < Date.now();
+  const isCompletedOverdue = isCompleted && isPastDue;
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
   const isSkipped = stateName === "SKIPPED";
+  const displayAssignments = isCompletedOverdue
+    ? assignments
+    : assignments.filter((item) => !isAssignmentCompleted(item.assignment));
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const chipRowRef = useRef<HTMLDivElement>(null);
@@ -84,16 +89,16 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const completedChipRowRef = useRef<HTMLDivElement>(null);
   const overflowIncompleteChipRowRef = useRef<HTMLDivElement>(null);
   const overflowCompletedChipRowRef = useRef<HTMLDivElement>(null);
-  const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, assignments.length);
-  useFittingChips(chipRowRef, assignments.length);
+  const { getItemRef, visibleCount } = useFittingAssignments(containerRef, headerRef, displayAssignments.length);
+  useFittingChips(chipRowRef, displayAssignments.length);
 
-  const incompleteAssignments = assignments.filter((item) => !isAssignmentCompleted(item.assignment));
-  const completedAssignments = assignments.filter((item) => isAssignmentCompleted(item.assignment));
+  const incompleteAssignments = displayAssignments.filter((item) => !isAssignmentCompleted(item.assignment));
+  const completedAssignments = displayAssignments.filter((item) => isAssignmentCompleted(item.assignment));
   const { visibleCount: visibleIncompleteCount } = useFittingChips(incompleteChipRowRef, incompleteAssignments.length);
   const { visibleCount: visibleCompletedCount } = useFittingChips(completedChipRowRef, completedAssignments.length);
 
-  const hiddenCount = Math.max(assignments.length - visibleCount, 0);
-  const hiddenAssignments = assignments.slice(visibleCount);
+  const hiddenCount = Math.max(displayAssignments.length - visibleCount, 0);
+  const hiddenAssignments = displayAssignments.slice(visibleCount);
   const hiddenIncompleteAssignments = hiddenAssignments.filter((item) => !isAssignmentCompleted(item.assignment));
   const hiddenCompletedAssignments = hiddenAssignments.filter((item) => isAssignmentCompleted(item.assignment));
   useFittingChips(overflowChipRowRef, hiddenCount, {
@@ -114,8 +119,8 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const durationMinutes = getEventDurationMinutes(workSession.startTime, workSession.endTime);
   const isCompact = durationMinutes < COMPACT_EVENT_THRESHOLD_MINUTES;
   const isSingleCompactAssignment =
-    assignments.length === 1 && durationMinutes <= SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES;
-  const hasAssignments = assignments.length > 0;
+    displayAssignments.length === 1 && durationMinutes <= SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES;
+  const hasAssignments = displayAssignments.length > 0;
 
   const statusAccentClass = isCompleted ? "border-l-emerald-500" : isSkipped ? "border-l-amber-500" : "border-l-slate-400";
   const statusTextClass = isCompleted ? "text-emerald-600" : isSkipped ? "text-amber-700" : "text-slate-900";
@@ -149,7 +154,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
           {StatusIcon && <StatusIcon />}
         </div>
       ) : isSingleCompactAssignment ? (
-        <AssignmentRow item={assignments[0]} textColorClass={statusTextClass} />
+        <AssignmentRow item={displayAssignments[0]} textColorClass={statusTextClass} />
       ) : isCompact ? (
         <div ref={chipRowRef} className="flex w-full items-center gap-1 overflow-hidden">
           {/* Incomplete chips - proportional width based on count */}
@@ -192,7 +197,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
             </p>
             {StatusIcon && <StatusIcon />}
           </div>
-          {assignments.map((item, index) => (
+          {displayAssignments.map((item, index) => (
             <div
               key={item.assignment.id}
               ref={getItemRef(index)}
