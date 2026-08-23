@@ -28,13 +28,16 @@ function formatTimeRange(startTime: string, endTime: string): string {
 
 function AssignmentRow({ item, textColorClass }: { item: CalendarAssignment; textColorClass: string }) {
   return (
-    <div className="flex items-center gap-1.5 min-w-0 w-full">
+    <div className={`flex items-center gap-1.5 min-w-0 w-full ${item.workedOn ? "opacity-50" : ""}`}>
       <span
         className="h-1.5 w-1.5 rounded-full shrink-0"
         style={{ backgroundColor: getCourseColor(item.course) }}
         aria-hidden="true"
       />
-      <p className={`truncate text-xs font-medium min-w-0 ${textColorClass}`} title={item.assignment.name}>
+      <p
+        className={`truncate text-xs font-medium min-w-0 ${textColorClass} ${item.workedOn ? "line-through" : ""}`}
+        title={item.assignment.name}
+      >
         {item.assignment.name}
       </p>
     </div>
@@ -74,7 +77,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const hasAssignments = assignments.length > 0;
 
   const statusAccentClass = isCompleted ? "border-l-emerald-500" : isSkipped ? "border-l-amber-500" : "border-l-slate-400";
-  const statusTextClass = isCompleted ? "text-emerald-600" : isSkipped ? "text-amber-700" : "text-slate-900";
+  const statusTextClass = "text-slate-900";
   const headerTextClass = isCompleted ? "text-emerald-600" : isSkipped ? "text-amber-700" : "text-slate-700";
 
   const handleBlockClick = () => {
