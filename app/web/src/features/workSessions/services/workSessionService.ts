@@ -4,6 +4,7 @@ import type {
   WorkSessionStateDto,
   CreateWorkSessionData,
   RescheduleWorkSessionData,
+  EditWorkSessionData,
 } from "../types/workSession.types";
 
 export async function fetchWorkSessions(): Promise<WorkSessionDto[]> {
@@ -24,6 +25,14 @@ export async function createWorkSession(data: CreateWorkSessionData): Promise<Wo
 
 export async function rescheduleWorkSession(id: string, data: RescheduleWorkSessionData): Promise<WorkSessionDto> {
   return apiClient<WorkSessionDto>(`/work-sessions/${id}/reschedule`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function editWorkSession(id: string, data: EditWorkSessionData): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/edit`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

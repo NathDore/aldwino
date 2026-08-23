@@ -68,6 +68,13 @@ export class CannotRescheduleNonSkippedWorkSessionError extends WorkSessionValid
   }
 }
 
+export class CannotEditNonInProgressWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only an in-progress work session can be edited (state: ${state})`);
+    this.name = "CannotEditNonInProgressWorkSessionError";
+  }
+}
+
 export class WorkSessionStateNotFoundError extends Error {
   constructor(workSessionStateId: string) {
     super(`WorkSessionState with id ${workSessionStateId} not found`);

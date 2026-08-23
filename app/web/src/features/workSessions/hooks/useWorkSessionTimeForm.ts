@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { WorkSessionDto } from "../types/workSession.types";
-import { useRescheduleWorkSessionMutation, useChangeWorkSessionStateMutation } from "../queries/useWorkSessionMutations";
+import {
+  useRescheduleWorkSessionMutation,
+  useEditWorkSessionMutation,
+  useChangeWorkSessionStateMutation,
+} from "../queries/useWorkSessionMutations";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSessionValidation";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
@@ -14,7 +18,9 @@ import {
   type FittingDuration,
 } from "@/shared/lib/dateTimeForm";
 
-interface RescheduleFormState {
+export type WorkSessionTimeFormMode = "edit" | "reschedule";
+
+interface WorkSessionTimeFormState {
   startDateDay: string;
   startDateTime: string;
   durationMinutes: number;
@@ -27,20 +33,22 @@ function closestAllowedDuration(minutes: number): number {
   );
 }
 
-export function useRescheduleWorkSessionForm(
+export function useWorkSessionTimeForm(
   workSession: WorkSessionDto,
-  onSuccess?: (newStart: Date) => void,
-  reactivateOnReschedule?: boolean
+  mode: WorkSessionTimeFormMode,
+  onSuccess?: (newStart: Date) => void
 ) {
+  const isReschedule = mode === "reschedule";
+
   const currentDurationMinutes = Math.round(
     (new Date(workSession.endTime).getTime() - new Date(workSession.startTime).getTime()) / 60000
   );
 
-  const defaultStartDate = reactivateOnReschedule
+  const defaultStartDate = isReschedule
     ? dateToDateInput(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
     : isoToDateInput(workSession.startTime);
 
-  const [formState, setFormState] = useState<RescheduleFormState>({
+  const [formState, setFormState] = useState<WorkSessionTimeFormState>({
     startDateDay: defaultStartDate,
     startDateTime: isoToTimeInput(workSession.startTime),
     durationMinutes: closestAllowedDuration(currentDurationMinutes),
@@ -48,9 +56,10 @@ export function useRescheduleWorkSessionForm(
   });
 
   const rescheduleMutation = useRescheduleWorkSessionMutation();
+  const editMutation = useEditWorkSessionMutation();
   const stateMutation = useChangeWorkSessionStateMutation();
   const { data: workSessionStates } = useWorkSessionStatesQuery();
-  const isLoading = rescheduleMutation.isPending || stateMutation.isPending;
+  const isLoading = rescheduleMutation.isPending || editMutation.isPending || stateMutation.isPending;
 
   const updateField = (field: "startDateDay" | "startDateTime", value: string) => {
     setFormState((prev) => ({
@@ -95,10 +104,13 @@ export function useRescheduleWorkSessionForm(
     }
 
     if (!errors.startDateDay && !errors.startDateTime && effectiveEndTime && startDateTimeValue) {
-      const pastError = validateStartNotInPast(startDateTimeValue);
-      if (pastError) {
-        errors.submit = pastError;
-      } else {
+      if (isReschedule) {
+        const pastError = validateStartNotInPast(startDateTimeValue);
+        if (pastError) {
+          errors.submit = pastError;
+        }
+      }
+      if (!errors.submit) {
         const dayError = validateSameCalendarDay(startDateTimeValue, effectiveEndTime);
         if (dayError) {
           errors.submit = dayError;
@@ -134,15 +146,20 @@ export function useRescheduleWorkSessionForm(
     const endTime = new Date(startTime.getTime() + fittingDuration.minutes * 60000);
 
     try {
-      await rescheduleMutation.mutateAsync({
-        id: workSession.id,
-        data: { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
-      });
-      if (reactivateOnReschedule) {
+      if (isReschedule) {
+        await rescheduleMutation.mutateAsync({
+          id: workSession.id,
+          data: { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
+        });
         const inProgressStateId = workSessionStates?.find((s) => s.state === "INPROGRESS")?.id;
         if (inProgressStateId) {
           await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: inProgressStateId });
         }
+      } else {
+        await editMutation.mutateAsync({
+          id: workSession.id,
+          data: { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
+        });
       }
       onSuccess?.(startTime);
     } catch (error: unknown) {

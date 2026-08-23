@@ -13,10 +13,12 @@ import { DeleteAssignmentWorkSessionUseCase } from "../src/application/assignmen
 import { MarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
 import { UnmarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
+import { EditWorkSessionUseCase } from "../src/application/workSession/EditWorkSessionUseCase";
 import { AssignmentStateTransitionError } from "../src/domain/assignment/AssignmentError";
 import { WorkSessionCompletedError } from "../src/domain/assignmentWorkSession/AssignmentWorkSessionError";
 import {
   CannotRescheduleNonSkippedWorkSessionError,
+  CannotEditNonInProgressWorkSessionError,
   StartTimeInPastError,
 } from "../src/domain/workSession/WorkSessionError";
 import { WorkSession } from "../src/domain/workSession/WorkSession";
@@ -43,6 +45,7 @@ let unlink: DeleteAssignmentWorkSessionUseCase;
 let markWorkedOn: MarkAssignmentWorkedOnUseCase;
 let unmarkWorkedOn: UnmarkAssignmentWorkedOnUseCase;
 let rescheduleSession: RescheduleWorkSessionUseCase;
+let editSession: EditWorkSessionUseCase;
 
 // A window on the same calendar day, comfortably after NOW.
 const SESSION_START = new Date("2026-06-15T14:00:00.000Z");
@@ -84,6 +87,7 @@ beforeEach(() => {
   markWorkedOn = new MarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
   unmarkWorkedOn = new UnmarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
   rescheduleSession = new RescheduleWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
+  editSession = new EditWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
 });
 
 function newAssignment(dueDate = FUTURE) {
@@ -303,5 +307,42 @@ describe("RescheduleWorkSessionUseCase", () => {
     const result = rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END });
 
     expect(result.session.wrapUpAt).toEqual(NOW);
+  });
+});
+
+describe("EditWorkSessionUseCase", () => {
+  test("edits an in-progress session and leaves rescheduleAt untouched", () => {
+    const session = newWorkSession("INPROGRESS");
+
+    const result = editSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END });
+
+    expect(result.session.startTime).toEqual(NEW_START);
+    expect(result.session.endTime).toEqual(NEW_END);
+    expect(result.session.rescheduleAt).toBeNull();
+    expect(result.mergedFrom).toEqual([]);
+  });
+
+  test("rejects a skipped session", () => {
+    const session = newWorkSession("SKIPPED");
+
+    expect(() => editSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
+      CannotEditNonInProgressWorkSessionError,
+    );
+  });
+
+  test("rejects a completed session", () => {
+    const session = newWorkSession("COMPLETED");
+
+    expect(() => editSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
+      CannotEditNonInProgressWorkSessionError,
+    );
+  });
+
+  test("allows a start time in the past", () => {
+    const session = newWorkSession("INPROGRESS");
+    const past = new Date("2026-06-01T14:00:00.000Z");
+    const pastEnd = new Date("2026-06-01T16:00:00.000Z");
+
+    expect(() => editSession.execute({ id: session.id, startTime: past, endTime: pastEnd })).not.toThrow();
   });
 });
