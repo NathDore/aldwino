@@ -14,29 +14,33 @@ export function useCalendarWorkSessions(
     const courseById = new Map(courses.map((course) => [course.id, course]));
     const assignmentById = new Map(assignments.map((assignment) => [assignment.id, assignment]));
 
-    const assignmentIdsByWorkSession = new Map<string, string[]>();
+    const linksByWorkSession = new Map<string, AssignmentWorkSessionDto[]>();
     for (const link of assignmentLinks) {
-      const list = assignmentIdsByWorkSession.get(link.workSessionId);
+      const list = linksByWorkSession.get(link.workSessionId);
       if (list) {
-        list.push(link.assignmentId);
+        list.push(link);
       } else {
-        assignmentIdsByWorkSession.set(link.workSessionId, [link.assignmentId]);
+        linksByWorkSession.set(link.workSessionId, [link]);
       }
     }
 
     const uniqueWorkSessions = Array.from(new Map(workSessions.map((ws) => [ws.id, ws])).values());
 
     return uniqueWorkSessions.map((workSession) => {
-      const linkedAssignments = (assignmentIdsByWorkSession.get(workSession.id) ?? [])
-        .map((assignmentId) => assignmentById.get(assignmentId))
-        .filter((assignment): assignment is AssignmentDto => assignment !== undefined)
-        .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+      const linkedEntries = (linksByWorkSession.get(workSession.id) ?? [])
+        .map((link) => {
+          const assignment = assignmentById.get(link.assignmentId);
+          return assignment ? { assignment, workedOn: link.workedOn } : undefined;
+        })
+        .filter((entry): entry is { assignment: AssignmentDto; workedOn: boolean } => entry !== undefined)
+        .sort((a, b) => new Date(a.assignment.dueDate).getTime() - new Date(b.assignment.dueDate).getTime());
 
       return {
         workSession,
-        assignments: linkedAssignments.map((assignment) => ({
+        assignments: linkedEntries.map(({ assignment, workedOn }) => ({
           assignment,
           course: courseById.get(assignment.courseId),
+          workedOn,
         })),
       };
     });
