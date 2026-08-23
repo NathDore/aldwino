@@ -37,6 +37,8 @@ import type { GetAssignmentWorkSessionByIdUseCase } from "../../application/assi
 import type { ListAssignmentWorkSessionsUseCase } from "../../application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
 import type { UpdateAssignmentWorkSessionUseCase } from "../../application/assignmentWorkSession/UpdateAssignmentWorkSessionUseCase";
 import type { DeleteAssignmentWorkSessionUseCase } from "../../application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
+import type { MarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
+import type { UnmarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 import { registerAssignmentWorkSessionRoutes } from "./routes/assignmentWorkSession.route";
 
 export interface ServerDeps {
@@ -71,6 +73,8 @@ export interface ServerDeps {
   listAssignmentWorkSessionsUseCase: ListAssignmentWorkSessionsUseCase;
   updateAssignmentWorkSessionUseCase: UpdateAssignmentWorkSessionUseCase;
   deleteAssignmentWorkSessionUseCase: DeleteAssignmentWorkSessionUseCase;
+  markAssignmentWorkedOnUseCase: MarkAssignmentWorkedOnUseCase;
+  unmarkAssignmentWorkedOnUseCase: UnmarkAssignmentWorkedOnUseCase;
   allowedOrigins: string[];
 }
 

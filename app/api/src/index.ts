@@ -63,6 +63,8 @@ import { GetAssignmentWorkSessionByIdUseCase } from "./application/assignmentWor
 import { ListAssignmentWorkSessionsUseCase } from "./application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
 import { UpdateAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/UpdateAssignmentWorkSessionUseCase";
 import { DeleteAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
+import { MarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
+import { UnmarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 
 const PORT = Number(process.env.API_PORT ?? 4287);
 const clock = new SystemClock();
@@ -202,6 +204,16 @@ const app = createServer({
     assignmentRepository,
     workSessionRepository,
     clock,
+    db,
+  ),
+  markAssignmentWorkedOnUseCase: new MarkAssignmentWorkedOnUseCase(
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    db,
+  ),
+  unmarkAssignmentWorkedOnUseCase: new UnmarkAssignmentWorkedOnUseCase(
+    assignmentWorkSessionRepository,
+    workSessionRepository,
     db,
   ),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
