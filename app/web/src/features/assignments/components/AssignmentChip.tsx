@@ -19,7 +19,7 @@ export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]}`}
+      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${item.workedOn ? "opacity-50" : ""}`}
       style={{ backgroundColor }}
       title={assignment.name}
     >
