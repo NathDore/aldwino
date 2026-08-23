@@ -16,9 +16,17 @@ export class AssignmentWorkSessionRepository implements IAssignmentWorkSessionRe
   create(link: AssignmentWorkSession): AssignmentWorkSession {
     const json = link.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO assignmentWorkSessions (id, assignmentId, workSessionId, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO assignmentWorkSessions (id, assignmentId, workSessionId, isDeleted, deletedAt, createdAt, workedOn) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
-    stmt.run(json.id, json.assignmentId, json.workSessionId, json.isDeleted ? 1 : 0, json.deletedAt, json.createdAt);
+    stmt.run(
+      json.id,
+      json.assignmentId,
+      json.workSessionId,
+      json.isDeleted ? 1 : 0,
+      json.deletedAt,
+      json.createdAt,
+      json.workedOn ? 1 : 0,
+    );
     return link;
   }
 
@@ -52,9 +60,9 @@ export class AssignmentWorkSessionRepository implements IAssignmentWorkSessionRe
   update(link: AssignmentWorkSession): AssignmentWorkSession {
     const json = link.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE assignmentWorkSessions SET assignmentId = ?, workSessionId = ?, isDeleted = ?, deletedAt = ? WHERE id = ?",
+      "UPDATE assignmentWorkSessions SET assignmentId = ?, workSessionId = ?, isDeleted = ?, deletedAt = ?, workedOn = ? WHERE id = ?",
     );
-    stmt.run(json.assignmentId, json.workSessionId, json.isDeleted ? 1 : 0, json.deletedAt, json.id);
+    stmt.run(json.assignmentId, json.workSessionId, json.isDeleted ? 1 : 0, json.deletedAt, json.workedOn ? 1 : 0, json.id);
     return link;
   }
 
@@ -66,6 +74,7 @@ export class AssignmentWorkSessionRepository implements IAssignmentWorkSessionRe
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       createdAt: new Date(row.createdAt as string),
+      workedOn: Boolean(row.workedOn),
     });
   }
 }

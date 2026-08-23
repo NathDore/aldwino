@@ -8,6 +8,7 @@ export class AssignmentWorkSession {
     public readonly isDeleted: boolean,
     public readonly deletedAt: Date | null,
     public readonly createdAt: Date,
+    public readonly workedOn: boolean,
   ) {}
 
   static create(params: {
@@ -17,6 +18,7 @@ export class AssignmentWorkSession {
     isDeleted?: boolean;
     deletedAt?: Date | null;
     createdAt: Date;
+    workedOn?: boolean;
   }): AssignmentWorkSession {
     validateAssignmentId(params.assignmentId);
     validateWorkSessionId(params.workSessionId);
@@ -27,6 +29,7 @@ export class AssignmentWorkSession {
       params.isDeleted ?? false,
       params.deletedAt ?? null,
       params.createdAt,
+      params.workedOn ?? false,
     );
   }
 
@@ -38,6 +41,7 @@ export class AssignmentWorkSession {
       isDeleted: this.isDeleted,
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
+      workedOn: this.workedOn,
     };
   }
 }
