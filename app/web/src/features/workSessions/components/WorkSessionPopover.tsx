@@ -83,6 +83,17 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const isSkippedUncompleted = stateName === "SKIPPED";
   const isCompletedCurrent = isCompleted && !isPastDue;
   const isCompletedPastDue = isCompleted && isPastDue;
+  const isInProgress = !isCompleted && !isSkippedUncompleted;
+
+  const workedOnCount = links.filter((l) => l.workedOn).length;
+  const totalLinked = links.length;
+  const progressPercent = totalLinked > 0 ? Math.round((workedOnCount / totalLinked) * 100) : 0;
+
+  const statusPill = isSkippedUncompleted
+    ? { label: "Skipped", bg: "bg-amber-50", fg: "text-amber-700", dot: "bg-amber-500" }
+    : isCompleted
+      ? { label: "Completed", bg: "bg-emerald-50", fg: "text-emerald-700", dot: "bg-emerald-500" }
+      : { label: "In progress", bg: "bg-slate-100", fg: "text-slate-700", dot: "bg-slate-400" };
 
   const { data: completionMessageData, isError: isCompletionMessageError } =
     useWorkSessionCompletionMessageQuery(isCompletedPastDue);
@@ -143,27 +154,23 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
             <p className="text-xs font-semibold text-slate-900 shrink-0">
               {formatTimeRange(workSession.startTime, workSession.endTime)}
             </p>
-            {stateName === "SKIPPED" && (
-              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-amber-700">
-                <span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
-                Skipped
-              </span>
-            )}
-            {isCompleted && (
-              <span className="inline-flex items-center gap-1 shrink-0 text-xs font-semibold text-emerald-600">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                Completed
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusPill.bg} ${statusPill.fg}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${statusPill.dot}`} aria-hidden="true" />
+              {statusPill.label}
+            </span>
+            {isInProgress && (
+              <span ref={menuTriggerRef} className="inline-flex shrink-0">
+                <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen((v) => !v)}>
+                  <span className="sr-only">More actions</span>
+                  <MoreIcon />
+                </Button>
               </span>
             )}
           </div>
-          {!isCompleted && !isSkippedUncompleted && (
-            <span ref={menuTriggerRef} className="inline-flex shrink-0">
-              <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen((v) => !v)}>
-                <span className="sr-only">More actions</span>
-                <MoreIcon />
-              </Button>
-            </span>
-          )}
           {isMenuOpen &&
             createPortal(
               <div
@@ -219,12 +226,30 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 <div
                   className={`col-start-1 row-start-1 h-full overflow-y-auto min-h-0 styled-scrollbar space-y-4 ${mode !== "session" ? "invisible" : ""}`}
                 >
-                  <LinkedAssignmentsList workSessionId={workSession.id} isLocked={isCompleted} />
-                  {!isCompleted && !isSkippedUncompleted && (
-                    <Button variant="secondary" size="sm" onClick={() => pushMode("link-assignment")}>
-                      Add assignments
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                      Assignments · {totalLinked}
+                    </p>
+                    {isInProgress && (
+                      <Button variant="ghost" size="sm" onClick={() => pushMode("link-assignment")}>
+                        + Add
+                      </Button>
+                    )}
+                  </div>
+                  {totalLinked > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-600"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-400 shrink-0">
+                        {workedOnCount} of {totalLinked} done
+                      </span>
+                    </div>
                   )}
+                  <LinkedAssignmentsList workSessionId={workSession.id} canEdit={isInProgress} />
 
                   <div className="space-y-2 pt-2 border-t border-slate-200">
                     {isSkippedUncompleted && <p className="text-sm text-slate-600">{SKIPPED_UNCOMPLETED_MESSAGE}</p>}
@@ -249,12 +274,12 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                       {isCompletedCurrent && (
                         <>
                           <Button
-                            variant="primary"
+                            variant="secondary"
                             size="sm"
                             onClick={handleToggleComplete}
                             disabled={stateMutation.isPending}
                           >
-                            Uncomplete
+                            Mark incomplete
                           </Button>
                           <Button
                             variant="success"
@@ -276,14 +301,14 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           Wrap up
                         </Button>
                       )}
-                      {!isSkippedUncompleted && !isCompleted && (
+                      {isInProgress && (
                         <Button
-                          variant="secondary"
+                          variant="primary"
                           size="sm"
                           onClick={handleToggleComplete}
                           disabled={stateMutation.isPending}
                         >
-                          Complete
+                          Mark complete
                         </Button>
                       )}
                     </div>

@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { linkAssignmentToWorkSession, unlinkAssignmentWorkSession } from "../services/assignmentWorkSessionService";
+import {
+  linkAssignmentToWorkSession,
+  unlinkAssignmentWorkSession,
+  markAssignmentWorkedOn,
+  unmarkAssignmentWorkedOn,
+} from "../services/assignmentWorkSessionService";
 
 export function useLinkAssignmentMutation() {
   const queryClient = useQueryClient();
@@ -17,6 +22,28 @@ export function useUnlinkAssignmentMutation() {
 
   return useMutation({
     mutationFn: unlinkAssignmentWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useMarkWorkedOnMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markAssignmentWorkedOn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useUnmarkWorkedOnMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: unmarkAssignmentWorkedOn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
     },

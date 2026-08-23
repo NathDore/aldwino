@@ -11,6 +11,8 @@ import type { GetAssignmentWorkSessionByIdUseCase } from "../../../application/a
 import type { ListAssignmentWorkSessionsUseCase } from "../../../application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
 import type { UpdateAssignmentWorkSessionUseCase } from "../../../application/assignmentWorkSession/UpdateAssignmentWorkSessionUseCase";
 import type { DeleteAssignmentWorkSessionUseCase } from "../../../application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
+import type { MarkAssignmentWorkedOnUseCase } from "../../../application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
+import type { UnmarkAssignmentWorkedOnUseCase } from "../../../application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 
 interface AssignmentWorkSessionRouteDeps {
   createAssignmentWorkSessionUseCase: CreateAssignmentWorkSessionUseCase;
@@ -18,6 +20,8 @@ interface AssignmentWorkSessionRouteDeps {
   listAssignmentWorkSessionsUseCase: ListAssignmentWorkSessionsUseCase;
   updateAssignmentWorkSessionUseCase: UpdateAssignmentWorkSessionUseCase;
   deleteAssignmentWorkSessionUseCase: DeleteAssignmentWorkSessionUseCase;
+  markAssignmentWorkedOnUseCase: MarkAssignmentWorkedOnUseCase;
+  unmarkAssignmentWorkedOnUseCase: UnmarkAssignmentWorkedOnUseCase;
 }
 
 function handleAssignmentWorkSessionError(error: unknown) {
@@ -106,6 +110,34 @@ export function registerAssignmentWorkSessionRoutes(app: Hono, deps: AssignmentW
       const id = c.req.param("id");
       deps.deleteAssignmentWorkSessionUseCase.execute(id);
       return new Response(null, { status: 204 });
+    } catch (error) {
+      const handled = handleAssignmentWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignment-work-sessions/:id/mark-worked-on", (c) => {
+    try {
+      const id = c.req.param("id");
+      const link = deps.markAssignmentWorkedOnUseCase.execute(id);
+      return c.json(link.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignment-work-sessions/:id/unmark-worked-on", (c) => {
+    try {
+      const id = c.req.param("id");
+      const link = deps.unmarkAssignmentWorkedOnUseCase.execute(id);
+      return c.json(link.toJSON(), 200);
     } catch (error) {
       const handled = handleAssignmentWorkSessionError(error);
       if (handled) {

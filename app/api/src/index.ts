@@ -22,6 +22,7 @@ import { migrate as migrateAssignmentWrapUpAt } from "./infrastructure/database/
 import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database/migrations/018_add_work_session_wrap_up_at_column";
 import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
 import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
+import { migrate as migrateAssignmentWorkSessionWorkedOn } from "./infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -62,6 +63,8 @@ import { GetAssignmentWorkSessionByIdUseCase } from "./application/assignmentWor
 import { ListAssignmentWorkSessionsUseCase } from "./application/assignmentWorkSession/ListAssignmentWorkSessionsUseCase";
 import { UpdateAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/UpdateAssignmentWorkSessionUseCase";
 import { DeleteAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
+import { MarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
+import { UnmarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 
 const PORT = Number(process.env.API_PORT ?? 4287);
 const clock = new SystemClock();
@@ -88,6 +91,7 @@ migrateAssignmentWrapUpAt(db);
 migrateWorkSessionWrapUpAt(db);
 migrateAssignmentRescheduleAt(db);
 migrateWorkSessionRescheduleAt(db);
+migrateAssignmentWorkSessionWorkedOn(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -200,6 +204,16 @@ const app = createServer({
     assignmentRepository,
     workSessionRepository,
     clock,
+    db,
+  ),
+  markAssignmentWorkedOnUseCase: new MarkAssignmentWorkedOnUseCase(
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    db,
+  ),
+  unmarkAssignmentWorkedOnUseCase: new UnmarkAssignmentWorkedOnUseCase(
+    assignmentWorkSessionRepository,
+    workSessionRepository,
     db,
   ),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],

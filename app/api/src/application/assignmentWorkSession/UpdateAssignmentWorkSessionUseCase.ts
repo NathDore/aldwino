@@ -37,6 +37,7 @@ export class UpdateAssignmentWorkSessionUseCase {
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
         createdAt: existing.createdAt,
+        workedOn: existing.workedOn,
       });
 
       return this.repository.update(updated);

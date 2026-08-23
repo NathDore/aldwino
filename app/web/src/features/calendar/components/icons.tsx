@@ -59,6 +59,14 @@ export function UnlinkIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   );
 }
 
+export function CheckIcon({ className = "w-3.5 h-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path d="M3 8l3.5 3.5L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function MoreIcon({ className = "w-3.5 h-3.5" }: IconProps) {
   return (
     <svg viewBox="0 0 16 16" fill="currentColor" className={className}>
