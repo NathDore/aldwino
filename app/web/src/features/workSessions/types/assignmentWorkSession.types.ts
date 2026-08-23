@@ -5,4 +5,5 @@ export interface AssignmentWorkSessionDto {
   isDeleted: boolean;
   deletedAt: string | null;
   createdAt: string;
+  workedOn: boolean;
 }

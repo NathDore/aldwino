@@ -27,3 +27,11 @@ export async function linkAssignmentToWorkSession(data: {
 export async function unlinkAssignmentWorkSession(id: string): Promise<void> {
   await apiClient<void>(`/assignment-work-sessions/${id}`, { method: "DELETE" });
 }
+
+export async function markAssignmentWorkedOn(id: string): Promise<AssignmentWorkSessionDto> {
+  return apiClient<AssignmentWorkSessionDto>(`/assignment-work-sessions/${id}/mark-worked-on`, { method: "POST" });
+}
+
+export async function unmarkAssignmentWorkedOn(id: string): Promise<AssignmentWorkSessionDto> {
+  return apiClient<AssignmentWorkSessionDto>(`/assignment-work-sessions/${id}/unmark-worked-on`, { method: "POST" });
+}
