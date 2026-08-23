@@ -28,8 +28,8 @@ export function CalendarPage() {
   const goToToday = useCalendarStore((s) => s.goToToday);
 
   return (
-    <div className="h-full flex flex-col p-8 max-w-[1200px] mx-auto">
-      <div className="mb-4 shrink-0 h-14 flex items-center bg-white border-b border-slate-200">
+    <div className="h-full flex flex-col pt-4 px-8 pb-8 max-w-[1200px] mx-auto">
+      <div className="mb-4 shrink-0 h-8 flex items-center bg-white border-b border-slate-200">
         <WeekNavigation
           weekStart={currentWeekStart}
           onPrevWeek={goToPrevWeek}

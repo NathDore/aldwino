@@ -4,7 +4,7 @@ import { Popover } from "@/shared/components/Popover";
 import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { Button } from "@/shared/components/Button";
-import { MoreIcon } from "@/features/calendar/components/icons";
+import { CheckIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
@@ -279,7 +279,10 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                             onClick={handleToggleComplete}
                             disabled={stateMutation.isPending}
                           >
-                            Mark incomplete
+                            <span className="inline-flex items-center gap-1.5">
+                              <CheckIcon className="w-3 h-3" />
+                              Completed
+                            </span>
                           </Button>
                           <Button
                             variant="success"
@@ -308,7 +311,10 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           onClick={handleToggleComplete}
                           disabled={stateMutation.isPending}
                         >
-                          Mark complete
+                          <span className="inline-flex items-center gap-1.5">
+                            <CheckIcon className="w-3 h-3" />
+                            Complete
+                          </span>
                         </Button>
                       )}
                     </div>
