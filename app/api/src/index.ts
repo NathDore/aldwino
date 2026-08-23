@@ -54,6 +54,7 @@ import { ChangeWorkSessionStateUseCase } from "./application/workSession/ChangeW
 import { GetRandomWorkSessionCompletionMessageUseCase } from "./application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
+import { EditWorkSessionUseCase } from "./application/workSession/EditWorkSessionUseCase";
 import { WrapUpWorkSessionUseCase } from "./application/workSession/WrapUpWorkSessionUseCase";
 import { WorkSessionMergeService } from "./application/workSession/WorkSessionMergeService";
 import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
@@ -181,6 +182,7 @@ const app = createServer({
     clock,
     db,
   ),
+  editWorkSessionUseCase: new EditWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
   wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
   getRandomWorkSessionCompletionMessageUseCase: new GetRandomWorkSessionCompletionMessageUseCase(),
   listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),

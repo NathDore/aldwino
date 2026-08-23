@@ -3,6 +3,7 @@ import {
   WorkSessionValidationError,
   WorkSessionStateNotFoundError,
   CannotRescheduleNonSkippedWorkSessionError,
+  CannotEditNonInProgressWorkSessionError,
   CannotUncompletePastWorkSessionError,
 } from "../../../domain/workSession/WorkSessionError";
 import type { CreateWorkSessionUseCase } from "../../../application/workSession/CreateWorkSessionUseCase";
@@ -11,6 +12,7 @@ import type { ListWorkSessionsUseCase } from "../../../application/workSession/L
 import type { ChangeWorkSessionStateUseCase } from "../../../application/workSession/ChangeWorkSessionStateUseCase";
 import type { DeleteWorkSessionUseCase } from "../../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../../application/workSession/RescheduleWorkSessionUseCase";
+import type { EditWorkSessionUseCase } from "../../../application/workSession/EditWorkSessionUseCase";
 import type { WrapUpWorkSessionUseCase } from "../../../application/workSession/WrapUpWorkSessionUseCase";
 import type { WorkSessionMergeResult } from "../../../application/workSession/WorkSessionMergeService";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
@@ -22,6 +24,7 @@ interface WorkSessionRouteDeps {
   changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
+  editWorkSessionUseCase: EditWorkSessionUseCase;
   wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
 }
@@ -29,6 +32,7 @@ interface WorkSessionRouteDeps {
 function handleWorkSessionError(error: unknown) {
   if (
     error instanceof CannotRescheduleNonSkippedWorkSessionError ||
+    error instanceof CannotEditNonInProgressWorkSessionError ||
     error instanceof CannotUncompletePastWorkSessionError
   ) {
     return { body: { error: error.message }, status: 409 as const };
@@ -163,6 +167,36 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
       }
 
       const result = deps.rescheduleWorkSessionUseCase.execute({ id, startTime, endTime });
+      return c.json(toWorkSessionResponse(result), 200);
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.patch("/work-sessions/:id/edit", async (c) => {
+    try {
+      const id = c.req.param("id");
+      const body = (await c.req.json()) as { startTime?: string; endTime?: string };
+
+      if (!body.startTime || !body.endTime) {
+        return c.json({ error: "startTime and endTime are required" }, 400);
+      }
+
+      const startTime = new Date(body.startTime);
+      if (isNaN(startTime.getTime())) {
+        return c.json({ error: "startTime must be a valid ISO 8601 date" }, 400);
+      }
+
+      const endTime = new Date(body.endTime);
+      if (isNaN(endTime.getTime())) {
+        return c.json({ error: "endTime must be a valid ISO 8601 date" }, 400);
+      }
+
+      const result = deps.editWorkSessionUseCase.execute({ id, startTime, endTime });
       return c.json(toWorkSessionResponse(result), 200);
     } catch (error) {
       const handled = handleWorkSessionError(error);

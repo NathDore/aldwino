@@ -28,3 +28,8 @@ export interface RescheduleWorkSessionData {
   startTime: string;
   endTime: string;
 }
+
+export interface EditWorkSessionData {
+  startTime: string;
+  endTime: string;
+}

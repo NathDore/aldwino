@@ -27,6 +27,7 @@ import type { ListWorkSessionsUseCase } from "../../application/workSession/List
 import type { ChangeWorkSessionStateUseCase } from "../../application/workSession/ChangeWorkSessionStateUseCase";
 import type { DeleteWorkSessionUseCase } from "../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../application/workSession/RescheduleWorkSessionUseCase";
+import type { EditWorkSessionUseCase } from "../../application/workSession/EditWorkSessionUseCase";
 import type { WrapUpWorkSessionUseCase } from "../../application/workSession/WrapUpWorkSessionUseCase";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { registerWorkSessionRoutes } from "./routes/workSession.route";
@@ -65,6 +66,7 @@ export interface ServerDeps {
   changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
+  editWorkSessionUseCase: EditWorkSessionUseCase;
   wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
   listWorkSessionStatesUseCase: ListWorkSessionStatesUseCase;

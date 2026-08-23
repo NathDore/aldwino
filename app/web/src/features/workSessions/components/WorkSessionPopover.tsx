@@ -18,7 +18,7 @@ import { useWorkSessionCompletionMessageQuery } from "../queries/useWorkSessionC
 import { FALLBACK_COMPLETION_MESSAGE } from "../constants/completionMessages";
 import { LinkedAssignmentsList } from "./LinkedAssignmentsList";
 import { LinkAssignmentPicker } from "./LinkAssignmentPicker";
-import { RescheduleWorkSessionForm } from "./RescheduleWorkSessionForm";
+import { WorkSessionTimeForm } from "./WorkSessionTimeForm";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import type { AssignmentDto } from "@/features/assignments";
 import type { CalendarWorkSession } from "@/features/calendar/types/calendar.types";
@@ -29,7 +29,7 @@ interface WorkSessionPopoverProps {
   onClose: () => void;
 }
 
-type Mode = "session" | "create-assignment" | "link-assignment" | "edit-session";
+type Mode = "session" | "create-assignment" | "link-assignment" | "edit-session" | "reschedule-session";
 
 const SKIPPED_UNCOMPLETED_MESSAGE = "You missed this one — reschedule it for a new time, or remove it for good.";
 
@@ -72,7 +72,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
     popMode();
   };
 
-  const handleRescheduled = (newStart: Date) => {
+  const handleSaved = (newStart: Date) => {
     onClose();
     goToWeekOf(newStart);
   };
@@ -257,7 +257,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                     <div className="flex items-center gap-2">
                       {isSkippedUncompleted && (
                         <>
-                          <Button variant="warning" size="sm" onClick={() => pushMode("edit-session")}>
+                          <Button variant="warning" size="sm" onClick={() => pushMode("reschedule-session")}>
                             Reschedule
                           </Button>
                           <span className="text-sm text-slate-500">or</span>
@@ -331,11 +331,16 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 )}
                 {mode === "edit-session" && (
                   <div className="col-start-1 row-start-1 h-full">
-                    <RescheduleWorkSessionForm
+                    <WorkSessionTimeForm workSession={workSession} mode="edit" onClose={popMode} onSaved={handleSaved} />
+                  </div>
+                )}
+                {mode === "reschedule-session" && (
+                  <div className="col-start-1 row-start-1 h-full">
+                    <WorkSessionTimeForm
                       workSession={workSession}
+                      mode="reschedule"
                       onClose={popMode}
-                      onRescheduled={handleRescheduled}
-                      reactivateOnReschedule={isSkippedUncompleted}
+                      onSaved={handleSaved}
                     />
                   </div>
                 )}

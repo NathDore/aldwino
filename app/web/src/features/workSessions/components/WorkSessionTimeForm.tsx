@@ -1,5 +1,5 @@
 import type { WorkSessionDto } from "../types/workSession.types";
-import { useRescheduleWorkSessionForm } from "../hooks/useRescheduleWorkSessionForm";
+import { useWorkSessionTimeForm, type WorkSessionTimeFormMode } from "../hooks/useWorkSessionTimeForm";
 import { DurationSelector } from "@/shared/components/DurationSelector";
 import { Button } from "@/shared/components/Button";
 import { DateTimeField } from "@/shared/components/DateTimeField";
@@ -7,21 +7,25 @@ import { ArrowLeftIcon } from "@/features/calendar/components/icons";
 import { ALLOWED_DURATIONS_MINUTES } from "@/shared/lib/dateTimeForm";
 import { LABEL_FONT_SIZE } from "@/shared/lib/formConstants";
 
-interface RescheduleWorkSessionFormProps {
+interface WorkSessionTimeFormProps {
   workSession: WorkSessionDto;
+  mode: WorkSessionTimeFormMode;
   onClose: () => void;
-  onRescheduled: (newStart: Date) => void;
-  reactivateOnReschedule?: boolean;
+  onSaved: (newStart: Date) => void;
 }
 
-export function RescheduleWorkSessionForm({
-  workSession,
-  onClose,
-  onRescheduled,
-  reactivateOnReschedule,
-}: RescheduleWorkSessionFormProps) {
-  const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } =
-    useRescheduleWorkSessionForm(workSession, onRescheduled, reactivateOnReschedule);
+const SUBMIT_LABEL: Record<WorkSessionTimeFormMode, { idle: string; loading: string }> = {
+  edit: { idle: "Save changes", loading: "Saving..." },
+  reschedule: { idle: "Reschedule", loading: "Rescheduling..." },
+};
+
+export function WorkSessionTimeForm({ workSession, mode, onClose, onSaved }: WorkSessionTimeFormProps) {
+  const { formState, updateField, updateDuration, handleSubmit, isLoading, todayDateInput } = useWorkSessionTimeForm(
+    workSession,
+    mode,
+    onSaved
+  );
+  const submitLabel = SUBMIT_LABEL[mode];
 
   return (
     <div className="flex h-full flex-col">
@@ -39,7 +43,7 @@ export function RescheduleWorkSessionForm({
         <div>
           <DateTimeField
             label="New start time"
-            id="reschedule-worksession-start"
+            id="worksession-time-start"
             dateValue={formState.startDateDay}
             timeValue={formState.startDateTime}
             onDateChange={(v) => updateField("startDateDay", v)}
@@ -73,7 +77,7 @@ export function RescheduleWorkSessionForm({
 
       <div className="flex justify-end mt-auto pt-4">
         <Button variant="warning" size="sm" onClick={handleSubmit} disabled={isLoading}>
-          {isLoading ? "Rescheduling..." : "Reschedule"}
+          {isLoading ? submitLabel.loading : submitLabel.idle}
         </Button>
       </div>
     </div>
