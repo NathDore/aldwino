@@ -22,6 +22,7 @@ import { migrate as migrateAssignmentWrapUpAt } from "./infrastructure/database/
 import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database/migrations/018_add_work_session_wrap_up_at_column";
 import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
 import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
+import { migrate as migrateAssignmentWorkSessionWorkedOn } from "./infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -88,6 +89,7 @@ migrateAssignmentWrapUpAt(db);
 migrateWorkSessionWrapUpAt(db);
 migrateAssignmentRescheduleAt(db);
 migrateWorkSessionRescheduleAt(db);
+migrateAssignmentWorkSessionWorkedOn(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
