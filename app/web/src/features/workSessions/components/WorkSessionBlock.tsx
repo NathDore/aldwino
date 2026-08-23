@@ -77,7 +77,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const hasAssignments = assignments.length > 0;
 
   const statusAccentClass = isCompleted ? "border-l-emerald-500" : isSkipped ? "border-l-amber-500" : "border-l-slate-400";
-  const statusTextClass = isCompleted ? "text-emerald-600" : isSkipped ? "text-amber-700" : "text-slate-900";
+  const statusTextClass = "text-slate-900";
   const headerTextClass = isCompleted ? "text-emerald-600" : isSkipped ? "text-amber-700" : "text-slate-700";
 
   const handleBlockClick = () => {
