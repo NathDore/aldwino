@@ -10,8 +10,11 @@ import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAss
 import { CompleteAssignmentUseCase } from "../src/application/assignment/CompleteAssignmentUseCase";
 import { CreateAssignmentWorkSessionUseCase } from "../src/application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
 import { DeleteAssignmentWorkSessionUseCase } from "../src/application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
+import { MarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
+import { UnmarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
 import { AssignmentStateTransitionError } from "../src/domain/assignment/AssignmentError";
+import { WorkSessionCompletedError } from "../src/domain/assignmentWorkSession/AssignmentWorkSessionError";
 import {
   CannotRescheduleNonSkippedWorkSessionError,
   StartTimeInPastError,
@@ -37,6 +40,8 @@ let create: CreateAssignmentUseCase;
 let complete: CompleteAssignmentUseCase;
 let link: CreateAssignmentWorkSessionUseCase;
 let unlink: DeleteAssignmentWorkSessionUseCase;
+let markWorkedOn: MarkAssignmentWorkedOnUseCase;
+let unmarkWorkedOn: UnmarkAssignmentWorkedOnUseCase;
 let rescheduleSession: RescheduleWorkSessionUseCase;
 
 // A window on the same calendar day, comfortably after NOW.
@@ -76,6 +81,8 @@ beforeEach(() => {
     clock,
     db,
   );
+  markWorkedOn = new MarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
+  unmarkWorkedOn = new UnmarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
   rescheduleSession = new RescheduleWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
 });
 
@@ -150,6 +157,87 @@ describe("assignment work session links", () => {
     complete.execute(assignment.id);
 
     expect(() => unlink.execute(created.id)).toThrow(AssignmentStateTransitionError);
+  });
+});
+
+describe("workedOn tracking", () => {
+  test("marks a linked assignment as worked on", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+
+    const marked = markWorkedOn.execute(created.id);
+
+    expect(marked.workedOn).toBe(true);
+  });
+
+  test("unmarks a previously worked-on assignment", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    markWorkedOn.execute(created.id);
+
+    const unmarked = unmarkWorkedOn.execute(created.id);
+
+    expect(unmarked.workedOn).toBe(false);
+  });
+
+  test("marking twice is idempotent", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+
+    markWorkedOn.execute(created.id);
+    const markedAgain = markWorkedOn.execute(created.id);
+
+    expect(markedAgain.workedOn).toBe(true);
+  });
+
+  test("unmarking an already-unmarked link is idempotent", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+
+    const unmarked = unmarkWorkedOn.execute(created.id);
+
+    expect(unmarked.workedOn).toBe(false);
+  });
+
+  test("rejects marking once the parent session is completed", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    workSessionRepository.update(
+      WorkSession.create({
+        id: session.id,
+        workSessionStateId: session.workSessionStateId,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        completedAt: NOW,
+        createdAt: session.createdAt,
+      }),
+    );
+
+    expect(() => markWorkedOn.execute(created.id)).toThrow(WorkSessionCompletedError);
+  });
+
+  test("rejects unmarking once the parent session is completed", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    markWorkedOn.execute(created.id);
+    workSessionRepository.update(
+      WorkSession.create({
+        id: session.id,
+        workSessionStateId: session.workSessionStateId,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        completedAt: NOW,
+        createdAt: session.createdAt,
+      }),
+    );
+
+    expect(() => unmarkWorkedOn.execute(created.id)).toThrow(WorkSessionCompletedError);
   });
 });
 
