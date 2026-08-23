@@ -5,6 +5,7 @@ import type { CourseDto } from "@/features/courses";
 export interface CalendarAssignment {
   assignment: AssignmentDto;
   course: CourseDto | undefined;
+  workedOn: boolean;
 }
 
 export interface CalendarWorkSession {
