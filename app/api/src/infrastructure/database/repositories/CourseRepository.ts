@@ -7,6 +7,7 @@ export interface ICourseRepository {
   getAll(): Course[];
   update(course: Course): Course;
   existsByCode(code: string, excludeId?: string): boolean;
+  purgeDeletedBefore(cutoff: Date): number;
 }
 
 export class CourseRepository implements ICourseRepository {
@@ -51,6 +52,12 @@ export class CourseRepository implements ICourseRepository {
       : this.db.prepare("SELECT 1 FROM courses WHERE code = ? AND isDeleted = 0");
     const row = excludeId ? stmt.get(code, excludeId) : stmt.get(code);
     return row !== undefined && row !== null;
+  }
+
+  purgeDeletedBefore(cutoff: Date): number {
+    const stmt = this.db.prepare("DELETE FROM courses WHERE isDeleted = 1 AND deletedAt <= ?");
+    const result = stmt.run(cutoff.toISOString());
+    return result.changes;
   }
 
   private rowToCourse(row: Record<string, string | number | null>): Course {
