@@ -39,3 +39,12 @@ export class WorkSessionCompletedError extends Error {
     this.name = "WorkSessionCompletedError";
   }
 }
+
+export class CannotDeleteAutoDetachedLinkError extends Error {
+  constructor(id: string) {
+    super(
+      `AssignmentWorkSession with id ${id} was auto-detached by completing its assignment and cannot be deleted directly; it is restored automatically if the assignment is uncompleted`,
+    );
+    this.name = "CannotDeleteAutoDetachedLinkError";
+  }
+}

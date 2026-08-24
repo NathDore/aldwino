@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
-import { WorkSessionCompletedError } from "../../domain/assignmentWorkSession/AssignmentWorkSessionError";
+import { CannotDeleteAutoDetachedLinkError, WorkSessionCompletedError } from "../../domain/assignmentWorkSession/AssignmentWorkSessionError";
 import { assertCanLink } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
@@ -20,6 +20,10 @@ export class DeleteAssignmentWorkSessionUseCase {
     return this.db.transaction(() => {
       const existing = this.repository.getById(id);
       if (!existing) {
+        const detached = this.repository.getByIdIncludingDeleted(id);
+        if (detached && detached.detachReason === "COMPLETION") {
+          throw new CannotDeleteAutoDetachedLinkError(id);
+        }
         throw new Error(`AssignmentWorkSession with id ${id} not found`);
       }
 
@@ -42,6 +46,7 @@ export class DeleteAssignmentWorkSessionUseCase {
         isDeleted: true,
         deletedAt: now,
         createdAt: existing.createdAt,
+        detachReason: "MANUAL",
       });
 
       return this.repository.update(deleted);

@@ -2,14 +2,19 @@ import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
 import { AssignmentStateNotFoundError } from "../../domain/assignment/AssignmentError";
 import { assertCanComplete } from "../../domain/assignment/AssignmentLifecycle";
+import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { IAssignmentStateRepository } from "../../infrastructure/database/repositories/AssignmentStateRepository";
+import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
+import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class CompleteAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
     private readonly assignmentStateRepository: IAssignmentStateRepository,
+    private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
+    private readonly workSessionRepository: IWorkSessionRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -43,7 +48,32 @@ export class CompleteAssignmentUseCase {
         createdAt: existing.createdAt,
       });
 
-      return this.repository.update(updated);
+      const result = this.repository.update(updated);
+      this.detachFromFutureWorkSessions(id, now);
+      return result;
     })();
+  }
+
+  private detachFromFutureWorkSessions(assignmentId: string, now: Date): void {
+    const links = this.assignmentWorkSessionRepository.getByAssignmentId(assignmentId);
+    for (const link of links) {
+      const workSession = this.workSessionRepository.getById(link.workSessionId);
+      if (!workSession || workSession.startTime.getTime() <= now.getTime()) {
+        continue;
+      }
+
+      this.assignmentWorkSessionRepository.update(
+        AssignmentWorkSession.create({
+          id: link.id,
+          assignmentId: link.assignmentId,
+          workSessionId: link.workSessionId,
+          isDeleted: true,
+          deletedAt: now,
+          createdAt: link.createdAt,
+          workedOn: link.workedOn,
+          detachReason: "COMPLETION",
+        }),
+      );
+    }
   }
 }

@@ -23,6 +23,7 @@ import { migrate as migrateWorkSessionWrapUpAt } from "./infrastructure/database
 import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
 import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { migrate as migrateAssignmentWorkSessionWorkedOn } from "./infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
+import { migrate as migrateAssignmentWorkSessionDetachReason } from "./infrastructure/database/migrations/022_add_assignment_work_session_detach_reason_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -46,6 +47,7 @@ import { WrapUpLateAssignmentUseCase } from "./application/assignment/WrapUpLate
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
 import { PurgeDeletedCoursesUseCase } from "./application/course/PurgeDeletedCoursesUseCase";
 import { PurgeDeletedWorkSessionsUseCase } from "./application/workSession/PurgeDeletedWorkSessionsUseCase";
+import { PurgeDeletedAssignmentWorkSessionsUseCase } from "./application/assignmentWorkSession/PurgeDeletedAssignmentWorkSessionsUseCase";
 import { ListAssignmentStatesUseCase } from "./application/assignmentState/ListAssignmentStatesUseCase";
 import { WorkSessionRepository } from "./infrastructure/database/repositories/WorkSessionRepository";
 import { WorkSessionStateRepository } from "./infrastructure/database/repositories/WorkSessionStateRepository";
@@ -95,6 +97,7 @@ migrateWorkSessionWrapUpAt(db);
 migrateAssignmentRescheduleAt(db);
 migrateWorkSessionRescheduleAt(db);
 migrateAssignmentWorkSessionWorkedOn(db);
+migrateAssignmentWorkSessionDetachReason(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -117,6 +120,10 @@ const workSessionMergeService = new WorkSessionMergeService(
 const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
 const purgeDeletedCoursesUseCase = new PurgeDeletedCoursesUseCase(courseRepository, clock);
 const purgeDeletedWorkSessionsUseCase = new PurgeDeletedWorkSessionsUseCase(workSessionRepository, clock);
+const purgeDeletedAssignmentWorkSessionsUseCase = new PurgeDeletedAssignmentWorkSessionsUseCase(
+  assignmentWorkSessionRepository,
+  clock,
+);
 const runPurge = () => {
   const purgedAssignments = purgeDeletedAssignmentsUseCase.execute();
   if (purgedAssignments > 0) {
@@ -129,6 +136,10 @@ const runPurge = () => {
   const purgedWorkSessions = purgeDeletedWorkSessionsUseCase.execute();
   if (purgedWorkSessions > 0) {
     console.log(`[app-api] purged ${purgedWorkSessions} expired soft-deleted work session(s)`);
+  }
+  const purgedAssignmentWorkSessions = purgeDeletedAssignmentWorkSessionsUseCase.execute();
+  if (purgedAssignmentWorkSessions > 0) {
+    console.log(`[app-api] purged ${purgedAssignmentWorkSessions} expired soft-deleted assignment-work-session link(s)`);
   }
 };
 runPurge();
@@ -154,15 +165,24 @@ const app = createServer({
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
-  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, assignmentStateRepository, clock, db),
+  completeAssignmentUseCase: new CompleteAssignmentUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    clock,
+    db,
+  ),
   uncompleteAssignmentUseCase: new UncompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
+    assignmentWorkSessionRepository,
+    workSessionRepository,
     clock,
     db,
   ),
   rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, clock, db),
-  wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, clock, db),
+  wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
   wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, clock, db),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
   createWorkSessionUseCase: new CreateWorkSessionUseCase(
