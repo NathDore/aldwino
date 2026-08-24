@@ -7,6 +7,7 @@ export interface IWorkSessionRepository {
   getAll(): WorkSession[];
   update(workSession: WorkSession): WorkSession;
   findOverlappingInProgress(start: Date, end: Date, excludeId?: string): WorkSession[];
+  purgeDeletedBefore(cutoff: Date): number;
 }
 
 export class WorkSessionRepository implements IWorkSessionRepository {
@@ -92,6 +93,12 @@ export class WorkSessionRepository implements IWorkSessionRepository {
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(...params) as Record<string, string | number | null>[];
     return rows.map((row) => this.rowToWorkSession(row));
+  }
+
+  purgeDeletedBefore(cutoff: Date): number {
+    const stmt = this.db.prepare("DELETE FROM workSessions WHERE isDeleted = 1 AND deletedAt <= ?");
+    const result = stmt.run(cutoff.toISOString());
+    return result.changes;
   }
 
   private rowToWorkSession(row: Record<string, string | number | null>): WorkSession {
