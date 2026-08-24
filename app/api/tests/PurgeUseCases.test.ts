@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import type { Database } from "bun:sqlite";
 import { AssignmentRepository } from "../src/infrastructure/database/repositories/AssignmentRepository";
+import { AssignmentWorkSessionRepository } from "../src/infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import { CourseRepository } from "../src/infrastructure/database/repositories/CourseRepository";
 import { WorkSessionRepository } from "../src/infrastructure/database/repositories/WorkSessionRepository";
 import { PurgeDeletedAssignmentsUseCase } from "../src/application/assignment/PurgeDeletedAssignmentsUseCase";
+import { PurgeDeletedAssignmentWorkSessionsUseCase } from "../src/application/assignmentWorkSession/PurgeDeletedAssignmentWorkSessionsUseCase";
 import { PurgeDeletedCoursesUseCase } from "../src/application/course/PurgeDeletedCoursesUseCase";
 import { PurgeDeletedWorkSessionsUseCase } from "../src/application/workSession/PurgeDeletedWorkSessionsUseCase";
 import { Assignment } from "../src/domain/assignment/Assignment";
+import { AssignmentWorkSession } from "../src/domain/assignmentWorkSession/AssignmentWorkSession";
 import { Course } from "../src/domain/course/Course";
 import { WorkSession } from "../src/domain/workSession/WorkSession";
 import { createTestDatabase, makeCourse, FixedClock, NOW, stateIdFor, workSessionStateIdFor } from "./support/fixtures";
@@ -16,10 +19,12 @@ let clock: FixedClock;
 let assignmentRepository: AssignmentRepository;
 let courseRepository: CourseRepository;
 let workSessionRepository: WorkSessionRepository;
+let linkRepository: AssignmentWorkSessionRepository;
 
 let purgeAssignments: PurgeDeletedAssignmentsUseCase;
 let purgeCourses: PurgeDeletedCoursesUseCase;
 let purgeWorkSessions: PurgeDeletedWorkSessionsUseCase;
+let purgeLinks: PurgeDeletedAssignmentWorkSessionsUseCase;
 
 const EIGHT_DAYS_AGO = new Date(NOW.getTime() - 8 * 24 * 60 * 60 * 1000);
 const YESTERDAY = new Date(NOW.getTime() - 24 * 60 * 60 * 1000);
@@ -30,11 +35,13 @@ beforeEach(() => {
   assignmentRepository = new AssignmentRepository(db);
   courseRepository = new CourseRepository(db);
   workSessionRepository = new WorkSessionRepository(db);
+  linkRepository = new AssignmentWorkSessionRepository(db);
   makeCourse(db);
 
   purgeAssignments = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
   purgeCourses = new PurgeDeletedCoursesUseCase(courseRepository, clock);
   purgeWorkSessions = new PurgeDeletedWorkSessionsUseCase(workSessionRepository, clock);
+  purgeLinks = new PurgeDeletedAssignmentWorkSessionsUseCase(linkRepository, clock);
 });
 
 function rowCount(table: string, id: string): number {
@@ -165,5 +172,55 @@ describe("PurgeDeletedWorkSessionsUseCase", () => {
 
     expect(purged).toBe(0);
     expect(rowCount("workSessions", session.id)).toBe(1);
+  });
+});
+
+describe("PurgeDeletedAssignmentWorkSessionsUseCase", () => {
+  function makeTestLink(id: string, detachReason: "MANUAL" | "COMPLETION" | null, deletedAt: Date | null) {
+    return AssignmentWorkSession.create({
+      id,
+      assignmentId: "assignment-1",
+      workSessionId: "session-1",
+      isDeleted: deletedAt !== null,
+      deletedAt,
+      createdAt: NOW,
+      detachReason,
+    });
+  }
+
+  test("purges a MANUAL link soft-deleted more than a week ago", () => {
+    const link = linkRepository.create(makeTestLink("old-manual-link", "MANUAL", EIGHT_DAYS_AGO));
+
+    const purged = purgeLinks.execute();
+
+    expect(purged).toBe(1);
+    expect(rowCount("assignmentWorkSessions", link.id)).toBe(0);
+  });
+
+  test("never purges a COMPLETION link, even past retention", () => {
+    const link = linkRepository.create(makeTestLink("old-completion-link", "COMPLETION", EIGHT_DAYS_AGO));
+
+    const purged = purgeLinks.execute();
+
+    expect(purged).toBe(0);
+    expect(rowCount("assignmentWorkSessions", link.id)).toBe(1);
+  });
+
+  test("keeps a MANUAL link soft-deleted within the retention window", () => {
+    const link = linkRepository.create(makeTestLink("recent-manual-link", "MANUAL", YESTERDAY));
+
+    const purged = purgeLinks.execute();
+
+    expect(purged).toBe(0);
+    expect(rowCount("assignmentWorkSessions", link.id)).toBe(1);
+  });
+
+  test("leaves a non-deleted link alone", () => {
+    const link = linkRepository.create(makeTestLink("active-link", null, null));
+
+    const purged = purgeLinks.execute();
+
+    expect(purged).toBe(0);
+    expect(rowCount("assignmentWorkSessions", link.id)).toBe(1);
   });
 });

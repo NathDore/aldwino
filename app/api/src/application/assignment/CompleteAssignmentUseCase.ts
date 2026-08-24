@@ -71,6 +71,7 @@ export class CompleteAssignmentUseCase {
           deletedAt: now,
           createdAt: link.createdAt,
           workedOn: link.workedOn,
+          detachReason: "COMPLETION",
         }),
       );
     }

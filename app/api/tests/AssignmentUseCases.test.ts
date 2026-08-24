@@ -49,9 +49,9 @@ beforeEach(() => {
   update = new UpdateAssignmentUseCase(repository, courseRepository, clock, db);
   remove = new DeleteAssignmentUseCase(repository, linkRepository, clock, db);
   complete = new CompleteAssignmentUseCase(repository, stateRepository, linkRepository, workSessionRepository, clock, db);
-  uncomplete = new UncompleteAssignmentUseCase(repository, stateRepository, clock, db);
+  uncomplete = new UncompleteAssignmentUseCase(repository, stateRepository, linkRepository, workSessionRepository, clock, db);
   reschedule = new RescheduleAssignmentUseCase(repository, clock, db);
-  wrapUp = new WrapUpAssignmentUseCase(repository, clock, db);
+  wrapUp = new WrapUpAssignmentUseCase(repository, linkRepository, clock, db);
   wrapUpLate = new WrapUpLateAssignmentUseCase(repository, clock, db);
 });
 

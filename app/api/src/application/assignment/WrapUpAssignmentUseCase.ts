@@ -1,12 +1,15 @@
 import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
 import { assertCanWrapUp } from "../../domain/assignment/AssignmentLifecycle";
+import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
+import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class WrapUpAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
+    private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -34,7 +37,27 @@ export class WrapUpAssignmentUseCase {
         createdAt: existing.createdAt,
       });
 
-      return this.repository.update(wrappedUp);
+      const result = this.repository.update(wrappedUp);
+      this.relabelStaleCompletionLinks(id);
+      return result;
     })();
+  }
+
+  private relabelStaleCompletionLinks(assignmentId: string): void {
+    const links = this.assignmentWorkSessionRepository.getDetachedByAssignmentIdAndReason(assignmentId, "COMPLETION");
+    for (const link of links) {
+      this.assignmentWorkSessionRepository.update(
+        AssignmentWorkSession.create({
+          id: link.id,
+          assignmentId: link.assignmentId,
+          workSessionId: link.workSessionId,
+          isDeleted: link.isDeleted,
+          deletedAt: link.deletedAt,
+          createdAt: link.createdAt,
+          workedOn: link.workedOn,
+          detachReason: "MANUAL",
+        }),
+      );
+    }
   }
 }

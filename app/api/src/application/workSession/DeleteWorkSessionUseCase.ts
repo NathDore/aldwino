@@ -45,11 +45,36 @@ export class DeleteWorkSessionUseCase {
             isDeleted: true,
             deletedAt: now,
             createdAt: link.createdAt,
+            workedOn: link.workedOn,
+            detachReason: "MANUAL",
           }),
         );
       }
 
+      this.relabelStaleCompletionLinks(id);
+
       return updated;
     })();
+  }
+
+  private relabelStaleCompletionLinks(workSessionId: string): void {
+    const links = this.assignmentWorkSessionRepository.getDetachedByWorkSessionIdAndReason(
+      workSessionId,
+      "COMPLETION",
+    );
+    for (const link of links) {
+      this.assignmentWorkSessionRepository.update(
+        AssignmentWorkSession.create({
+          id: link.id,
+          assignmentId: link.assignmentId,
+          workSessionId: link.workSessionId,
+          isDeleted: link.isDeleted,
+          deletedAt: link.deletedAt,
+          createdAt: link.createdAt,
+          workedOn: link.workedOn,
+          detachReason: "MANUAL",
+        }),
+      );
+    }
   }
 }

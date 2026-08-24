@@ -14,6 +14,7 @@ import { migrate as migrateWorkSessionWrapUpAt } from "../../src/infrastructure/
 import { migrate as migrateAssignmentRescheduleAt } from "../../src/infrastructure/database/migrations/019_add_assignment_reschedule_at_column";
 import { migrate as migrateWorkSessionRescheduleAt } from "../../src/infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { migrate as migrateAssignmentWorkSessionWorkedOn } from "../../src/infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
+import { migrate as migrateAssignmentWorkSessionDetachReason } from "../../src/infrastructure/database/migrations/022_add_assignment_work_session_detach_reason_column";
 import { seedAssignmentStates } from "../../src/infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "../../src/infrastructure/database/seeds/seedWorkSessionStates";
 
@@ -52,6 +53,7 @@ export function createTestDatabase(): Database {
   migrateAssignmentRescheduleAt(db);
   migrateWorkSessionRescheduleAt(db);
   migrateAssignmentWorkSessionWorkedOn(db);
+  migrateAssignmentWorkSessionDetachReason(db);
   seedAssignmentStates(db);
   seedWorkSessionStates(db);
   return db;

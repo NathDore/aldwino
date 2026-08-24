@@ -4,6 +4,7 @@ import {
   AssignmentNotFoundError,
   WorkSessionNotFoundError,
   WorkSessionCompletedError,
+  CannotDeleteAutoDetachedLinkError,
 } from "../../../domain/assignmentWorkSession/AssignmentWorkSessionError";
 import { AssignmentStateTransitionError } from "../../../domain/assignment/AssignmentError";
 import type { CreateAssignmentWorkSessionUseCase } from "../../../application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
@@ -35,6 +36,9 @@ function handleAssignmentWorkSessionError(error: unknown) {
     return { body: { error: error.message }, status: 404 as const };
   }
   if (error instanceof WorkSessionCompletedError) {
+    return { body: { error: error.message }, status: 409 as const };
+  }
+  if (error instanceof CannotDeleteAutoDetachedLinkError) {
     return { body: { error: error.message }, status: 409 as const };
   }
   if (error instanceof Error && error.message.includes("not found")) {

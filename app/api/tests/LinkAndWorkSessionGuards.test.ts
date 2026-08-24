@@ -8,6 +8,10 @@ import { WorkSessionRepository } from "../src/infrastructure/database/repositori
 import { WorkSessionStateRepository } from "../src/infrastructure/database/repositories/WorkSessionStateRepository";
 import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "../src/application/assignment/CompleteAssignmentUseCase";
+import { UncompleteAssignmentUseCase } from "../src/application/assignment/UncompleteAssignmentUseCase";
+import { WrapUpAssignmentUseCase } from "../src/application/assignment/WrapUpAssignmentUseCase";
+import { DeleteAssignmentUseCase } from "../src/application/assignment/DeleteAssignmentUseCase";
+import { DeleteWorkSessionUseCase } from "../src/application/workSession/DeleteWorkSessionUseCase";
 import { CreateAssignmentWorkSessionUseCase } from "../src/application/assignmentWorkSession/CreateAssignmentWorkSessionUseCase";
 import { DeleteAssignmentWorkSessionUseCase } from "../src/application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
 import { MarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
@@ -15,7 +19,7 @@ import { UnmarkAssignmentWorkedOnUseCase } from "../src/application/assignmentWo
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
 import { EditWorkSessionUseCase } from "../src/application/workSession/EditWorkSessionUseCase";
 import { AssignmentStateTransitionError } from "../src/domain/assignment/AssignmentError";
-import { WorkSessionCompletedError } from "../src/domain/assignmentWorkSession/AssignmentWorkSessionError";
+import { CannotDeleteAutoDetachedLinkError, WorkSessionCompletedError } from "../src/domain/assignmentWorkSession/AssignmentWorkSessionError";
 import {
   CannotRescheduleNonSkippedWorkSessionError,
   CannotEditNonInProgressWorkSessionError,
@@ -40,6 +44,10 @@ let workSessionStateRepository: WorkSessionStateRepository;
 
 let create: CreateAssignmentUseCase;
 let complete: CompleteAssignmentUseCase;
+let uncomplete: UncompleteAssignmentUseCase;
+let wrapUp: WrapUpAssignmentUseCase;
+let deleteAssignment: DeleteAssignmentUseCase;
+let deleteWorkSession: DeleteWorkSessionUseCase;
 let link: CreateAssignmentWorkSessionUseCase;
 let unlink: DeleteAssignmentWorkSessionUseCase;
 let markWorkedOn: MarkAssignmentWorkedOnUseCase;
@@ -80,6 +88,17 @@ beforeEach(() => {
     clock,
     db,
   );
+  uncomplete = new UncompleteAssignmentUseCase(
+    assignmentRepository,
+    new AssignmentStateRepository(db),
+    linkRepository,
+    workSessionRepository,
+    clock,
+    db,
+  );
+  wrapUp = new WrapUpAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
+  deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
+  deleteWorkSession = new DeleteWorkSessionUseCase(workSessionRepository, linkRepository, clock, db);
   link = new CreateAssignmentWorkSessionUseCase(
     linkRepository,
     assignmentRepository,
@@ -220,6 +239,116 @@ describe("CompleteAssignmentUseCase cascade", () => {
     complete.execute(assignment.id);
 
     expect(linkRepository.getById(otherLink.id)).not.toBeNull();
+  });
+});
+
+describe("UncompleteAssignmentUseCase restore", () => {
+  test("restores a link to a session still in the future", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    markWorkedOn.execute(created.id);
+    complete.execute(assignment.id);
+    expect(linkRepository.getById(created.id)).toBeNull();
+
+    uncomplete.execute(assignment.id);
+
+    const restored = linkRepository.getById(created.id);
+    expect(restored).not.toBeNull();
+    expect(restored?.workedOn).toBe(true);
+    expect(restored?.detachReason).toBeNull();
+  });
+
+  test("leaves a past-session link untouched (never detached, nothing to restore)", () => {
+    const assignment = newAssignment();
+    const pastSession = newPastWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: pastSession.id });
+    complete.execute(assignment.id);
+
+    uncomplete.execute(assignment.id);
+
+    const stillLinked = linkRepository.getById(created.id);
+    expect(stillLinked).not.toBeNull();
+    expect(stillLinked?.workSessionId).toBe(pastSession.id);
+  });
+
+  test("never restores a link the user manually unlinked before completing", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    unlink.execute(created.id);
+    complete.execute(assignment.id);
+
+    uncomplete.execute(assignment.id);
+
+    expect(linkRepository.getById(created.id)).toBeNull();
+  });
+
+  test("does not restore a link once its once-future session has since started", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    complete.execute(assignment.id);
+    clock.set(new Date(SESSION_START.getTime() + 1000));
+
+    uncomplete.execute(assignment.id);
+
+    expect(linkRepository.getById(created.id)).toBeNull();
+  });
+});
+
+describe("DeleteAssignmentWorkSessionUseCase guard on auto-detached links", () => {
+  test("rejects deleting a link auto-detached by the completion cascade", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    complete.execute(assignment.id);
+
+    expect(() => unlink.execute(created.id)).toThrow(CannotDeleteAutoDetachedLinkError);
+  });
+
+  test("still throws a generic not-found error for a link that truly doesn't exist", () => {
+    expect(() => unlink.execute("no-such-link")).toThrow(/not found/);
+  });
+});
+
+describe("relabeling stale COMPLETION links to MANUAL", () => {
+  test("relabels a leftover COMPLETION link once the assignment is wrapped up", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    complete.execute(assignment.id);
+
+    wrapUp.execute(assignment.id);
+
+    const relabeled = linkRepository.getByIdIncludingDeleted(created.id);
+    expect(relabeled?.detachReason).toBe("MANUAL");
+    expect(relabeled?.isDeleted).toBe(true);
+  });
+
+  test("relabels a leftover COMPLETION link once the assignment is deleted", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    complete.execute(assignment.id);
+    clock.set(new Date(SESSION_START.getTime() + 1000));
+    uncomplete.execute(assignment.id);
+    expect(linkRepository.getByIdIncludingDeleted(created.id)?.detachReason).toBe("COMPLETION");
+
+    deleteAssignment.execute(assignment.id);
+
+    expect(linkRepository.getByIdIncludingDeleted(created.id)?.detachReason).toBe("MANUAL");
+  });
+
+  test("relabels a leftover COMPLETION link once its work session is deleted", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    complete.execute(assignment.id);
+
+    deleteWorkSession.execute(session.id);
+
+    expect(linkRepository.getByIdIncludingDeleted(created.id)?.detachReason).toBe("MANUAL");
   });
 });
 

@@ -1,5 +1,7 @@
 import { validateAssignmentId, validateWorkSessionId } from "./AssignmentWorkSessionRules";
 
+export type AssignmentWorkSessionDetachReason = "MANUAL" | "COMPLETION";
+
 export class AssignmentWorkSession {
   private constructor(
     public readonly id: string,
@@ -9,6 +11,7 @@ export class AssignmentWorkSession {
     public readonly deletedAt: Date | null,
     public readonly createdAt: Date,
     public readonly workedOn: boolean,
+    public readonly detachReason: AssignmentWorkSessionDetachReason | null,
   ) {}
 
   static create(params: {
@@ -19,6 +22,7 @@ export class AssignmentWorkSession {
     deletedAt?: Date | null;
     createdAt: Date;
     workedOn?: boolean;
+    detachReason?: AssignmentWorkSessionDetachReason | null;
   }): AssignmentWorkSession {
     validateAssignmentId(params.assignmentId);
     validateWorkSessionId(params.workSessionId);
@@ -30,6 +34,7 @@ export class AssignmentWorkSession {
       params.deletedAt ?? null,
       params.createdAt,
       params.workedOn ?? false,
+      params.detachReason ?? null,
     );
   }
 
@@ -42,6 +47,7 @@ export class AssignmentWorkSession {
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
       workedOn: this.workedOn,
+      detachReason: this.detachReason,
     };
   }
 }
