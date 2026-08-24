@@ -14,29 +14,24 @@ export function ManagePage() {
   return (
     <div className="h-full overflow-y-auto styled-scrollbar">
       <div className="max-w-6xl mx-auto p-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Courses &amp; Assignments</h1>
-        <p className="text-base text-slate-700 mb-6">Add, edit, or remove the courses and assignments behind your calendar.</p>
-
         <div className="flex gap-6 border-b border-slate-200 mb-6">
           <button
             type="button"
             onClick={() => setActiveTab("courses")}
-            className={`pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${
-              activeTab === "courses"
+            className={`pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${activeTab === "courses"
                 ? "text-emerald-700 border-emerald-600"
                 : "text-slate-600 border-transparent hover:text-slate-900"
-            }`}
+              }`}
           >
             Courses <span className="text-slate-500 font-medium">{courses.length}</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("assignments")}
-            className={`pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${
-              activeTab === "assignments"
+            className={`pb-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${activeTab === "assignments"
                 ? "text-emerald-700 border-emerald-600"
                 : "text-slate-600 border-transparent hover:text-slate-900"
-            }`}
+              }`}
           >
             Assignments <span className="text-slate-500 font-medium">{assignments.length}</span>
           </button>
