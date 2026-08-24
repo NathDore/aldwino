@@ -44,6 +44,8 @@ import { RescheduleAssignmentUseCase } from "./application/assignment/Reschedule
 import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "./application/assignment/WrapUpLateAssignmentUseCase";
 import { PurgeDeletedAssignmentsUseCase } from "./application/assignment/PurgeDeletedAssignmentsUseCase";
+import { PurgeDeletedCoursesUseCase } from "./application/course/PurgeDeletedCoursesUseCase";
+import { PurgeDeletedWorkSessionsUseCase } from "./application/workSession/PurgeDeletedWorkSessionsUseCase";
 import { ListAssignmentStatesUseCase } from "./application/assignmentState/ListAssignmentStatesUseCase";
 import { WorkSessionRepository } from "./infrastructure/database/repositories/WorkSessionRepository";
 import { WorkSessionStateRepository } from "./infrastructure/database/repositories/WorkSessionStateRepository";
@@ -112,12 +114,25 @@ const workSessionMergeService = new WorkSessionMergeService(
   clock,
 );
 
-// Purge assignments soft-deleted more than a week ago, on startup and then daily
+// Purge assignments, courses, and work sessions soft-deleted more than a week ago, on startup and then daily
 const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
+const purgeDeletedCoursesUseCase = new PurgeDeletedCoursesUseCase(courseRepository, clock);
+const purgeDeletedWorkSessionsUseCase = new PurgeDeletedWorkSessionsUseCase(workSessionRepository, clock);
 const runPurge = () => {
-  const purged = purgeDeletedAssignmentsUseCase.execute();
-  if (purged > 0) {
-    console.log(`[app-api] purged ${purged} expired soft-deleted assignment(s)`);
+  // Assignments before courses: a course is soft-deleted alongside its assignments
+  // (DeleteCourseUseCase), so purging assignments first avoids ever leaving one
+  // referencing an already-purged courseId.
+  const purgedAssignments = purgeDeletedAssignmentsUseCase.execute();
+  if (purgedAssignments > 0) {
+    console.log(`[app-api] purged ${purgedAssignments} expired soft-deleted assignment(s)`);
+  }
+  const purgedCourses = purgeDeletedCoursesUseCase.execute();
+  if (purgedCourses > 0) {
+    console.log(`[app-api] purged ${purgedCourses} expired soft-deleted course(s)`);
+  }
+  const purgedWorkSessions = purgeDeletedWorkSessionsUseCase.execute();
+  if (purgedWorkSessions > 0) {
+    console.log(`[app-api] purged ${purgedWorkSessions} expired soft-deleted work session(s)`);
   }
 };
 runPurge();
