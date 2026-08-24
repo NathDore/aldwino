@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { getCourseColor } from "../utils/assignmentStatus";
+import { CheckIcon } from "@/features/calendar/components/icons";
 import type { CalendarAssignment } from "@/features/calendar/types/calendar.types";
 
 interface AssignmentChipProps {
@@ -16,14 +17,20 @@ export const AssignmentChip = memo(function AssignmentChip({ item, size = "md" }
   const { assignment, course } = item;
   const letter = course?.code?.charAt(0).toUpperCase() ?? "?";
   const backgroundColor = getCourseColor(course);
+  const isCompleted = assignment.completedAt !== null;
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${item.workedOn ? "opacity-50" : ""}`}
+      className={`relative flex shrink-0 items-center justify-center rounded-sm border border-slate-400 font-semibold text-white ${SIZE_CLASSES[size]} ${item.workedOn ? "opacity-50" : ""}`}
       style={{ backgroundColor }}
-      title={assignment.name}
+      title={isCompleted ? `${assignment.name} (Done)` : assignment.name}
     >
       {letter}
+      {isCompleted && (
+        <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-emerald-600 text-white ring-1 ring-white">
+          <CheckIcon className="w-1.5 h-1.5" />
+        </span>
+      )}
     </div>
   );
 });

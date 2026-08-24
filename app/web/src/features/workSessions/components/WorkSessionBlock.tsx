@@ -7,6 +7,7 @@ import { useIsEventActive } from "@/features/calendar/hooks/useIsEventActive";
 import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { AssignmentChip } from "@/features/assignments/components/AssignmentChip";
 import { getCourseColor } from "@/features/assignments/utils/assignmentStatus";
+import { CheckIcon } from "@/features/calendar/components/icons";
 import { WorkSessionPopover } from "./WorkSessionPopover";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
@@ -27,6 +28,7 @@ function formatTimeRange(startTime: string, endTime: string): string {
 }
 
 function AssignmentRow({ item, textColorClass }: { item: CalendarAssignment; textColorClass: string }) {
+  const isCompleted = item.assignment.completedAt !== null;
   return (
     <div className={`flex items-center gap-1.5 min-w-0 w-full ${item.workedOn ? "opacity-50" : ""}`}>
       <span
@@ -35,11 +37,17 @@ function AssignmentRow({ item, textColorClass }: { item: CalendarAssignment; tex
         aria-hidden="true"
       />
       <p
-        className={`truncate text-xs font-medium min-w-0 ${textColorClass} ${item.workedOn ? "line-through" : ""}`}
+        className={`truncate text-xs font-medium min-w-0 flex-1 ${textColorClass} ${item.workedOn ? "line-through" : ""}`}
         title={item.assignment.name}
       >
         {item.assignment.name}
       </p>
+      {isCompleted && (
+        <span className="inline-flex shrink-0 items-center gap-0.5 rounded text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1 py-0.5">
+          <CheckIcon className="w-2 h-2" />
+          Done
+        </span>
+      )}
     </div>
   );
 }

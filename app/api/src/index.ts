@@ -143,7 +143,14 @@ const app = createServer({
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
-  completeAssignmentUseCase: new CompleteAssignmentUseCase(assignmentRepository, assignmentStateRepository, clock, db),
+  completeAssignmentUseCase: new CompleteAssignmentUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    clock,
+    db,
+  ),
   uncompleteAssignmentUseCase: new UncompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,

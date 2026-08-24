@@ -4,6 +4,7 @@ import { AssignmentRepository } from "../src/infrastructure/database/repositorie
 import { AssignmentStateRepository } from "../src/infrastructure/database/repositories/AssignmentStateRepository";
 import { AssignmentWorkSessionRepository } from "../src/infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import { CourseRepository } from "../src/infrastructure/database/repositories/CourseRepository";
+import { WorkSessionRepository } from "../src/infrastructure/database/repositories/WorkSessionRepository";
 import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAssignmentUseCase";
 import { UpdateAssignmentUseCase } from "../src/application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "../src/application/assignment/DeleteAssignmentUseCase";
@@ -21,6 +22,7 @@ let repository: AssignmentRepository;
 let stateRepository: AssignmentStateRepository;
 let courseRepository: CourseRepository;
 let linkRepository: AssignmentWorkSessionRepository;
+let workSessionRepository: WorkSessionRepository;
 
 let create: CreateAssignmentUseCase;
 let update: UpdateAssignmentUseCase;
@@ -40,12 +42,13 @@ beforeEach(() => {
   stateRepository = new AssignmentStateRepository(db);
   courseRepository = new CourseRepository(db);
   linkRepository = new AssignmentWorkSessionRepository(db);
+  workSessionRepository = new WorkSessionRepository(db);
   makeCourse(db);
 
   create = new CreateAssignmentUseCase(repository, courseRepository, stateRepository, clock, db);
   update = new UpdateAssignmentUseCase(repository, courseRepository, clock, db);
   remove = new DeleteAssignmentUseCase(repository, linkRepository, clock, db);
-  complete = new CompleteAssignmentUseCase(repository, stateRepository, clock, db);
+  complete = new CompleteAssignmentUseCase(repository, stateRepository, linkRepository, workSessionRepository, clock, db);
   uncomplete = new UncompleteAssignmentUseCase(repository, stateRepository, clock, db);
   reschedule = new RescheduleAssignmentUseCase(repository, clock, db);
   wrapUp = new WrapUpAssignmentUseCase(repository, clock, db);

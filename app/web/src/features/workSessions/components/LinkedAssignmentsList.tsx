@@ -83,7 +83,13 @@ export function LinkedAssignmentsList({ workSessionId, canEdit }: LinkedAssignme
                 {course ? formatCourseLabel(course) : "Unknown course"}
               </span>
               <span className="text-xs font-bold text-slate-600 shrink-0">·</span>
-              <span className="text-sm text-slate-900 truncate">{assignment.name}</span>
+              <span className="text-sm text-slate-900 truncate min-w-0">{assignment.name}</span>
+              {assignment.completedAt !== null && (
+                <span className="inline-flex shrink-0 items-center gap-0.5 rounded text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5">
+                  <CheckIcon className="w-2.5 h-2.5" />
+                  Done
+                </span>
+              )}
             </div>
             {canEdit && (
               <button

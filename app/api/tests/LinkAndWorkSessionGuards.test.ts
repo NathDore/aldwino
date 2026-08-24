@@ -52,6 +52,9 @@ const SESSION_START = new Date("2026-06-15T14:00:00.000Z");
 const SESSION_END = new Date("2026-06-15T16:00:00.000Z");
 const NEW_START = new Date("2026-07-01T14:00:00.000Z");
 const NEW_END = new Date("2026-07-01T16:00:00.000Z");
+// A window on the same calendar day, comfortably before NOW.
+const PAST_SESSION_START = new Date("2026-06-15T08:00:00.000Z");
+const PAST_SESSION_END = new Date("2026-06-15T10:00:00.000Z");
 
 beforeEach(() => {
   db = createTestDatabase();
@@ -69,7 +72,14 @@ beforeEach(() => {
     clock,
     db,
   );
-  complete = new CompleteAssignmentUseCase(assignmentRepository, new AssignmentStateRepository(db), clock, db);
+  complete = new CompleteAssignmentUseCase(
+    assignmentRepository,
+    new AssignmentStateRepository(db),
+    linkRepository,
+    workSessionRepository,
+    clock,
+    db,
+  );
   link = new CreateAssignmentWorkSessionUseCase(
     linkRepository,
     assignmentRepository,
@@ -101,6 +111,19 @@ function newWorkSession(state = "INPROGRESS", id = "session-1") {
       workSessionStateId: workSessionStateIdFor(db, state),
       startTime: SESSION_START,
       endTime: SESSION_END,
+      completedAt: null,
+      createdAt: NOW,
+    }),
+  );
+}
+
+function newPastWorkSession(state = "INPROGRESS", id = "past-session-1") {
+  return workSessionRepository.create(
+    WorkSession.create({
+      id,
+      workSessionStateId: workSessionStateIdFor(db, state),
+      startTime: PAST_SESSION_START,
+      endTime: PAST_SESSION_END,
       completedAt: null,
       createdAt: NOW,
     }),
@@ -154,13 +177,49 @@ describe("assignment work session links", () => {
     expect(() => unlink.execute(created.id)).toThrow(AssignmentStateTransitionError);
   });
 
-  test("rejects unlinking a completed assignment", () => {
+  test("rejects unlinking a completed assignment's link to a session that already started", () => {
     const assignment = newAssignment();
-    const session = newWorkSession();
+    const session = newPastWorkSession();
     const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
     complete.execute(assignment.id);
 
     expect(() => unlink.execute(created.id)).toThrow(AssignmentStateTransitionError);
+  });
+});
+
+describe("CompleteAssignmentUseCase cascade", () => {
+  test("detaches a completed assignment from a work session that hasn't started yet", () => {
+    const assignment = newAssignment();
+    const session = newWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+
+    complete.execute(assignment.id);
+
+    expect(linkRepository.getById(created.id)).toBeNull();
+  });
+
+  test("leaves a completed assignment linked to a work session that already started", () => {
+    const assignment = newAssignment();
+    const pastSession = newPastWorkSession();
+    const created = link.execute({ assignmentId: assignment.id, workSessionId: pastSession.id });
+
+    complete.execute(assignment.id);
+
+    const stillLinked = linkRepository.getById(created.id);
+    expect(stillLinked).not.toBeNull();
+    expect(stillLinked?.workSessionId).toBe(pastSession.id);
+  });
+
+  test("leaves other assignments' links to future sessions untouched", () => {
+    const assignment = newAssignment();
+    const otherAssignment = create.execute({ courseId: "course-1", name: "Other", dueDate: FUTURE });
+    const session = newWorkSession();
+    link.execute({ assignmentId: assignment.id, workSessionId: session.id });
+    const otherLink = link.execute({ assignmentId: otherAssignment.id, workSessionId: session.id });
+
+    complete.execute(assignment.id);
+
+    expect(linkRepository.getById(otherLink.id)).not.toBeNull();
   });
 });
 
