@@ -114,14 +114,10 @@ const workSessionMergeService = new WorkSessionMergeService(
   clock,
 );
 
-// Purge assignments, courses, and work sessions soft-deleted more than a week ago, on startup and then daily
 const purgeDeletedAssignmentsUseCase = new PurgeDeletedAssignmentsUseCase(assignmentRepository, clock);
 const purgeDeletedCoursesUseCase = new PurgeDeletedCoursesUseCase(courseRepository, clock);
 const purgeDeletedWorkSessionsUseCase = new PurgeDeletedWorkSessionsUseCase(workSessionRepository, clock);
 const runPurge = () => {
-  // Assignments before courses: a course is soft-deleted alongside its assignments
-  // (DeleteCourseUseCase), so purging assignments first avoids ever leaving one
-  // referencing an already-purged courseId.
   const purgedAssignments = purgeDeletedAssignmentsUseCase.execute();
   if (purgedAssignments > 0) {
     console.log(`[app-api] purged ${purgedAssignments} expired soft-deleted assignment(s)`);
