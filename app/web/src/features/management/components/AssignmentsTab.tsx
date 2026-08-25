@@ -1,16 +1,6 @@
 import { useState } from "react";
 import type { CourseDto } from "@/features/courses";
-import {
-  type AssignmentDto,
-  isAssignmentCompleted,
-  isAssignmentOverdue,
-  isAssignmentCompletedOverdue,
-  useDeleteAssignmentMutation,
-  useCompleteAssignmentMutation,
-  useUncompleteAssignmentMutation,
-  useWrapUpAssignmentMutation,
-  useWrapUpLateAssignmentMutation,
-} from "@/features/assignments";
+import { type AssignmentDto, isAssignmentCompleted, isAssignmentOverdue, isAssignmentCompletedOverdue } from "@/features/assignments";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { AssignmentFormPanel } from "@/features/assignments/components/AssignmentFormPanel";
 import { Button } from "@/shared/components/Button";
@@ -19,9 +9,9 @@ import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { PlusIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
-import { showToast } from "@/shared/store/toastStore";
 import { getAssignmentStatusBadge, formatAssignmentDueDate } from "../utils/assignmentDisplay";
 import { useAssignmentGroups } from "../hooks/useAssignmentGroups";
+import { useAssignmentActions } from "../hooks/useAssignmentActions";
 import { AssignmentRowMenu } from "./AssignmentRowMenu";
 
 interface AssignmentsTabProps {
@@ -35,11 +25,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   const [editingAssignment, setEditingAssignment] = useState<AssignmentDto | null>(null);
   const [reschedulingAssignment, setReschedulingAssignment] = useState<AssignmentDto | null>(null);
   const [deletingAssignment, setDeletingAssignment] = useState<AssignmentDto | null>(null);
-  const deleteMutation = useDeleteAssignmentMutation();
-  const completeMutation = useCompleteAssignmentMutation();
-  const uncompleteMutation = useUncompleteAssignmentMutation();
-  const wrapUpMutation = useWrapUpAssignmentMutation();
-  const wrapUpLateMutation = useWrapUpLateAssignmentMutation();
+  const actions = useAssignmentActions();
 
   const toggleFilter = (id: string) => {
     setCourseFilterIds((prev) => {
@@ -58,40 +44,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
 
   const handleDelete = async () => {
     if (!deletingAssignment) return;
-    await deleteMutation.mutateAsync(deletingAssignment.id);
+    await actions.delete(deletingAssignment);
     setDeletingAssignment(null);
-  };
-
-  const handleComplete = async (assignment: AssignmentDto) => {
-    try {
-      await completeMutation.mutateAsync(assignment.id);
-    } catch (error) {
-      if (error instanceof Error) showToast(error.message, "error");
-    }
-  };
-
-  const handleUncomplete = async (assignment: AssignmentDto) => {
-    try {
-      await uncompleteMutation.mutateAsync(assignment.id);
-    } catch (error) {
-      if (error instanceof Error) showToast(error.message, "error");
-    }
-  };
-
-  const handleWrapUp = async (assignment: AssignmentDto) => {
-    try {
-      await wrapUpMutation.mutateAsync(assignment.id);
-    } catch (error) {
-      if (error instanceof Error) showToast(error.message, "error");
-    }
-  };
-
-  const handleWrapUpLate = async (assignment: AssignmentDto) => {
-    try {
-      await wrapUpLateMutation.mutateAsync(assignment.id);
-    } catch (error) {
-      if (error instanceof Error) showToast(error.message, "error");
-    }
   };
 
   return (
@@ -181,8 +135,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                               variant="success"
                               size="xs"
                               className="w-full"
-                              onClick={() => handleWrapUp(assignment)}
-                              disabled={wrapUpMutation.isPending}
+                              onClick={() => actions.wrapUp(assignment)}
+                              disabled={actions.isWrapUpPending}
                             >
                               Wrap up
                             </Button>
@@ -191,8 +145,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                               variant="primary"
                               size="xs"
                               className="w-full"
-                              onClick={() => handleUncomplete(assignment)}
-                              disabled={uncompleteMutation.isPending}
+                              onClick={() => actions.uncomplete(assignment)}
+                              disabled={actions.isUncompletePending}
                             >
                               Uncomplete
                             </Button>
@@ -210,8 +164,8 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                               variant="secondary"
                               size="xs"
                               className="w-full"
-                              onClick={() => handleComplete(assignment)}
-                              disabled={completeMutation.isPending}
+                              onClick={() => actions.complete(assignment)}
+                              disabled={actions.isCompletePending}
                             >
                               Complete
                             </Button>
@@ -221,12 +175,12 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                           {isAssignmentCompletedOverdue(assignment) ? null : isAssignmentCompleted(assignment) ? (
                             <AssignmentRowMenu
                               assignmentName={assignment.name}
-                              items={[{ label: "Wrap up", onClick: () => handleWrapUp(assignment) }]}
+                              items={[{ label: "Wrap up", onClick: () => actions.wrapUp(assignment) }]}
                             />
                           ) : isAssignmentOverdue(assignment) ? (
                             <AssignmentRowMenu
                               assignmentName={assignment.name}
-                              items={[{ label: "Wrap up - late", onClick: () => handleWrapUpLate(assignment) }]}
+                              items={[{ label: "Wrap up - late", onClick: () => actions.wrapUpLate(assignment) }]}
                             />
                           ) : (
                             <AssignmentRowMenu
@@ -309,7 +263,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
           <DeleteConfirmation
             title="Delete assignment?"
             description={`"${deletingAssignment.name}" will be removed. This can't be undone.`}
-            isLoading={deleteMutation.isPending}
+            isLoading={actions.isDeletePending}
             onConfirm={handleDelete}
             onCancel={() => setDeletingAssignment(null)}
           />
