@@ -13,7 +13,6 @@ interface AssignmentLinkSelectorProps {
   onRequestCreateAssignment: () => void;
   excludeIds?: Set<string>;
   disabled?: boolean;
-  optional?: boolean;
 }
 
 function formatDueDate(dueDate: string): string {
@@ -33,7 +32,6 @@ export function AssignmentLinkSelector({
   onRequestCreateAssignment,
   excludeIds,
   disabled = false,
-  optional = false,
 }: AssignmentLinkSelectorProps) {
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
@@ -73,9 +71,7 @@ export function AssignmentLinkSelector({
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex items-baseline justify-between mb-1.5 shrink-0">
-        <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>
-          Add assignments{optional ? " (optional)" : ""}
-        </label>
+        <label className={`${LABEL_FONT_SIZE} font-semibold text-slate-700`}>Add assignments</label>
         <Button variant="ghost" size="sm" onClick={onRequestCreateAssignment} disabled={disabled}>
           <span className="flex items-center gap-1">
             <PlusIcon className="w-3 h-3" />
@@ -102,7 +98,7 @@ export function AssignmentLinkSelector({
         />
       </div>
 
-      <div className="mt-2 flex-1 min-h-0 max-h-[280px] overflow-y-auto styled-scrollbar border border-slate-200 rounded-lg divide-y divide-slate-100">
+      <div className="mt-2 flex-1 min-h-0 max-h-[180px] overflow-y-auto styled-scrollbar border border-slate-200 rounded-lg divide-y divide-slate-100">
         {visible.length === 0 ? (
           <p className="px-3 py-6 text-sm text-slate-600 text-center">
             {inProgress.length === 0 ? "No assignments in progress" : "No matches"}

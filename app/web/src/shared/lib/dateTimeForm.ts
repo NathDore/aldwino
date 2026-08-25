@@ -1,5 +1,19 @@
 export const ALLOWED_DURATIONS_MINUTES = [15, 25, 50, 60, 90] as const;
 
+export const MIN_DURATION_MINUTES = 1;
+export const MAX_DURATION_MINUTES = 480;
+
+export function isValidDurationMinutes(minutes: number): boolean {
+  return Number.isInteger(minutes) && minutes >= MIN_DURATION_MINUTES && minutes <= MAX_DURATION_MINUTES;
+}
+
+export function formatDurationLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
 export function dateToDateInput(d: Date): string {
   return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d
     .getDate()

@@ -93,7 +93,6 @@ export function WorkSessionFormPanel({
           onToggle={toggleAssignment}
           onRequestCreateAssignment={onRequestCreateAssignment}
           disabled={isLoading}
-          optional
         />
       </div>
 
