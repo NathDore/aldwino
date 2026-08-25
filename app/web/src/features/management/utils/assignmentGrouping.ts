@@ -6,6 +6,8 @@ export interface AssignmentGroups {
   completed: AssignmentDto[];
 }
 
+export type AssignmentStatusFilterValue = "overdue" | "uncompleted" | "completed";
+
 export function filterAndSortAssignments(
   assignments: AssignmentDto[],
   courseFilterIds: Set<string>,
@@ -21,4 +23,16 @@ export function groupAssignments(assignments: AssignmentDto[]): AssignmentGroups
     uncompleted: assignments.filter((a) => !isAssignmentCompleted(a) && !isAssignmentOverdue(a)),
     completed: assignments.filter((a) => isAssignmentCompleted(a)),
   };
+}
+
+export function buildAssignmentList(
+  groups: AssignmentGroups,
+  statusFilter: Set<AssignmentStatusFilterValue>,
+): AssignmentDto[] {
+  const includeAll = statusFilter.size === 0;
+  return [
+    ...(includeAll || statusFilter.has("overdue") ? groups.overdue : []),
+    ...(includeAll || statusFilter.has("uncompleted") ? groups.uncompleted : []),
+    ...(includeAll || statusFilter.has("completed") ? groups.completed : []),
+  ];
 }

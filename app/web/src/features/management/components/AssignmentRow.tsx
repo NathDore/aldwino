@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/Button";
 import { getAssignmentStatusBadge, formatAssignmentDueDate } from "../utils/assignmentDisplay";
 import { useAssignmentActions } from "../hooks/useAssignmentActions";
 import { AssignmentRowMenu } from "./AssignmentRowMenu";
+import { ASSIGNMENT_ROW_GRID } from "../utils/assignmentRowLayout";
 
 interface AssignmentRowProps {
   assignment: AssignmentDto;
@@ -18,25 +19,25 @@ export function AssignmentRow({ assignment, course, actions, onReschedule, onEdi
   const status = getAssignmentStatusBadge(assignment);
 
   return (
-    <tr className="border-b border-slate-200 last:border-b-0 hover:bg-slate-50">
-      <td className="p-1.5 text-xs font-medium text-slate-900">{assignment.name}</td>
-      <td className="p-1.5 text-xs text-slate-700">
-        <span className="inline-flex items-center gap-1.5">
+    <div className={`${ASSIGNMENT_ROW_GRID} items-center hover:bg-slate-50`}>
+      <div className="p-1.5 text-xs font-medium text-slate-900 truncate">{assignment.name}</div>
+      <div className="p-1.5 text-xs text-slate-700 min-w-0">
+        <span className="inline-flex items-center gap-1.5 min-w-0">
           <span
             className="w-2 h-2 rounded-sm shrink-0"
             style={{ backgroundColor: course?.color ?? "#cbd5e1" }}
             aria-hidden="true"
           />
-          {course?.code ?? "—"}
+          <span className="truncate">{course?.code ?? "—"}</span>
         </span>
-      </td>
-      <td className="p-1.5 text-xs text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</td>
-      <td className="p-1.5">
+      </div>
+      <div className="p-1.5 text-xs text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</div>
+      <div className="p-1.5">
         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}>
           {status.label}
         </span>
-      </td>
-      <td className="p-1.5">
+      </div>
+      <div className="p-1.5">
         <div className="grid grid-cols-[6rem_1.5rem] items-center gap-1.5">
           <div className="flex justify-end">
             {isAssignmentCompletedOverdue(assignment) ? (
@@ -97,7 +98,7 @@ export function AssignmentRow({ assignment, course, actions, onReschedule, onEdi
             )}
           </div>
         </div>
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
