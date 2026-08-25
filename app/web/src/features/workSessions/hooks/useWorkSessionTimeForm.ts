@@ -9,10 +9,12 @@ import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery"
 import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSessionValidation";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 import {
-  ALLOWED_DURATIONS_MINUTES,
+  MAX_DURATION_MINUTES,
+  MIN_DURATION_MINUTES,
   combineDateAndTime,
   computeFittingDuration,
   dateToDateInput,
+  isValidDurationMinutes,
   isoToDateInput,
   isoToTimeInput,
   type FittingDuration,
@@ -25,12 +27,6 @@ interface WorkSessionTimeFormState {
   startDateTime: string;
   durationMinutes: number;
   errors: Record<string, string>;
-}
-
-function closestAllowedDuration(minutes: number): number {
-  return ALLOWED_DURATIONS_MINUTES.reduce((closest, candidate) =>
-    Math.abs(candidate - minutes) < Math.abs(closest - minutes) ? candidate : closest
-  );
 }
 
 export function useWorkSessionTimeForm(
@@ -51,7 +47,7 @@ export function useWorkSessionTimeForm(
   const [formState, setFormState] = useState<WorkSessionTimeFormState>({
     startDateDay: defaultStartDate,
     startDateTime: isoToTimeInput(workSession.startTime),
-    durationMinutes: closestAllowedDuration(currentDurationMinutes),
+    durationMinutes: Math.min(MAX_DURATION_MINUTES, Math.max(MIN_DURATION_MINUTES, currentDurationMinutes)),
     errors: {},
   });
 
@@ -118,8 +114,8 @@ export function useWorkSessionTimeForm(
       }
     }
 
-    if (!ALLOWED_DURATIONS_MINUTES.includes(formState.durationMinutes as (typeof ALLOWED_DURATIONS_MINUTES)[number])) {
-      errors.durationMinutes = "Duration must be one of the allowed options";
+    if (!isValidDurationMinutes(formState.durationMinutes)) {
+      errors.durationMinutes = "Duration must be between 1 and 480 minutes";
     }
 
     setFormState((prev) => ({ ...prev, errors }));

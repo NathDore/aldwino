@@ -6,10 +6,10 @@ import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSe
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 import { showToast } from "@/shared/store/toastStore";
 import {
-  ALLOWED_DURATIONS_MINUTES,
   combineDateAndTime,
   computeFittingDuration,
   dateToDateInput,
+  isValidDurationMinutes,
   type FittingDuration,
 } from "@/shared/lib/dateTimeForm";
 
@@ -135,8 +135,8 @@ export function useWorkSessionForm(
       }
     }
 
-    if (!ALLOWED_DURATIONS_MINUTES.includes(formState.durationMinutes as (typeof ALLOWED_DURATIONS_MINUTES)[number])) {
-      errors.durationMinutes = "Duration must be one of the allowed options";
+    if (!isValidDurationMinutes(formState.durationMinutes)) {
+      errors.durationMinutes = "Duration must be between 1 and 480 minutes";
     }
 
     setFormState((prev) => ({ ...prev, errors }));
