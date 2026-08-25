@@ -33,11 +33,11 @@ export function AssignmentListSection({
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-100 border-b border-slate-300 text-left text-slate-900 font-semibold text-xs sticky top-0 z-10">
-              <th className="p-3">Assignment</th>
-              <th className="p-3">Course</th>
-              <th className="p-3">Due</th>
-              <th className="p-3">Status</th>
-              <th className="p-3" />
+              <th className="p-1.5">Assignment</th>
+              <th className="p-1.5">Course</th>
+              <th className="p-1.5">Due</th>
+              <th className="p-1.5">Status</th>
+              <th className="p-1.5" />
             </tr>
           </thead>
           <tbody>

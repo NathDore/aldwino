@@ -59,7 +59,7 @@ export function AssignmentRowMenu({ assignmentName, items }: AssignmentRowMenuPr
           type="button"
           aria-label={`More actions for ${assignmentName}`}
           onClick={() => setIsOpen((v) => !v)}
-          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
+          className="w-6 h-6 flex items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
         >
           <MoreIcon />
         </button>

@@ -19,8 +19,8 @@ export function AssignmentRow({ assignment, course, actions, onReschedule, onEdi
 
   return (
     <tr className="border-b border-slate-200 last:border-b-0 hover:bg-slate-50">
-      <td className="p-3 font-medium text-slate-900">{assignment.name}</td>
-      <td className="p-3 text-slate-700">
+      <td className="p-1.5 text-xs font-medium text-slate-900">{assignment.name}</td>
+      <td className="p-1.5 text-xs text-slate-700">
         <span className="inline-flex items-center gap-1.5">
           <span
             className="w-2 h-2 rounded-sm shrink-0"
@@ -30,16 +30,14 @@ export function AssignmentRow({ assignment, course, actions, onReschedule, onEdi
           {course?.code ?? "—"}
         </span>
       </td>
-      <td className="p-3 text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</td>
-      <td className="p-3">
-        <span
-          className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}
-        >
+      <td className="p-1.5 text-xs text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</td>
+      <td className="p-1.5">
+        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}>
           {status.label}
         </span>
       </td>
-      <td className="p-3">
-        <div className="grid grid-cols-[6rem_1.75rem] items-center gap-1.5">
+      <td className="p-1.5">
+        <div className="grid grid-cols-[6rem_1.5rem] items-center gap-1.5">
           <div className="flex justify-end">
             {isAssignmentCompletedOverdue(assignment) ? (
               <Button
