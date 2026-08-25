@@ -21,30 +21,11 @@ import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { PlusIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 import { showToast } from "@/shared/store/toastStore";
+import { getAssignmentStatusBadge, formatAssignmentDueDate } from "../utils/assignmentDisplay";
 
 interface AssignmentsTabProps {
   assignments: AssignmentDto[];
   courses: CourseDto[];
-}
-
-function statusFor(assignment: AssignmentDto): { label: string; className: string } {
-  if (isAssignmentCompletedOverdue(assignment)) {
-    return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-  }
-  if (isAssignmentCompleted(assignment)) {
-    return { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-300" };
-  }
-  if (isAssignmentOverdue(assignment)) {
-    return { label: "Overdue", className: "bg-amber-50 text-amber-700 border-amber-300" };
-  }
-  return { label: "Upcoming", className: "bg-slate-100 text-slate-700 border-slate-200" };
-}
-
-function formatDue(dueDate: string): string {
-  const d = new Date(dueDate);
-  const dateLabel = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  const timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `${dateLabel}, ${timeLabel}`;
 }
 
 interface AssignmentRowMenuItem {
@@ -265,7 +246,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
             <tbody>
               {groupedRows.map(({ assignment, isGroupStart }, rowIndex) => {
                 const course = courses.find((c) => c.id === assignment.courseId);
-                const status = statusFor(assignment);
+                const status = getAssignmentStatusBadge(assignment);
                 const dividerClassName = isGroupStart && rowIndex !== 0 ? "border-t-2 border-t-slate-300" : "";
                 return (
                   <tr
@@ -283,7 +264,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
                         {course?.code ?? "—"}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-600">{formatDue(assignment.dueDate)}</td>
+                    <td className="p-3 text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</td>
                     <td className="p-3">
                       <span
                         className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}
