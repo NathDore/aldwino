@@ -57,7 +57,6 @@ export function StartTimeField({
   disabled = false,
   min,
 }: StartTimeFieldProps) {
-  const [customOpen, setCustomOpen] = useState(false);
   const [entry, setEntry] = useState<TimeDigits>(EMPTY_TIME_DIGITS);
   const [period, setPeriod] = useState<Period>("AM");
 
@@ -98,7 +97,13 @@ export function StartTimeField({
     commit(entry, nextPeriod);
   };
 
-  const chipTimes = quickTimeBase ? QUICK_OFFSETS_MINUTES.map((offset) => addMinutes(quickTimeBase, offset)) : [];
+  const chipBase = (() => {
+    if (!quickTimeBase) return null;
+    const [hh, mm] = quickTimeBase.split(":").map(Number);
+    const hour12 = hh % 12 === 0 ? 12 : hh % 12;
+    return to24Hour(hour12, mm, period);
+  })();
+  const chipTimes = chipBase ? QUICK_OFFSETS_MINUTES.map((offset) => addMinutes(chipBase, offset)) : [];
 
   return (
     <div>
@@ -106,65 +111,55 @@ export function StartTimeField({
         Start time
       </label>
 
-      <div className="flex items-center gap-1.5 mb-2">
+      <div className="mb-2">
         <DateCard id={id} value={dateValue} onChange={onDateChange} disabled={disabled} min={min} />
-        <p className="text-xs text-slate-500">pick a quick time, or set a custom one</p>
       </div>
 
-      {customOpen ? (
-        <div className="flex items-end gap-1.5">
-          <input
-            id={`${id}-time`}
-            type="text"
-            value={formatDigits(entry)}
-            onChange={(e) => handleTimeInputChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Backspace") {
-                e.preventDefault();
-                handleBackspace();
-              }
-            }}
-            placeholder="HH:MM"
-            inputMode="numeric"
-            className={`h-[38px] w-16 shrink-0 px-2 text-xs bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
-              }`}
-            disabled={disabled}
-          />
-          <div className="flex h-[38px] w-8 shrink-0 flex-col gap-0.5">
-            <button
-              type="button"
-              onClick={() => selectPeriod("AM")}
-              disabled={disabled}
-              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${period === "AM"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                }`}
-            >
-              AM
-            </button>
-            <button
-              type="button"
-              onClick={() => selectPeriod("PM")}
-              disabled={disabled}
-              className={`flex-1 rounded text-[9px] font-medium transition-colors disabled:opacity-50 ${period === "PM"
-                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                }`}
-            >
-              PM
-            </button>
-          </div>
+      <div className="flex items-center gap-1.5">
+        <input
+          id={`${id}-time`}
+          type="text"
+          value={formatDigits(entry)}
+          onChange={(e) => handleTimeInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace") {
+              e.preventDefault();
+              handleBackspace();
+            }
+          }}
+          placeholder="HH:MM"
+          inputMode="numeric"
+          className={`h-[38px] w-16 shrink-0 px-2 text-xs bg-white border text-slate-900 placeholder-slate-500 focus:outline-none transition-colors ${
+            timeError ? "border-red-500 focus:border-red-600" : "border-slate-300 focus:border-emerald-600"
+          }`}
+          disabled={disabled}
+        />
+        <div className="flex h-[38px] rounded-md border border-slate-200 overflow-hidden">
           <button
             type="button"
-            onClick={() => setCustomOpen(false)}
+            onClick={() => selectPeriod("AM")}
             disabled={disabled}
-            className="h-[38px] px-2.5 rounded-md text-xs font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+            className={`px-3 text-xs font-medium transition-colors disabled:opacity-50 ${
+              period === "AM" ? "bg-emerald-50 text-emerald-700" : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
           >
-            Back
+            AM
+          </button>
+          <button
+            type="button"
+            onClick={() => selectPeriod("PM")}
+            disabled={disabled}
+            className={`px-3 text-xs font-medium border-l border-slate-200 transition-colors disabled:opacity-50 ${
+              period === "PM" ? "bg-emerald-50 text-emerald-700" : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            PM
           </button>
         </div>
-      ) : (
-        <div className="flex flex-wrap gap-1.5">
+      </div>
+
+      {chipTimes.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {chipTimes.map((time24) => {
             const isSelected = timeValue === time24;
             return (
@@ -173,23 +168,16 @@ export function StartTimeField({
                 type="button"
                 onClick={() => onTimeChange(time24)}
                 disabled={disabled}
-                className={`h-[34px] px-3 rounded-md text-[13px] transition-colors disabled:opacity-50 ${isSelected
+                className={`h-[30px] px-3 rounded-md text-xs transition-colors disabled:opacity-50 ${
+                  isSelected
                     ? "border border-emerald-600 bg-emerald-50 text-emerald-700 font-medium"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                }`}
               >
                 {formatChipLabel(time24)}
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setCustomOpen(true)}
-            disabled={disabled}
-            className="h-[34px] px-3 rounded-md text-[13px] border border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
-          >
-            Custom…
-          </button>
         </div>
       )}
 
