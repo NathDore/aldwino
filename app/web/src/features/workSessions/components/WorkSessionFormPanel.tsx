@@ -96,7 +96,7 @@ export function WorkSessionFormPanel({
         />
       </div>
 
-      <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 shrink-0">
+      <div className="flex justify-end gap-2 mt-6 pt-2 border-t border-slate-200 shrink-0">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading}>
           Cancel
         </Button>
