@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CourseDto } from "@/features/courses";
-import { type AssignmentDto, isAssignmentCompleted, isAssignmentOverdue, isAssignmentCompletedOverdue } from "@/features/assignments";
+import { type AssignmentDto } from "@/features/assignments";
 import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
 import { AssignmentFormPanel } from "@/features/assignments/components/AssignmentFormPanel";
 import { Button } from "@/shared/components/Button";
@@ -9,10 +9,9 @@ import { Modal } from "@/shared/components/Modal";
 import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { PlusIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
-import { getAssignmentStatusBadge, formatAssignmentDueDate } from "../utils/assignmentDisplay";
 import { useAssignmentGroups } from "../hooks/useAssignmentGroups";
 import { useAssignmentActions } from "../hooks/useAssignmentActions";
-import { AssignmentRowMenu } from "./AssignmentRowMenu";
+import { AssignmentListSection } from "./AssignmentListSection";
 
 interface AssignmentsTabProps {
   assignments: AssignmentDto[];
@@ -37,10 +36,6 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   };
 
   const { overdue, uncompleted, completed, isEmpty } = useAssignmentGroups(assignments, courseFilterIds);
-
-  const groupedRows = [overdue, uncompleted, completed]
-    .filter((group) => group.length > 0)
-    .flatMap((group) => group.map((assignment, index) => ({ assignment, isGroupStart: index === 0 })));
 
   const handleDelete = async () => {
     if (!deletingAssignment) return;
@@ -87,122 +82,34 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
       {isEmpty ? (
         <p className="text-center py-16 text-slate-600 text-sm">No assignments match this filter.</p>
       ) : (
-        <div className="border border-slate-200 rounded-lg bg-white overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-300 text-left text-slate-900 font-semibold text-xs">
-                <th className="p-3">Assignment</th>
-                <th className="p-3">Course</th>
-                <th className="p-3">Due</th>
-                <th className="p-3">Status</th>
-                <th className="p-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {groupedRows.map(({ assignment, isGroupStart }, rowIndex) => {
-                const course = courses.find((c) => c.id === assignment.courseId);
-                const status = getAssignmentStatusBadge(assignment);
-                const dividerClassName = isGroupStart && rowIndex !== 0 ? "border-t-2 border-t-slate-300" : "";
-                return (
-                  <tr
-                    key={assignment.id}
-                    className={`border-b border-slate-200 last:border-b-0 hover:bg-slate-50 ${dividerClassName}`}
-                  >
-                    <td className="p-3 font-medium text-slate-900">{assignment.name}</td>
-                    <td className="p-3 text-slate-700">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className="w-2 h-2 rounded-sm shrink-0"
-                          style={{ backgroundColor: course?.color ?? "#cbd5e1" }}
-                          aria-hidden="true"
-                        />
-                        {course?.code ?? "—"}
-                      </span>
-                    </td>
-                    <td className="p-3 text-slate-600">{formatAssignmentDueDate(assignment.dueDate)}</td>
-                    <td className="p-3">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <div className="grid grid-cols-[6rem_1.75rem] items-center gap-1.5">
-                        <div className="flex justify-end">
-                          {isAssignmentCompletedOverdue(assignment) ? (
-                            <Button
-                              variant="success"
-                              size="xs"
-                              className="w-full"
-                              onClick={() => actions.wrapUp(assignment)}
-                              disabled={actions.isWrapUpPending}
-                            >
-                              Wrap up
-                            </Button>
-                          ) : isAssignmentCompleted(assignment) ? (
-                            <Button
-                              variant="primary"
-                              size="xs"
-                              className="w-full"
-                              onClick={() => actions.uncomplete(assignment)}
-                              disabled={actions.isUncompletePending}
-                            >
-                              Uncomplete
-                            </Button>
-                          ) : isAssignmentOverdue(assignment) ? (
-                            <Button
-                              variant="warning"
-                              size="xs"
-                              className="w-full"
-                              onClick={() => setReschedulingAssignment(assignment)}
-                            >
-                              Reschedule
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="secondary"
-                              size="xs"
-                              className="w-full"
-                              onClick={() => actions.complete(assignment)}
-                              disabled={actions.isCompletePending}
-                            >
-                              Complete
-                            </Button>
-                          )}
-                        </div>
-                        <div className="flex justify-end">
-                          {isAssignmentCompletedOverdue(assignment) ? null : isAssignmentCompleted(assignment) ? (
-                            <AssignmentRowMenu
-                              assignmentName={assignment.name}
-                              items={[{ label: "Wrap up", onClick: () => actions.wrapUp(assignment) }]}
-                            />
-                          ) : isAssignmentOverdue(assignment) ? (
-                            <AssignmentRowMenu
-                              assignmentName={assignment.name}
-                              items={[{ label: "Wrap up - late", onClick: () => actions.wrapUpLate(assignment) }]}
-                            />
-                          ) : (
-                            <AssignmentRowMenu
-                              assignmentName={assignment.name}
-                              items={[
-                                { label: "Edit", onClick: () => setEditingAssignment(assignment) },
-                                {
-                                  label: "Delete",
-                                  onClick: () => setDeletingAssignment(assignment),
-                                  variant: "danger",
-                                },
-                              ]}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="flex-1 min-h-0 flex flex-col gap-4">
+          <AssignmentListSection
+            title="Overdue"
+            assignments={overdue}
+            courses={courses}
+            actions={actions}
+            onReschedule={setReschedulingAssignment}
+            onEdit={setEditingAssignment}
+            onDelete={setDeletingAssignment}
+          />
+          <AssignmentListSection
+            title="Uncompleted"
+            assignments={uncompleted}
+            courses={courses}
+            actions={actions}
+            onReschedule={setReschedulingAssignment}
+            onEdit={setEditingAssignment}
+            onDelete={setDeletingAssignment}
+          />
+          <AssignmentListSection
+            title="Completed"
+            assignments={completed}
+            courses={courses}
+            actions={actions}
+            onReschedule={setReschedulingAssignment}
+            onEdit={setEditingAssignment}
+            onDelete={setDeletingAssignment}
+          />
         </div>
       )}
 
