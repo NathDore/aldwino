@@ -22,6 +22,7 @@ import { PlusIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 import { showToast } from "@/shared/store/toastStore";
 import { getAssignmentStatusBadge, formatAssignmentDueDate } from "../utils/assignmentDisplay";
+import { useAssignmentGroups } from "../hooks/useAssignmentGroups";
 
 interface AssignmentsTabProps {
   assignments: AssignmentDto[];
@@ -139,19 +140,9 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
     });
   };
 
-  const visibleAssignments = (
-    courseFilterIds.size === 0 ? assignments : assignments.filter((a) => courseFilterIds.has(a.courseId))
-  )
-    .slice()
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const { overdue, uncompleted, completed, isEmpty } = useAssignmentGroups(assignments, courseFilterIds);
 
-  const overdueAssignments = visibleAssignments.filter((a) => isAssignmentOverdue(a));
-  const upcomingAssignments = visibleAssignments.filter(
-    (a) => !isAssignmentCompleted(a) && !isAssignmentOverdue(a),
-  );
-  const completedAssignments = visibleAssignments.filter((a) => isAssignmentCompleted(a));
-
-  const groupedRows = [overdueAssignments, upcomingAssignments, completedAssignments]
+  const groupedRows = [overdue, uncompleted, completed]
     .filter((group) => group.length > 0)
     .flatMap((group) => group.map((assignment, index) => ({ assignment, isGroupStart: index === 0 })));
 
@@ -229,7 +220,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
         </Button>
       </div>
 
-      {visibleAssignments.length === 0 ? (
+      {isEmpty ? (
         <p className="text-center py-16 text-slate-600 text-sm">No assignments match this filter.</p>
       ) : (
         <div className="border border-slate-200 rounded-lg bg-white overflow-x-auto">
