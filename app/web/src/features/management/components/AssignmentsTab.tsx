@@ -1,17 +1,11 @@
 import { useState } from "react";
 import type { CourseDto } from "@/features/courses";
 import { type AssignmentDto } from "@/features/assignments";
-import { CreateAssignmentForm } from "@/features/assignments/components/CreateAssignmentForm";
-import { AssignmentFormPanel } from "@/features/assignments/components/AssignmentFormPanel";
-import { Button } from "@/shared/components/Button";
-import { Popover } from "@/shared/components/Popover";
-import { Modal } from "@/shared/components/Modal";
-import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
-import { PlusIcon } from "@/features/calendar/components/icons";
-import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 import { useAssignmentGroups } from "../hooks/useAssignmentGroups";
 import { useAssignmentActions } from "../hooks/useAssignmentActions";
 import { AssignmentListSection } from "./AssignmentListSection";
+import { AssignmentCourseFilterBar } from "./AssignmentCourseFilterBar";
+import { AssignmentDialogs } from "./AssignmentDialogs";
 
 interface AssignmentsTabProps {
   assignments: AssignmentDto[];
@@ -45,39 +39,12 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
 
   return (
     <div>
-      <div className="flex justify-between items-center flex-wrap gap-2.5 mb-4">
-        <div className="flex gap-1.5 flex-wrap">
-          {courses.map((course) => {
-            const active = courseFilterIds.has(course.id);
-            return (
-              <button
-                key={course.id}
-                type="button"
-                onClick={() => toggleFilter(course.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${active ? "text-slate-900" : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
-                  }`}
-                style={active ? { borderColor: course.color, backgroundColor: `${course.color}1a` } : undefined}
-              >
-                <span
-                  className="w-2 h-2 rounded-sm shrink-0"
-                  style={{ backgroundColor: course.color }}
-                  aria-hidden="true"
-                />
-                {course.code}
-              </button>
-            );
-          })}
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setIsAdding(true)}
-          className="flex items-center gap-1.5 shrink-0"
-        >
-          <PlusIcon className="w-3.5 h-3.5" />
-          Add assignment
-        </Button>
-      </div>
+      <AssignmentCourseFilterBar
+        courses={courses}
+        courseFilterIds={courseFilterIds}
+        onToggleFilter={toggleFilter}
+        onAddClick={() => setIsAdding(true)}
+      />
 
       {isEmpty ? (
         <p className="text-center py-16 text-slate-600 text-sm">No assignments match this filter.</p>
@@ -113,69 +80,18 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
         </div>
       )}
 
-      {isAdding && (
-        <Popover
-          onClose={() => setIsAdding(false)}
-          panelClassName="max-w-full max-h-full"
-          panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
-          headerClassName="px-10 py-3"
-          header={<p className="text-sm font-bold text-slate-900">Add assignment</p>}
-        >
-          {(handleClose) => (
-            <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-              <CreateAssignmentForm onCreated={handleClose} onBack={handleClose} />
-            </div>
-          )}
-        </Popover>
-      )}
-
-      {editingAssignment && (
-        <Popover
-          onClose={() => setEditingAssignment(null)}
-          panelClassName="max-w-full max-h-full"
-          panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
-          headerClassName="px-10 py-3"
-          header={<p className="text-sm font-bold text-slate-900">Edit assignment</p>}
-        >
-          {(handleClose) => (
-            <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-              <AssignmentFormPanel assignmentToEdit={editingAssignment} onClose={handleClose} />
-            </div>
-          )}
-        </Popover>
-      )}
-
-      {reschedulingAssignment && (
-        <Popover
-          onClose={() => setReschedulingAssignment(null)}
-          panelClassName="max-w-full max-h-full"
-          panelStyle={{ width: MODAL_WIDTH, height: MODAL_HEIGHT }}
-          headerClassName="px-10 py-3"
-          header={<p className="text-sm font-bold text-slate-900">Reschedule assignment</p>}
-        >
-          {(handleClose) => (
-            <div className="px-10 py-4 overflow-hidden min-h-0 flex-1">
-              <AssignmentFormPanel
-                assignmentToEdit={reschedulingAssignment}
-                onClose={handleClose}
-                intent="reschedule"
-              />
-            </div>
-          )}
-        </Popover>
-      )}
-
-      {deletingAssignment && (
-        <Modal maxWidth="max-w-md">
-          <DeleteConfirmation
-            title="Delete assignment?"
-            description={`"${deletingAssignment.name}" will be removed. This can't be undone.`}
-            isLoading={actions.isDeletePending}
-            onConfirm={handleDelete}
-            onCancel={() => setDeletingAssignment(null)}
-          />
-        </Modal>
-      )}
+      <AssignmentDialogs
+        isAdding={isAdding}
+        onCloseAdding={() => setIsAdding(false)}
+        editingAssignment={editingAssignment}
+        onCloseEditing={() => setEditingAssignment(null)}
+        reschedulingAssignment={reschedulingAssignment}
+        onCloseRescheduling={() => setReschedulingAssignment(null)}
+        deletingAssignment={deletingAssignment}
+        onCloseDeleting={() => setDeletingAssignment(null)}
+        onConfirmDelete={handleDelete}
+        isDeletePending={actions.isDeletePending}
+      />
     </div>
   );
 }
