@@ -16,7 +16,7 @@ export function AssignmentCourseFilterBar({
   onAddClick,
 }: AssignmentCourseFilterBarProps) {
   return (
-    <div className="flex justify-between items-center flex-wrap gap-2.5 mb-4">
+    <div className="shrink-0 flex justify-between items-center flex-wrap gap-2.5 mb-4">
       <div className="flex gap-1.5 flex-wrap">
         {courses.map((course) => {
           const active = courseFilterIds.has(course.id);

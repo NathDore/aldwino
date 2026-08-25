@@ -38,7 +38,7 @@ export function AssignmentsTab({ assignments, courses }: AssignmentsTabProps) {
   };
 
   return (
-    <div>
+    <div className="flex flex-col h-full min-h-0">
       <AssignmentCourseFilterBar
         courses={courses}
         courseFilterIds={courseFilterIds}
