@@ -2,7 +2,7 @@ import type { AssignmentDto } from "@/features/assignments";
 import type { CourseDto } from "@/features/courses";
 import { useAssignmentActions } from "../hooks/useAssignmentActions";
 import { AssignmentRow } from "./AssignmentRow";
-import { ASSIGNMENT_ROW_GRID, getAssignmentListBodyHeightPx } from "../utils/assignmentRowLayout";
+import { ASSIGNMENT_ROW_GRID, ASSIGNMENT_ROW_HEIGHT, getAssignmentListBodyHeightPx } from "../utils/assignmentRowLayout";
 
 interface AssignmentListProps {
   assignments: AssignmentDto[];
@@ -16,12 +16,14 @@ interface AssignmentListProps {
 export function AssignmentList({ assignments, courses, actions, onReschedule, onEdit, onDelete }: AssignmentListProps) {
   return (
     <div className="border border-slate-200 rounded-lg bg-white overflow-hidden">
-      <div className={`${ASSIGNMENT_ROW_GRID} bg-slate-100 border-b border-slate-300 text-left text-slate-900 font-semibold text-xs`}>
-        <div className="p-1.5">Assignment</div>
-        <div className="p-1.5">Course</div>
-        <div className="p-1.5">Due</div>
-        <div className="p-1.5">Status</div>
-        <div className="p-1.5" />
+      <div
+        className={`${ASSIGNMENT_ROW_GRID} ${ASSIGNMENT_ROW_HEIGHT} items-center bg-slate-100 border-b border-slate-300 text-left text-slate-900 font-semibold text-xs`}
+      >
+        <div className="px-1.5">Assignment</div>
+        <div className="px-1.5">Course</div>
+        <div className="px-1.5">Due</div>
+        <div className="px-1.5">Status</div>
+        <div className="px-1.5" />
       </div>
       <div
         className="overflow-y-auto overflow-x-auto styled-scrollbar"
