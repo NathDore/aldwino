@@ -2,11 +2,13 @@ import type { Database } from "bun:sqlite";
 import { Assignment } from "../../domain/assignment/Assignment";
 import { assertCanWrapUpLate } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class WrapUpLateAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -34,7 +36,9 @@ export class WrapUpLateAssignmentUseCase {
         createdAt: existing.createdAt,
       });
 
-      return this.repository.update(wrappedUp);
+      const result = this.repository.update(wrappedUp);
+      this.notificationRepository.markAllReadForEntity("ASSIGNMENT", id, now);
+      return result;
     })();
   }
 }
