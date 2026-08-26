@@ -7,7 +7,7 @@ export class AssignmentStateValidationError extends Error {
 
 export class AssignmentStateInvalidError extends AssignmentStateValidationError {
   constructor() {
-    super("state must be one of UNCOMPLETED, COMPLETED, SKIPPED");
+    super("state must be one of UNCOMPLETED, COMPLETED, SKIPPED, WAIT_CONFIRM");
     this.name = "AssignmentStateInvalidError";
   }
 }
