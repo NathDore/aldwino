@@ -1,6 +1,6 @@
 import { validateState } from "./WorkSessionStateRules";
 
-export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED";
+export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED" | "WAIT_CONFIRM";
 
 export class WorkSessionState {
   private constructor(

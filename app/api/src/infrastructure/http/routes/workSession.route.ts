@@ -2,9 +2,10 @@ import type { Hono } from "hono";
 import {
   WorkSessionValidationError,
   WorkSessionStateNotFoundError,
-  CannotRescheduleNonSkippedWorkSessionError,
+  CannotRescheduleNonWaitConfirmWorkSessionError,
   CannotEditNonInProgressWorkSessionError,
   CannotUncompletePastWorkSessionError,
+  WaitConfirmWorkSessionTransitionError,
 } from "../../../domain/workSession/WorkSessionError";
 import type { CreateWorkSessionUseCase } from "../../../application/workSession/CreateWorkSessionUseCase";
 import type { GetWorkSessionByIdUseCase } from "../../../application/workSession/GetWorkSessionByIdUseCase";
@@ -31,9 +32,10 @@ interface WorkSessionRouteDeps {
 
 function handleWorkSessionError(error: unknown) {
   if (
-    error instanceof CannotRescheduleNonSkippedWorkSessionError ||
+    error instanceof CannotRescheduleNonWaitConfirmWorkSessionError ||
     error instanceof CannotEditNonInProgressWorkSessionError ||
-    error instanceof CannotUncompletePastWorkSessionError
+    error instanceof CannotUncompletePastWorkSessionError ||
+    error instanceof WaitConfirmWorkSessionTransitionError
   ) {
     return { body: { error: error.message }, status: 409 as const };
   }

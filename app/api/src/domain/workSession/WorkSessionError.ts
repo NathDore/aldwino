@@ -61,10 +61,19 @@ export class StartTimeInPastError extends WorkSessionValidationError {
   }
 }
 
-export class CannotRescheduleNonSkippedWorkSessionError extends WorkSessionValidationError {
+export class CannotRescheduleNonWaitConfirmWorkSessionError extends WorkSessionValidationError {
   constructor(state: string) {
-    super(`Only a skipped work session can be rescheduled (state: ${state})`);
-    this.name = "CannotRescheduleNonSkippedWorkSessionError";
+    super(`Only a work session awaiting confirmation can be rescheduled (state: ${state})`);
+    this.name = "CannotRescheduleNonWaitConfirmWorkSessionError";
+  }
+}
+
+export class WaitConfirmWorkSessionTransitionError extends WorkSessionValidationError {
+  constructor() {
+    super(
+      "WAIT_CONFIRM can only be set by the system, and can only be left via reschedule or delete, not a direct state change",
+    );
+    this.name = "WaitConfirmWorkSessionTransitionError";
   }
 }
 
