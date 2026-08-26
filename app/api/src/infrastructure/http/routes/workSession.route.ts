@@ -5,16 +5,18 @@ import {
   CannotRescheduleNonWaitConfirmWorkSessionError,
   CannotEditNonInProgressWorkSessionError,
   CannotUncompletePastWorkSessionError,
-  WaitConfirmWorkSessionTransitionError,
+  CannotCompleteNonInProgressWorkSessionError,
+  CannotUncompleteNonCompletedWorkSessionError,
 } from "../../../domain/workSession/WorkSessionError";
 import type { CreateWorkSessionUseCase } from "../../../application/workSession/CreateWorkSessionUseCase";
 import type { GetWorkSessionByIdUseCase } from "../../../application/workSession/GetWorkSessionByIdUseCase";
 import type { ListWorkSessionsUseCase } from "../../../application/workSession/ListWorkSessionsUseCase";
-import type { ChangeWorkSessionStateUseCase } from "../../../application/workSession/ChangeWorkSessionStateUseCase";
+import type { CompleteWorkSessionUseCase } from "../../../application/workSession/CompleteWorkSessionUseCase";
+import type { UncompleteWorkSessionUseCase } from "../../../application/workSession/UncompleteWorkSessionUseCase";
 import type { DeleteWorkSessionUseCase } from "../../../application/workSession/DeleteWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../../application/workSession/RescheduleWorkSessionUseCase";
 import type { EditWorkSessionUseCase } from "../../../application/workSession/EditWorkSessionUseCase";
-import type { WrapUpWorkSessionUseCase } from "../../../application/workSession/WrapUpWorkSessionUseCase";
+import type { CloseWorkSessionUseCase } from "../../../application/workSession/CloseWorkSessionUseCase";
 import type { WorkSessionMergeResult } from "../../../application/workSession/WorkSessionMergeService";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 
@@ -22,11 +24,12 @@ interface WorkSessionRouteDeps {
   createWorkSessionUseCase: CreateWorkSessionUseCase;
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
   listWorkSessionsUseCase: ListWorkSessionsUseCase;
-  changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
+  completeWorkSessionUseCase: CompleteWorkSessionUseCase;
+  uncompleteWorkSessionUseCase: UncompleteWorkSessionUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
   editWorkSessionUseCase: EditWorkSessionUseCase;
-  wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
+  closeWorkSessionUseCase: CloseWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
 }
 
@@ -35,7 +38,8 @@ function handleWorkSessionError(error: unknown) {
     error instanceof CannotRescheduleNonWaitConfirmWorkSessionError ||
     error instanceof CannotEditNonInProgressWorkSessionError ||
     error instanceof CannotUncompletePastWorkSessionError ||
-    error instanceof WaitConfirmWorkSessionTransitionError
+    error instanceof CannotCompleteNonInProgressWorkSessionError ||
+    error instanceof CannotUncompleteNonCompletedWorkSessionError
   ) {
     return { body: { error: error.message }, status: 409 as const };
   }
@@ -112,19 +116,22 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
     return c.json(workSessions.map((workSession) => workSession.toJSON()), 200);
   });
 
-  app.patch("/work-sessions/:id/state", async (c) => {
+  app.post("/work-sessions/:id/complete", (c) => {
     try {
-      const id = c.req.param("id");
-      const body = (await c.req.json()) as { workSessionStateId?: string };
-
-      if (!body.workSessionStateId) {
-        return c.json({ error: "workSessionStateId is required" }, 400);
+      const workSession = deps.completeWorkSessionUseCase.execute(c.req.param("id"));
+      return c.json(workSession.toJSON(), 200);
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
       }
+      throw error;
+    }
+  });
 
-      const result = deps.changeWorkSessionStateUseCase.execute({
-        id,
-        workSessionStateId: body.workSessionStateId,
-      });
+  app.post("/work-sessions/:id/uncomplete", (c) => {
+    try {
+      const result = deps.uncompleteWorkSessionUseCase.execute(c.req.param("id"));
       return c.json(toWorkSessionResponse(result), 200);
     } catch (error) {
       const handled = handleWorkSessionError(error);
@@ -209,10 +216,10 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
     }
   });
 
-  app.post("/work-sessions/:id/wrap-up", (c) => {
+  app.post("/work-sessions/:id/close", (c) => {
     try {
       const id = c.req.param("id");
-      const workSession = deps.wrapUpWorkSessionUseCase.execute(id);
+      const workSession = deps.closeWorkSessionUseCase.execute(id);
       return c.json(workSession.toJSON(), 200);
     } catch (error) {
       const handled = handleWorkSessionError(error);

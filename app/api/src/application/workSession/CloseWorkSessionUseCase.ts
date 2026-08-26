@@ -4,7 +4,7 @@ import { WorkSessionNotCompletedError } from "../../domain/workSession/WorkSessi
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class WrapUpWorkSessionUseCase {
+export class CloseWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
     private readonly clock: Clock,

@@ -68,12 +68,17 @@ export class CannotRescheduleNonWaitConfirmWorkSessionError extends WorkSessionV
   }
 }
 
-export class WaitConfirmWorkSessionTransitionError extends WorkSessionValidationError {
-  constructor() {
-    super(
-      "WAIT_CONFIRM can only be set by the system, and can only be left via reschedule or delete, not a direct state change",
-    );
-    this.name = "WaitConfirmWorkSessionTransitionError";
+export class CannotCompleteNonInProgressWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only an in-progress work session can be completed (state: ${state})`);
+    this.name = "CannotCompleteNonInProgressWorkSessionError";
+  }
+}
+
+export class CannotUncompleteNonCompletedWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only a completed work session can be uncompleted (state: ${state})`);
+    this.name = "CannotUncompleteNonCompletedWorkSessionError";
   }
 }
 
