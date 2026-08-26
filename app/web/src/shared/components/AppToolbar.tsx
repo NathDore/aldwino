@@ -1,5 +1,9 @@
 import { NavLink } from "react-router-dom";
 import { AddMenu } from "./AddMenu";
+import { NotificationBellButton } from "@/features/notifications/components/NotificationBellButton";
+
+// Placeholder until the notifications backend lands (Milestone 3).
+const PLACEHOLDER_UNREAD_COUNT = 3;
 
 const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -24,7 +28,10 @@ export function AppToolbar() {
         </nav>
       </div>
 
-      <AddMenu />
+      <div className="flex items-center gap-3">
+        <AddMenu />
+        <NotificationBellButton unreadCount={PLACEHOLDER_UNREAD_COUNT} />
+      </div>
     </div>
   );
 }
