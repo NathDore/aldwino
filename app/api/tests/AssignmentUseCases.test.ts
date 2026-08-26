@@ -99,10 +99,13 @@ describe("CompleteAssignmentUseCase", () => {
     expect(completed.assignmentStateId).toBe(stateIdFor(db, "COMPLETED"));
   });
 
-  test("rejects an overdue assignment", () => {
+  test("completes an overdue assignment (the user forgot, it's actually done)", () => {
     const assignment = makeOverdue();
 
-    expect(() => complete.execute(assignment.id)).toThrow(AssignmentStateTransitionError);
+    const completed = complete.execute(assignment.id);
+
+    expect(completed.completedAt).toEqual(clock.now());
+    expect(completed.assignmentStateId).toBe(stateIdFor(db, "COMPLETED"));
   });
 
   test("rejects an already completed assignment", () => {

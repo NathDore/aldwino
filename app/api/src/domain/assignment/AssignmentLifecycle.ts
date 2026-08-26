@@ -24,7 +24,7 @@ export function resolveLifecycle(assignment: Assignment, now: Date): AssignmentL
 
 export function assertCanComplete(assignment: Assignment, now: Date): void {
   const state = resolveLifecycle(assignment, now);
-  if (state !== "UPCOMING") {
+  if (state !== "UPCOMING" && state !== "OVERDUE") {
     throw new CannotCompleteAssignmentError(state);
   }
 }
