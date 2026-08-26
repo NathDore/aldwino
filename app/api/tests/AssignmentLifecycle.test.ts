@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   resolveLifecycle,
   assertCanComplete,
+  assertCanConfirmComplete,
   assertCanUncomplete,
   assertCanEdit,
   assertCanDelete,
@@ -28,7 +29,8 @@ type Guard = (assignment: Assignment, now: Date) => void;
 
 /** The allowed cell of the state machine: action -> states that permit it. */
 const truthTable: { action: string; guard: Guard; allowedIn: AssignmentLifecycleState[] }[] = [
-  { action: "complete", guard: assertCanComplete, allowedIn: ["UPCOMING", "OVERDUE"] },
+  { action: "complete", guard: assertCanComplete, allowedIn: ["UPCOMING"] },
+  { action: "confirm-complete", guard: assertCanConfirmComplete, allowedIn: ["OVERDUE"] },
   { action: "uncomplete", guard: assertCanUncomplete, allowedIn: ["COMPLETED"] },
   { action: "edit", guard: assertCanEdit, allowedIn: ["UPCOMING"] },
   { action: "delete", guard: assertCanDelete, allowedIn: ["UPCOMING"] },

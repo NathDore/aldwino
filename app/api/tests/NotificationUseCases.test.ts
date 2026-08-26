@@ -11,14 +11,18 @@ import { CheckMissedWorkSessionsUseCase } from "../src/application/notification/
 import { CheckUpcomingAssignmentsUseCase } from "../src/application/notification/CheckUpcomingAssignmentsUseCase";
 import { ListNotificationsUseCase } from "../src/application/notification/ListNotificationsUseCase";
 import { PurgeDeletedNotificationsUseCase } from "../src/application/notification/PurgeDeletedNotificationsUseCase";
-import { CompleteAssignmentUseCase } from "../src/application/assignment/CompleteAssignmentUseCase";
+import { ConfirmCompleteAssignmentUseCase } from "../src/application/assignment/ConfirmCompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "../src/application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "../src/application/assignment/WrapUpLateAssignmentUseCase";
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
 import { DeleteWorkSessionUseCase } from "../src/application/workSession/DeleteWorkSessionUseCase";
-import { ChangeWorkSessionStateUseCase } from "../src/application/workSession/ChangeWorkSessionStateUseCase";
+import { CompleteWorkSessionUseCase } from "../src/application/workSession/CompleteWorkSessionUseCase";
+import { UncompleteWorkSessionUseCase } from "../src/application/workSession/UncompleteWorkSessionUseCase";
 import { WorkSessionMergeService } from "../src/application/workSession/WorkSessionMergeService";
-import { WaitConfirmWorkSessionTransitionError } from "../src/domain/workSession/WorkSessionError";
+import {
+  CannotCompleteNonInProgressWorkSessionError,
+  CannotUncompleteNonCompletedWorkSessionError,
+} from "../src/domain/workSession/WorkSessionError";
 import { WorkSession } from "../src/domain/workSession/WorkSession";
 import {
   createTestDatabase,
@@ -47,12 +51,13 @@ let checkMissedWorkSessions: CheckMissedWorkSessionsUseCase;
 let checkUpcomingAssignments: CheckUpcomingAssignmentsUseCase;
 let listNotifications: ListNotificationsUseCase;
 let purgeNotifications: PurgeDeletedNotificationsUseCase;
-let completeAssignment: CompleteAssignmentUseCase;
+let confirmCompleteAssignment: ConfirmCompleteAssignmentUseCase;
 let rescheduleAssignment: RescheduleAssignmentUseCase;
 let wrapUpLateAssignment: WrapUpLateAssignmentUseCase;
 let rescheduleWorkSession: RescheduleWorkSessionUseCase;
 let deleteWorkSession: DeleteWorkSessionUseCase;
-let changeWorkSessionState: ChangeWorkSessionStateUseCase;
+let completeWorkSession: CompleteWorkSessionUseCase;
+let uncompleteWorkSession: UncompleteWorkSessionUseCase;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -82,7 +87,7 @@ beforeEach(() => {
   checkUpcomingAssignments = new CheckUpcomingAssignmentsUseCase(assignmentRepository, notificationRepository, clock);
   listNotifications = new ListNotificationsUseCase(notificationRepository);
   purgeNotifications = new PurgeDeletedNotificationsUseCase(notificationRepository, clock);
-  completeAssignment = new CompleteAssignmentUseCase(
+  confirmCompleteAssignment = new ConfirmCompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
     linkRepository,
@@ -107,7 +112,8 @@ beforeEach(() => {
     db,
   );
   deleteWorkSession = new DeleteWorkSessionUseCase(workSessionRepository, linkRepository, notificationRepository, clock, db);
-  changeWorkSessionState = new ChangeWorkSessionStateUseCase(
+  completeWorkSession = new CompleteWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
+  uncompleteWorkSession = new UncompleteWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
     new WorkSessionMergeService(workSessionRepository, linkRepository, workSessionStateRepository, clock),
@@ -309,12 +315,12 @@ describe("CheckUpcomingAssignmentsUseCase", () => {
 });
 
 describe("auto-resolve on assignment resolution", () => {
-  test("completing an overdue assignment clears its unread notification", () => {
+  test("confirm-completing an overdue assignment clears its unread notification", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
     expect(listNotifications.execute()).toHaveLength(1);
 
-    completeAssignment.execute(assignment.id);
+    confirmCompleteAssignment.execute(assignment.id);
 
     expect(listNotifications.execute()).toHaveLength(0);
   });
@@ -363,31 +369,19 @@ describe("auto-resolve on work session resolution", () => {
   });
 });
 
-describe("ChangeWorkSessionStateUseCase WAIT_CONFIRM guard", () => {
-  test("rejects transitioning a WAIT_CONFIRM session to COMPLETED", () => {
+describe("CompleteWorkSessionUseCase / UncompleteWorkSessionUseCase WAIT_CONFIRM guards", () => {
+  test("CompleteWorkSessionUseCase rejects a WAIT_CONFIRM session", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
 
-    expect(() =>
-      changeWorkSessionState.execute({ id: session.id, workSessionStateId: workSessionStateIdFor(db, "COMPLETED") }),
-    ).toThrow(WaitConfirmWorkSessionTransitionError);
+    expect(() => completeWorkSession.execute(session.id)).toThrow(CannotCompleteNonInProgressWorkSessionError);
   });
 
-  test("rejects transitioning an in-progress session directly to WAIT_CONFIRM", () => {
-    const session = workSessionRepository.create(
-      WorkSession.create({
-        id: "session-inprogress",
-        workSessionStateId: workSessionStateIdFor(db, "INPROGRESS"),
-        startTime: FUTURE,
-        endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000),
-        completedAt: null,
-        createdAt: NOW,
-      }),
-    );
+  test("UncompleteWorkSessionUseCase rejects a WAIT_CONFIRM session", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
 
-    expect(() =>
-      changeWorkSessionState.execute({ id: session.id, workSessionStateId: workSessionStateIdFor(db, "WAIT_CONFIRM") }),
-    ).toThrow(WaitConfirmWorkSessionTransitionError);
+    expect(() => uncompleteWorkSession.execute(session.id)).toThrow(CannotUncompleteNonCompletedWorkSessionError);
   });
 });
 

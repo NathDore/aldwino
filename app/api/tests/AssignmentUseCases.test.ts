@@ -10,6 +10,7 @@ import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAss
 import { UpdateAssignmentUseCase } from "../src/application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "../src/application/assignment/DeleteAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "../src/application/assignment/CompleteAssignmentUseCase";
+import { ConfirmCompleteAssignmentUseCase } from "../src/application/assignment/ConfirmCompleteAssignmentUseCase";
 import { UncompleteAssignmentUseCase } from "../src/application/assignment/UncompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "../src/application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpAssignmentUseCase } from "../src/application/assignment/WrapUpAssignmentUseCase";
@@ -30,6 +31,7 @@ let create: CreateAssignmentUseCase;
 let update: UpdateAssignmentUseCase;
 let remove: DeleteAssignmentUseCase;
 let complete: CompleteAssignmentUseCase;
+let confirmComplete: ConfirmCompleteAssignmentUseCase;
 let uncomplete: UncompleteAssignmentUseCase;
 let reschedule: RescheduleAssignmentUseCase;
 let wrapUp: WrapUpAssignmentUseCase;
@@ -52,6 +54,15 @@ beforeEach(() => {
   update = new UpdateAssignmentUseCase(repository, courseRepository, clock, db);
   remove = new DeleteAssignmentUseCase(repository, linkRepository, clock, db);
   complete = new CompleteAssignmentUseCase(
+    repository,
+    stateRepository,
+    linkRepository,
+    workSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
+  confirmComplete = new ConfirmCompleteAssignmentUseCase(
     repository,
     stateRepository,
     linkRepository,
@@ -99,13 +110,10 @@ describe("CompleteAssignmentUseCase", () => {
     expect(completed.assignmentStateId).toBe(stateIdFor(db, "COMPLETED"));
   });
 
-  test("completes an overdue assignment (the user forgot, it's actually done)", () => {
+  test("rejects an overdue assignment (use confirm-complete instead)", () => {
     const assignment = makeOverdue();
 
-    const completed = complete.execute(assignment.id);
-
-    expect(completed.completedAt).toEqual(clock.now());
-    expect(completed.assignmentStateId).toBe(stateIdFor(db, "COMPLETED"));
+    expect(() => complete.execute(assignment.id)).toThrow(AssignmentStateTransitionError);
   });
 
   test("rejects an already completed assignment", () => {
@@ -113,6 +121,30 @@ describe("CompleteAssignmentUseCase", () => {
     complete.execute(assignment.id);
 
     expect(() => complete.execute(assignment.id)).toThrow(AssignmentStateTransitionError);
+  });
+});
+
+describe("ConfirmCompleteAssignmentUseCase", () => {
+  test("confirm-completes an overdue assignment (the user forgot, it's actually done)", () => {
+    const assignment = makeOverdue();
+
+    const completed = confirmComplete.execute(assignment.id);
+
+    expect(completed.completedAt).toEqual(clock.now());
+    expect(completed.assignmentStateId).toBe(stateIdFor(db, "COMPLETED"));
+  });
+
+  test("rejects an upcoming assignment", () => {
+    const assignment = newAssignment();
+
+    expect(() => confirmComplete.execute(assignment.id)).toThrow(AssignmentStateTransitionError);
+  });
+
+  test("rejects an already completed assignment", () => {
+    const assignment = newAssignment();
+    complete.execute(assignment.id);
+
+    expect(() => confirmComplete.execute(assignment.id)).toThrow(AssignmentStateTransitionError);
   });
 });
 
