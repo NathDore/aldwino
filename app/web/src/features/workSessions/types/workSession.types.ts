@@ -1,4 +1,4 @@
-export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED";
+export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED" | "WAIT_CONFIRM";
 
 export interface WorkSessionStateDto {
   id: string;

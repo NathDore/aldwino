@@ -82,16 +82,16 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
   const isCompleted = workSession.completedAt !== null;
   const isPastDue = new Date(workSession.endTime).getTime() < Date.now();
-  const isSkippedUncompleted = stateName === "SKIPPED";
+  const isWaitConfirm = stateName === "WAIT_CONFIRM";
   const isCompletedCurrent = isCompleted && !isPastDue;
   const isCompletedPastDue = isCompleted && isPastDue;
-  const isInProgress = !isCompleted && !isSkippedUncompleted;
+  const isInProgress = !isCompleted && !isWaitConfirm;
 
   const workedOnCount = links.filter((l) => l.workedOn).length;
   const totalLinked = links.length;
   const progressPercent = totalLinked > 0 ? Math.round((workedOnCount / totalLinked) * 100) : 0;
 
-  const statusPill = isSkippedUncompleted
+  const statusPill = isWaitConfirm
     ? { label: "Skipped", bg: "bg-amber-50", fg: "text-amber-700", dot: "bg-amber-500" }
     : isCompleted
       ? { label: "Completed", bg: "bg-emerald-50", fg: "text-emerald-700", dot: "bg-emerald-500" }
@@ -255,10 +255,10 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                   <LinkedAssignmentsList workSessionId={workSession.id} canEdit={isInProgress} />
 
                   <div className="space-y-2 pt-2 border-t border-slate-200">
-                    {isSkippedUncompleted && <p className="text-sm text-slate-600">{SKIPPED_UNCOMPLETED_MESSAGE}</p>}
+                    {isWaitConfirm && <p className="text-sm text-slate-600">{SKIPPED_UNCOMPLETED_MESSAGE}</p>}
                     {isCompletedPastDue && <p className="text-sm text-slate-600">{completionMessage}</p>}
                     <div className="flex items-center gap-2">
-                      {isSkippedUncompleted && (
+                      {isWaitConfirm && (
                         <>
                           <Button variant="warning" size="sm" onClick={() => pushMode("reschedule-session")}>
                             Reschedule
