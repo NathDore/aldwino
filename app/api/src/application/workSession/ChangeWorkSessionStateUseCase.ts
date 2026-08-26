@@ -3,6 +3,7 @@ import { WorkSession } from "../../domain/workSession/WorkSession";
 import {
   WorkSessionStateNotFoundError,
   CannotUncompletePastWorkSessionError,
+  WaitConfirmWorkSessionTransitionError,
 } from "../../domain/workSession/WorkSessionError";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
@@ -28,6 +29,11 @@ export class ChangeWorkSessionStateUseCase {
       const newState = this.workSessionStateRepository.getById(params.workSessionStateId);
       if (!newState) {
         throw new WorkSessionStateNotFoundError(params.workSessionStateId);
+      }
+
+      const currentState = this.workSessionStateRepository.getById(existing.workSessionStateId);
+      if (newState.state === "WAIT_CONFIRM" || currentState?.state === "WAIT_CONFIRM") {
+        throw new WaitConfirmWorkSessionTransitionError();
       }
 
       if (newState.state === "INPROGRESS" && existing.completedAt !== null && existing.endTime < this.clock.now()) {

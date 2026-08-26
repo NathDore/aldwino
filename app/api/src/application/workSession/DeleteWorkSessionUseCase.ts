@@ -3,12 +3,14 @@ import { WorkSession } from "../../domain/workSession/WorkSession";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class DeleteWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
     private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -52,6 +54,7 @@ export class DeleteWorkSessionUseCase {
       }
 
       this.relabelStaleCompletionLinks(id);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", id, now);
 
       return updated;
     })();
