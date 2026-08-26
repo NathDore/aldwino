@@ -3,9 +3,10 @@ import {
   createWorkSession,
   rescheduleWorkSession,
   editWorkSession,
-  changeWorkSessionState,
+  completeWorkSession,
+  uncompleteWorkSession,
   deleteWorkSession,
-  wrapUpWorkSession,
+  closeWorkSession,
 } from "../services/workSessionService";
 import type { CreateWorkSessionData, RescheduleWorkSessionData, EditWorkSessionData } from "../types/workSession.types";
 
@@ -45,12 +46,23 @@ export function useEditWorkSessionMutation() {
   });
 }
 
-export function useChangeWorkSessionStateMutation() {
+export function useCompleteWorkSessionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, workSessionStateId }: { id: string; workSessionStateId: string }) =>
-      changeWorkSessionState(id, workSessionStateId),
+    mutationFn: completeWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useUncompleteWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: uncompleteWorkSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
@@ -70,11 +82,11 @@ export function useDeleteWorkSessionMutation() {
   });
 }
 
-export function useWrapUpWorkSessionMutation() {
+export function useCloseWorkSessionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: wrapUpWorkSession,
+    mutationFn: closeWorkSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });

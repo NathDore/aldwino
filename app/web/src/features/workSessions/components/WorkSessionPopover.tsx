@@ -8,9 +8,10 @@ import { CheckIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
-  useChangeWorkSessionStateMutation,
+  useCompleteWorkSessionMutation,
+  useUncompleteWorkSessionMutation,
   useDeleteWorkSessionMutation,
-  useWrapUpWorkSessionMutation,
+  useCloseWorkSessionMutation,
 } from "../queries/useWorkSessionMutations";
 import { showToast } from "@/shared/store/toastStore";
 import { useWorkSessionAssignmentLinksQuery } from "../queries/useAssignmentWorkSessionsQuery";
@@ -51,9 +52,10 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const { weekday, date } = formatDateHeading(workSession.startTime);
   const { data: workSessionStates } = useWorkSessionStatesQuery();
   const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSession.id);
-  const stateMutation = useChangeWorkSessionStateMutation();
+  const completeMutation = useCompleteWorkSessionMutation();
+  const uncompleteMutation = useUncompleteWorkSessionMutation();
   const deleteMutation = useDeleteWorkSessionMutation();
-  const wrapUpMutation = useWrapUpWorkSessionMutation();
+  const closeMutation = useCloseWorkSessionMutation();
   const goToWeekOf = useCalendarStore((s) => s.goToWeekOf);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -100,11 +102,12 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const completionMessage =
     !isCompletionMessageError && completionMessageData ? completionMessageData.message : FALLBACK_COMPLETION_MESSAGE;
 
-  const handleToggleComplete = async () => {
-    const targetState = isCompleted ? "INPROGRESS" : "COMPLETED";
-    const targetStateId = workSessionStates?.find((s) => s.state === targetState)?.id;
-    if (!targetStateId) return;
-    await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: targetStateId });
+  const handleComplete = async () => {
+    await completeMutation.mutateAsync(workSession.id);
+  };
+
+  const handleUncomplete = async () => {
+    await uncompleteMutation.mutateAsync(workSession.id);
   };
 
   useEffect(() => {
@@ -210,9 +213,9 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
           handleClose();
         };
 
-        const handleWrapUp = async () => {
+        const handleCloseSession = async () => {
           try {
-            await wrapUpMutation.mutateAsync(workSession.id);
+            await closeMutation.mutateAsync(workSession.id);
             handleClose();
           } catch (error) {
             if (error instanceof Error) showToast(error.message, "error");
@@ -276,8 +279,8 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={handleToggleComplete}
-                            disabled={stateMutation.isPending}
+                            onClick={handleUncomplete}
+                            disabled={uncompleteMutation.isPending}
                           >
                             <span className="inline-flex items-center gap-1.5">
                               <CheckIcon className="w-3 h-3" />
@@ -287,10 +290,10 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                           <Button
                             variant="success"
                             size="sm"
-                            onClick={handleWrapUp}
-                            disabled={wrapUpMutation.isPending}
+                            onClick={handleCloseSession}
+                            disabled={closeMutation.isPending}
                           >
-                            Wrap up
+                            Close
                           </Button>
                         </>
                       )}
@@ -298,18 +301,18 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                         <Button
                           variant="success"
                           size="sm"
-                          onClick={handleWrapUp}
-                          disabled={wrapUpMutation.isPending}
+                          onClick={handleCloseSession}
+                          disabled={closeMutation.isPending}
                         >
-                          Wrap up
+                          Close
                         </Button>
                       )}
                       {isInProgress && (
                         <Button
                           variant="primary"
                           size="sm"
-                          onClick={handleToggleComplete}
-                          disabled={stateMutation.isPending}
+                          onClick={handleComplete}
+                          disabled={completeMutation.isPending}
                         >
                           <span className="inline-flex items-center gap-1.5">
                             <CheckIcon className="w-3 h-3" />

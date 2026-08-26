@@ -1,11 +1,6 @@
 import { useState } from "react";
 import type { WorkSessionDto } from "../types/workSession.types";
-import {
-  useRescheduleWorkSessionMutation,
-  useEditWorkSessionMutation,
-  useChangeWorkSessionStateMutation,
-} from "../queries/useWorkSessionMutations";
-import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
+import { useRescheduleWorkSessionMutation, useEditWorkSessionMutation } from "../queries/useWorkSessionMutations";
 import { validateStartNotInPast, validateSameCalendarDay } from "../utils/workSessionValidation";
 import { isValidTimeFormat, TIME_FORMAT_ERROR } from "@/shared/components/DateTimeField";
 import {
@@ -53,9 +48,7 @@ export function useWorkSessionTimeForm(
 
   const rescheduleMutation = useRescheduleWorkSessionMutation();
   const editMutation = useEditWorkSessionMutation();
-  const stateMutation = useChangeWorkSessionStateMutation();
-  const { data: workSessionStates } = useWorkSessionStatesQuery();
-  const isLoading = rescheduleMutation.isPending || editMutation.isPending || stateMutation.isPending;
+  const isLoading = rescheduleMutation.isPending || editMutation.isPending;
 
   const updateField = (field: "startDateDay" | "startDateTime", value: string) => {
     setFormState((prev) => ({
@@ -147,10 +140,6 @@ export function useWorkSessionTimeForm(
           id: workSession.id,
           data: { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
         });
-        const inProgressStateId = workSessionStates?.find((s) => s.state === "INPROGRESS")?.id;
-        if (inProgressStateId) {
-          await stateMutation.mutateAsync({ id: workSession.id, workSessionStateId: inProgressStateId });
-        }
       } else {
         await editMutation.mutateAsync({
           id: workSession.id,
