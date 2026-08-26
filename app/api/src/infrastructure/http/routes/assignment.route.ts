@@ -11,6 +11,7 @@ import type { ListAssignmentsUseCase } from "../../../application/assignment/Lis
 import type { UpdateAssignmentUseCase } from "../../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../../application/assignment/DeleteAssignmentUseCase";
 import type { CompleteAssignmentUseCase } from "../../../application/assignment/CompleteAssignmentUseCase";
+import type { ConfirmCompleteAssignmentUseCase } from "../../../application/assignment/ConfirmCompleteAssignmentUseCase";
 import type { UncompleteAssignmentUseCase } from "../../../application/assignment/UncompleteAssignmentUseCase";
 import type { RescheduleAssignmentUseCase } from "../../../application/assignment/RescheduleAssignmentUseCase";
 import type { WrapUpAssignmentUseCase } from "../../../application/assignment/WrapUpAssignmentUseCase";
@@ -23,6 +24,7 @@ interface AssignmentRouteDeps {
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
   completeAssignmentUseCase: CompleteAssignmentUseCase;
+  confirmCompleteAssignmentUseCase: ConfirmCompleteAssignmentUseCase;
   uncompleteAssignmentUseCase: UncompleteAssignmentUseCase;
   rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
   wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
@@ -168,6 +170,19 @@ export function registerAssignmentRoutes(app: Hono, deps: AssignmentRouteDeps) {
   app.post("/assignments/:id/complete", (c) => {
     try {
       const assignment = deps.completeAssignmentUseCase.execute(c.req.param("id"));
+      return c.json(assignment.toJSON(), 200);
+    } catch (error) {
+      const handled = handleAssignmentError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/assignments/:id/confirm-complete", (c) => {
+    try {
+      const assignment = deps.confirmCompleteAssignmentUseCase.execute(c.req.param("id"));
       return c.json(assignment.toJSON(), 200);
     } catch (error) {
       const handled = handleAssignmentError(error);

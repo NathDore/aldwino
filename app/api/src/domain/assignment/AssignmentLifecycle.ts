@@ -1,6 +1,7 @@
 import type { Assignment } from "./Assignment";
 import {
   CannotCompleteAssignmentError,
+  CannotConfirmCompleteAssignmentError,
   CannotDeleteAssignmentError,
   CannotEditAssignmentError,
   CannotUncompleteAssignmentError,
@@ -24,8 +25,15 @@ export function resolveLifecycle(assignment: Assignment, now: Date): AssignmentL
 
 export function assertCanComplete(assignment: Assignment, now: Date): void {
   const state = resolveLifecycle(assignment, now);
-  if (state !== "UPCOMING" && state !== "OVERDUE") {
+  if (state !== "UPCOMING") {
     throw new CannotCompleteAssignmentError(state);
+  }
+}
+
+export function assertCanConfirmComplete(assignment: Assignment, now: Date): void {
+  const state = resolveLifecycle(assignment, now);
+  if (state !== "OVERDUE") {
+    throw new CannotConfirmCompleteAssignmentError(state);
   }
 }
 
