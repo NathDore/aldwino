@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { Assignment } from "../../src/domain/assignment/Assignment";
+import { Notification, type NotificationType, type NotificationEntityType } from "../../src/domain/notification/Notification";
 import type { Clock } from "../../src/application/health/ports/Clock";
 import { migrate as migrateCourses } from "../../src/infrastructure/database/migrations/002_create_course_table";
 import { migrate as migrateCourseDeleted } from "../../src/infrastructure/database/migrations/010_add_course_deleted_columns";
@@ -15,6 +16,7 @@ import { migrate as migrateAssignmentRescheduleAt } from "../../src/infrastructu
 import { migrate as migrateWorkSessionRescheduleAt } from "../../src/infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { migrate as migrateAssignmentWorkSessionWorkedOn } from "../../src/infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
 import { migrate as migrateAssignmentWorkSessionDetachReason } from "../../src/infrastructure/database/migrations/022_add_assignment_work_session_detach_reason_column";
+import { migrate as migrateNotificationTable } from "../../src/infrastructure/database/migrations/023_create_notification_table";
 import { seedAssignmentStates } from "../../src/infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "../../src/infrastructure/database/seeds/seedWorkSessionStates";
 
@@ -54,6 +56,7 @@ export function createTestDatabase(): Database {
   migrateWorkSessionRescheduleAt(db);
   migrateAssignmentWorkSessionWorkedOn(db);
   migrateAssignmentWorkSessionDetachReason(db);
+  migrateNotificationTable(db);
   seedAssignmentStates(db);
   seedWorkSessionStates(db);
   return db;
@@ -99,4 +102,28 @@ export function stateIdFor(db: Database, state: string): string {
 export function workSessionStateIdFor(db: Database, state: string): string {
   const row = db.prepare("SELECT id FROM workSessionStates WHERE state = ?").get(state) as { id: string };
   return row.id;
+}
+
+interface NotificationOverrides {
+  id?: string;
+  type?: NotificationType;
+  entityType?: NotificationEntityType;
+  entityId?: string;
+  isRead?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
+  createdAt?: Date;
+}
+
+export function makeNotification(overrides: NotificationOverrides = {}): Notification {
+  return Notification.create({
+    id: overrides.id ?? "notification-1",
+    type: overrides.type ?? "ASSIGNMENT_OVERDUE",
+    entityType: overrides.entityType ?? "ASSIGNMENT",
+    entityId: overrides.entityId ?? "assignment-1",
+    isRead: overrides.isRead ?? false,
+    isDeleted: overrides.isDeleted ?? false,
+    deletedAt: overrides.deletedAt ?? null,
+    createdAt: overrides.createdAt ?? NOW,
+  });
 }

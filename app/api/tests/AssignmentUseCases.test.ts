@@ -5,6 +5,7 @@ import { AssignmentStateRepository } from "../src/infrastructure/database/reposi
 import { AssignmentWorkSessionRepository } from "../src/infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import { CourseRepository } from "../src/infrastructure/database/repositories/CourseRepository";
 import { WorkSessionRepository } from "../src/infrastructure/database/repositories/WorkSessionRepository";
+import { NotificationRepository } from "../src/infrastructure/database/repositories/NotificationRepository";
 import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAssignmentUseCase";
 import { UpdateAssignmentUseCase } from "../src/application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "../src/application/assignment/DeleteAssignmentUseCase";
@@ -23,6 +24,7 @@ let stateRepository: AssignmentStateRepository;
 let courseRepository: CourseRepository;
 let linkRepository: AssignmentWorkSessionRepository;
 let workSessionRepository: WorkSessionRepository;
+let notificationRepository: NotificationRepository;
 
 let create: CreateAssignmentUseCase;
 let update: UpdateAssignmentUseCase;
@@ -43,16 +45,25 @@ beforeEach(() => {
   courseRepository = new CourseRepository(db);
   linkRepository = new AssignmentWorkSessionRepository(db);
   workSessionRepository = new WorkSessionRepository(db);
+  notificationRepository = new NotificationRepository(db);
   makeCourse(db);
 
   create = new CreateAssignmentUseCase(repository, courseRepository, stateRepository, clock, db);
   update = new UpdateAssignmentUseCase(repository, courseRepository, clock, db);
   remove = new DeleteAssignmentUseCase(repository, linkRepository, clock, db);
-  complete = new CompleteAssignmentUseCase(repository, stateRepository, linkRepository, workSessionRepository, clock, db);
+  complete = new CompleteAssignmentUseCase(
+    repository,
+    stateRepository,
+    linkRepository,
+    workSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   uncomplete = new UncompleteAssignmentUseCase(repository, stateRepository, linkRepository, workSessionRepository, clock, db);
-  reschedule = new RescheduleAssignmentUseCase(repository, clock, db);
+  reschedule = new RescheduleAssignmentUseCase(repository, stateRepository, notificationRepository, clock, db);
   wrapUp = new WrapUpAssignmentUseCase(repository, linkRepository, clock, db);
-  wrapUpLate = new WrapUpLateAssignmentUseCase(repository, clock, db);
+  wrapUpLate = new WrapUpLateAssignmentUseCase(repository, notificationRepository, clock, db);
 });
 
 function newAssignment(dueDate = FUTURE) {
