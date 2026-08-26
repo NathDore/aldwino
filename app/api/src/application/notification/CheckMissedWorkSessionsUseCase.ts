@@ -24,12 +24,17 @@ export class CheckMissedWorkSessionsUseCase {
     if (!inProgressState) {
       throw new WorkSessionStateNotFoundError("INPROGRESS");
     }
+    // Legacy sessions set to SKIPPED by the old client-side sync (removed) are migrated
+    // to WAIT_CONFIRM here too, so they get a real notification and become reschedulable again.
+    const skippedState = this.workSessionStateRepository.findByState("SKIPPED");
 
     let flagged = 0;
     for (const workSession of this.workSessionRepository.getAll()) {
       if (workSession.completedAt !== null) continue;
-      if (workSession.endTime >= now) continue;
-      if (workSession.workSessionStateId !== inProgressState.id) continue;
+
+      const isOverdueInProgress = workSession.workSessionStateId === inProgressState.id && workSession.endTime < now;
+      const isLegacySkipped = skippedState !== null && workSession.workSessionStateId === skippedState.id;
+      if (!isOverdueInProgress && !isLegacySkipped) continue;
 
       this.workSessionRepository.update(
         WorkSession.create({

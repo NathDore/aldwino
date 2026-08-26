@@ -213,6 +213,25 @@ describe("CheckMissedWorkSessionsUseCase", () => {
     expect(listNotifications.execute()).toHaveLength(1);
   });
 
+  test("migrates a legacy SKIPPED session to WAIT_CONFIRM and creates its notification", () => {
+    const session = workSessionRepository.create(
+      WorkSession.create({
+        id: "session-legacy-skipped",
+        workSessionStateId: workSessionStateIdFor(db, "SKIPPED"),
+        startTime: new Date(PAST.getTime() - 60 * 60 * 1000),
+        endTime: PAST,
+        completedAt: null,
+        createdAt: PAST,
+      }),
+    );
+
+    const flagged = checkMissedWorkSessions.execute();
+
+    expect(flagged).toBe(1);
+    expect(workSessionRepository.getById(session.id)?.workSessionStateId).toBe(workSessionStateIdFor(db, "WAIT_CONFIRM"));
+    expect(listNotifications.execute()).toHaveLength(1);
+  });
+
   test("ignores a future session", () => {
     workSessionRepository.create(
       WorkSession.create({
