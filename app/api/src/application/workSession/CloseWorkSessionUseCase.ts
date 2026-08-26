@@ -31,6 +31,9 @@ export class CloseWorkSessionUseCase {
         isDeleted: true,
         deletedAt: now,
         wrapUpAt: now,
+        rescheduleAt: existing.rescheduleAt,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: existing.skippedAt,
         createdAt: existing.createdAt,
       });
 

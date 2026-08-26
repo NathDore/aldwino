@@ -17,6 +17,8 @@ export class WorkSession {
     public readonly deletedAt: Date | null,
     public readonly wrapUpAt: Date | null,
     public readonly rescheduleAt: Date | null,
+    public readonly waitConfirmAt: Date | null,
+    public readonly skippedAt: Date | null,
     public readonly createdAt: Date,
   ) {}
 
@@ -30,6 +32,8 @@ export class WorkSession {
     deletedAt?: Date | null;
     wrapUpAt?: Date | null;
     rescheduleAt?: Date | null;
+    waitConfirmAt?: Date | null;
+    skippedAt?: Date | null;
     createdAt: Date;
   }): WorkSession {
     validateWorkSessionStateId(params.workSessionStateId);
@@ -47,6 +51,8 @@ export class WorkSession {
       params.deletedAt ?? null,
       params.wrapUpAt ?? null,
       params.rescheduleAt ?? null,
+      params.waitConfirmAt ?? null,
+      params.skippedAt ?? null,
       params.createdAt,
     );
   }
@@ -62,6 +68,8 @@ export class WorkSession {
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
       wrapUpAt: this.wrapUpAt ? this.wrapUpAt.toISOString() : null,
       rescheduleAt: this.rescheduleAt ? this.rescheduleAt.toISOString() : null,
+      waitConfirmAt: this.waitConfirmAt ? this.waitConfirmAt.toISOString() : null,
+      skippedAt: this.skippedAt ? this.skippedAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
     };
   }

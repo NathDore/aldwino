@@ -9,8 +9,11 @@ import { useCalendarStore } from "@/features/calendar/store/calendarStore";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
   useCompleteWorkSessionMutation,
+  useConfirmCompleteWorkSessionMutation,
+  useConfirmSkipWorkSessionMutation,
   useUncompleteWorkSessionMutation,
   useDeleteWorkSessionMutation,
+  useWrapUpLateWorkSessionMutation,
   useCloseWorkSessionMutation,
 } from "../queries/useWorkSessionMutations";
 import { showToast } from "@/shared/store/toastStore";
@@ -32,7 +35,8 @@ interface WorkSessionPopoverProps {
 
 type Mode = "session" | "create-assignment" | "link-assignment" | "edit-session" | "reschedule-session";
 
-const SKIPPED_UNCOMPLETED_MESSAGE = "You missed this one — reschedule it for a new time, or remove it for good.";
+const WAIT_CONFIRM_MESSAGE = "Did you forget this one? Mark it complete, or confirm that you skipped it.";
+const SKIPPED_MESSAGE = "You skipped this one — reschedule it for a new time, or remove it for good.";
 
 function formatTimeRange(startTime: string, endTime: string): string {
   const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
@@ -53,8 +57,11 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const { data: workSessionStates } = useWorkSessionStatesQuery();
   const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSession.id);
   const completeMutation = useCompleteWorkSessionMutation();
+  const confirmCompleteMutation = useConfirmCompleteWorkSessionMutation();
+  const confirmSkipMutation = useConfirmSkipWorkSessionMutation();
   const uncompleteMutation = useUncompleteWorkSessionMutation();
   const deleteMutation = useDeleteWorkSessionMutation();
+  const wrapUpLateMutation = useWrapUpLateWorkSessionMutation();
   const closeMutation = useCloseWorkSessionMutation();
   const goToWeekOf = useCalendarStore((s) => s.goToWeekOf);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -83,19 +90,22 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const isCompleted = workSession.completedAt !== null;
   const isPastDue = new Date(workSession.endTime).getTime() < Date.now();
   const isWaitConfirm = stateName === "WAIT_CONFIRM";
+  const isSkipped = stateName === "SKIPPED";
   const isCompletedCurrent = isCompleted && !isPastDue;
   const isCompletedPastDue = isCompleted && isPastDue;
-  const isInProgress = !isCompleted && !isWaitConfirm;
+  const isInProgress = !isCompleted && !isWaitConfirm && !isSkipped;
 
   const workedOnCount = links.filter((l) => l.workedOn).length;
   const totalLinked = links.length;
   const progressPercent = totalLinked > 0 ? Math.round((workedOnCount / totalLinked) * 100) : 0;
 
-  const statusPill = isWaitConfirm
+  const statusPill = isSkipped
     ? { label: "Skipped", bg: "bg-amber-50", fg: "text-amber-700", dot: "bg-amber-500" }
-    : isCompleted
-      ? { label: "Completed", bg: "bg-emerald-50", fg: "text-emerald-700", dot: "bg-emerald-500" }
-      : { label: "In progress", bg: "bg-slate-100", fg: "text-slate-700", dot: "bg-slate-400" };
+    : isWaitConfirm
+      ? { label: "Needs confirmation", bg: "bg-amber-50", fg: "text-amber-700", dot: "bg-amber-500" }
+      : isCompleted
+        ? { label: "Completed", bg: "bg-emerald-50", fg: "text-emerald-700", dot: "bg-emerald-500" }
+        : { label: "In progress", bg: "bg-slate-100", fg: "text-slate-700", dot: "bg-slate-400" };
 
   const { data: completionMessageData, isError: isCompletionMessageError } =
     useWorkSessionCompletionMessageQuery(isCompletedPastDue);
@@ -108,6 +118,14 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
 
   const handleUncomplete = async () => {
     await uncompleteMutation.mutateAsync(workSession.id);
+  };
+
+  const handleConfirmComplete = async () => {
+    await confirmCompleteMutation.mutateAsync(workSession.id);
+  };
+
+  const handleConfirmSkip = async () => {
+    await confirmSkipMutation.mutateAsync(workSession.id);
   };
 
   useEffect(() => {
@@ -209,7 +227,11 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
     >
       {(handleClose) => {
         const handleDelete = async () => {
-          await deleteMutation.mutateAsync(workSession.id);
+          if (isSkipped) {
+            await wrapUpLateMutation.mutateAsync(workSession.id);
+          } else {
+            await deleteMutation.mutateAsync(workSession.id);
+          }
           handleClose();
         };
 
@@ -255,10 +277,35 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                   <LinkedAssignmentsList workSessionId={workSession.id} canEdit={isInProgress} />
 
                   <div className="space-y-2 pt-2 border-t border-slate-200">
-                    {isWaitConfirm && <p className="text-sm text-slate-600">{SKIPPED_UNCOMPLETED_MESSAGE}</p>}
+                    {isWaitConfirm && <p className="text-sm text-slate-600">{WAIT_CONFIRM_MESSAGE}</p>}
+                    {isSkipped && <p className="text-sm text-slate-600">{SKIPPED_MESSAGE}</p>}
                     {isCompletedPastDue && <p className="text-sm text-slate-600">{completionMessage}</p>}
                     <div className="flex items-center gap-2">
                       {isWaitConfirm && (
+                        <>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleConfirmComplete}
+                            disabled={confirmCompleteMutation.isPending}
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              <CheckIcon className="w-3 h-3" />
+                              Complete
+                            </span>
+                          </Button>
+                          <span className="text-sm text-slate-500">or</span>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={handleConfirmSkip}
+                            disabled={confirmSkipMutation.isPending}
+                          >
+                            Confirm skipped
+                          </Button>
+                        </>
+                      )}
+                      {isSkipped && (
                         <>
                           <Button variant="warning" size="sm" onClick={() => pushMode("reschedule-session")}>
                             Reschedule
@@ -268,7 +315,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                             variant="danger"
                             size="sm"
                             onClick={() => setIsConfirmingDelete(true)}
-                            disabled={deleteMutation.isPending}
+                            disabled={wrapUpLateMutation.isPending}
                           >
                             Remove
                           </Button>
@@ -365,7 +412,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                       ? "This will permanently delete this session. Linked assignments will be unlinked but not deleted."
                       : "This will permanently delete this session."
                   }
-                  isLoading={deleteMutation.isPending}
+                  isLoading={isSkipped ? wrapUpLateMutation.isPending : deleteMutation.isPending}
                   onConfirm={handleDelete}
                   onCancel={() => setIsConfirmingDelete(false)}
                 />

@@ -47,8 +47,20 @@ export async function uncompleteWorkSession(id: string): Promise<WorkSessionDto>
   return apiClient<WorkSessionDto>(`/work-sessions/${id}/uncomplete`, { method: "POST" });
 }
 
+export async function confirmCompleteWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/confirm-complete`, { method: "POST" });
+}
+
+export async function confirmSkipWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/confirm-skip`, { method: "POST" });
+}
+
 export async function deleteWorkSession(id: string): Promise<void> {
   await apiClient<void>(`/work-sessions/${id}`, { method: "DELETE" });
+}
+
+export async function wrapUpLateWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/wrap-up-late`, { method: "POST" });
 }
 
 export async function closeWorkSession(id: string): Promise<WorkSessionDto> {

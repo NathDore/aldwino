@@ -1,14 +1,14 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
-import { CannotDeleteNonInProgressWorkSessionError } from "../../domain/workSession/WorkSessionError";
+import { CannotWrapUpLateNonSkippedWorkSessionError } from "../../domain/workSession/WorkSessionError";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class DeleteWorkSessionUseCase {
+export class WrapUpLateWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
     private readonly workSessionStateRepository: IWorkSessionStateRepository,
@@ -26,13 +26,13 @@ export class DeleteWorkSessionUseCase {
       }
 
       const currentState = this.workSessionStateRepository.getById(existing.workSessionStateId);
-      if (currentState?.state !== "INPROGRESS") {
-        throw new CannotDeleteNonInProgressWorkSessionError(currentState?.state ?? "UNKNOWN");
+      if (currentState?.state !== "SKIPPED") {
+        throw new CannotWrapUpLateNonSkippedWorkSessionError(currentState?.state ?? "UNKNOWN");
       }
 
       const now = this.clock.now();
 
-      const deleted = WorkSession.create({
+      const wrappedUp = WorkSession.create({
         id: existing.id,
         workSessionStateId: existing.workSessionStateId,
         startTime: existing.startTime,
@@ -46,7 +46,7 @@ export class DeleteWorkSessionUseCase {
         skippedAt: existing.skippedAt,
         createdAt: existing.createdAt,
       });
-      const updated = this.repository.update(deleted);
+      const updated = this.repository.update(wrappedUp);
 
       for (const link of this.assignmentWorkSessionRepository.getByWorkSessionId(id)) {
         this.assignmentWorkSessionRepository.update(

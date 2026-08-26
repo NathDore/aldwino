@@ -4,8 +4,11 @@ export {
   useCreateWorkSessionMutation,
   useRescheduleWorkSessionMutation,
   useCompleteWorkSessionMutation,
+  useConfirmCompleteWorkSessionMutation,
+  useConfirmSkipWorkSessionMutation,
   useUncompleteWorkSessionMutation,
   useDeleteWorkSessionMutation,
+  useWrapUpLateWorkSessionMutation,
   useCloseWorkSessionMutation,
 } from "./queries/useWorkSessionMutations";
 export {

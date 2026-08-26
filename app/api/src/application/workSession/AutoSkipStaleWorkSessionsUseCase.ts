@@ -1,16 +1,15 @@
 import { WorkSession } from "../../domain/workSession/WorkSession";
 import { WorkSessionStateNotFoundError } from "../../domain/workSession/WorkSessionError";
-import { Notification } from "../../domain/notification/Notification";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
-import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
-export class CheckMissedWorkSessionsUseCase {
+const STALE_WAIT_CONFIRM_MS = 7 * 24 * 60 * 60 * 1000;
+
+export class AutoSkipStaleWorkSessionsUseCase {
   constructor(
     private readonly workSessionRepository: IWorkSessionRepository,
     private readonly workSessionStateRepository: IWorkSessionStateRepository,
-    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
   ) {}
 
@@ -20,22 +19,21 @@ export class CheckMissedWorkSessionsUseCase {
     if (!waitConfirmState) {
       throw new WorkSessionStateNotFoundError("WAIT_CONFIRM");
     }
-    const inProgressState = this.workSessionStateRepository.findByState("INPROGRESS");
-    if (!inProgressState) {
-      throw new WorkSessionStateNotFoundError("INPROGRESS");
+    const skippedState = this.workSessionStateRepository.findByState("SKIPPED");
+    if (!skippedState) {
+      throw new WorkSessionStateNotFoundError("SKIPPED");
     }
 
-    let flagged = 0;
+    let skipped = 0;
     for (const workSession of this.workSessionRepository.getAll()) {
-      if (workSession.completedAt !== null) continue;
-
-      const isOverdueInProgress = workSession.workSessionStateId === inProgressState.id && workSession.endTime < now;
-      if (!isOverdueInProgress) continue;
+      if (workSession.workSessionStateId !== waitConfirmState.id) continue;
+      if (!workSession.waitConfirmAt) continue;
+      if (now.getTime() - workSession.waitConfirmAt.getTime() < STALE_WAIT_CONFIRM_MS) continue;
 
       this.workSessionRepository.update(
         WorkSession.create({
           id: workSession.id,
-          workSessionStateId: waitConfirmState.id,
+          workSessionStateId: skippedState.id,
           startTime: workSession.startTime,
           endTime: workSession.endTime,
           completedAt: workSession.completedAt,
@@ -43,30 +41,13 @@ export class CheckMissedWorkSessionsUseCase {
           deletedAt: workSession.deletedAt,
           wrapUpAt: workSession.wrapUpAt,
           rescheduleAt: workSession.rescheduleAt,
-          waitConfirmAt: now,
-          skippedAt: null,
+          waitConfirmAt: null,
+          skippedAt: now,
           createdAt: workSession.createdAt,
         }),
       );
-
-      const alreadyNotified = this.notificationRepository.findUnreadByEntity(
-        "WORK_SESSION",
-        workSession.id,
-        "WORK_SESSION_SKIPPED",
-      );
-      if (!alreadyNotified) {
-        this.notificationRepository.create(
-          Notification.create({
-            id: crypto.randomUUID(),
-            type: "WORK_SESSION_SKIPPED",
-            entityType: "WORK_SESSION",
-            entityId: workSession.id,
-            createdAt: now,
-          }),
-        );
-      }
-      flagged++;
+      skipped++;
     }
-    return flagged;
+    return skipped;
   }
 }

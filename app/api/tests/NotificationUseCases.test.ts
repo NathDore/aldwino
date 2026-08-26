@@ -16,12 +16,22 @@ import { RescheduleAssignmentUseCase } from "../src/application/assignment/Resch
 import { WrapUpLateAssignmentUseCase } from "../src/application/assignment/WrapUpLateAssignmentUseCase";
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
 import { DeleteWorkSessionUseCase } from "../src/application/workSession/DeleteWorkSessionUseCase";
+import { WrapUpLateWorkSessionUseCase } from "../src/application/workSession/WrapUpLateWorkSessionUseCase";
 import { CompleteWorkSessionUseCase } from "../src/application/workSession/CompleteWorkSessionUseCase";
+import { ConfirmCompleteWorkSessionUseCase } from "../src/application/workSession/ConfirmCompleteWorkSessionUseCase";
+import { ConfirmSkipWorkSessionUseCase } from "../src/application/workSession/ConfirmSkipWorkSessionUseCase";
 import { UncompleteWorkSessionUseCase } from "../src/application/workSession/UncompleteWorkSessionUseCase";
+import { AutoSkipStaleWorkSessionsUseCase } from "../src/application/workSession/AutoSkipStaleWorkSessionsUseCase";
+import { AutoWrapUpLateStaleWorkSessionsUseCase } from "../src/application/workSession/AutoWrapUpLateStaleWorkSessionsUseCase";
+import { CreateWorkSessionUseCase } from "../src/application/workSession/CreateWorkSessionUseCase";
 import { WorkSessionMergeService } from "../src/application/workSession/WorkSessionMergeService";
 import {
   CannotCompleteNonInProgressWorkSessionError,
   CannotUncompleteNonCompletedWorkSessionError,
+  CannotDeleteNonInProgressWorkSessionError,
+  CannotConfirmSkipNonWaitConfirmWorkSessionError,
+  CannotConfirmCompleteNonWaitConfirmWorkSessionError,
+  CannotWrapUpLateNonSkippedWorkSessionError,
 } from "../src/domain/workSession/WorkSessionError";
 import { WorkSession } from "../src/domain/workSession/WorkSession";
 import {
@@ -56,8 +66,14 @@ let rescheduleAssignment: RescheduleAssignmentUseCase;
 let wrapUpLateAssignment: WrapUpLateAssignmentUseCase;
 let rescheduleWorkSession: RescheduleWorkSessionUseCase;
 let deleteWorkSession: DeleteWorkSessionUseCase;
+let wrapUpLateWorkSession: WrapUpLateWorkSessionUseCase;
 let completeWorkSession: CompleteWorkSessionUseCase;
+let confirmCompleteWorkSession: ConfirmCompleteWorkSessionUseCase;
+let confirmSkipWorkSession: ConfirmSkipWorkSessionUseCase;
 let uncompleteWorkSession: UncompleteWorkSessionUseCase;
+let autoSkipStaleWorkSessions: AutoSkipStaleWorkSessionsUseCase;
+let autoWrapUpLateStaleWorkSessions: AutoWrapUpLateStaleWorkSessionsUseCase;
+let createWorkSession: CreateWorkSessionUseCase;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -111,9 +127,57 @@ beforeEach(() => {
     clock,
     db,
   );
-  deleteWorkSession = new DeleteWorkSessionUseCase(workSessionRepository, linkRepository, notificationRepository, clock, db);
+  deleteWorkSession = new DeleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    linkRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
+  wrapUpLateWorkSession = new WrapUpLateWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    linkRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   completeWorkSession = new CompleteWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
+  confirmCompleteWorkSession = new ConfirmCompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
+  confirmSkipWorkSession = new ConfirmSkipWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   uncompleteWorkSession = new UncompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    new WorkSessionMergeService(workSessionRepository, linkRepository, workSessionStateRepository, clock),
+    clock,
+    db,
+  );
+  autoSkipStaleWorkSessions = new AutoSkipStaleWorkSessionsUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    clock,
+  );
+  autoWrapUpLateStaleWorkSessions = new AutoWrapUpLateStaleWorkSessionsUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    linkRepository,
+    notificationRepository,
+    clock,
+  );
+  createWorkSession = new CreateWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
     new WorkSessionMergeService(workSessionRepository, linkRepository, workSessionStateRepository, clock),
@@ -213,23 +277,22 @@ describe("CheckMissedWorkSessionsUseCase", () => {
     expect(listNotifications.execute()).toHaveLength(1);
   });
 
-  test("migrates a legacy SKIPPED session to WAIT_CONFIRM and creates its notification", () => {
+  test("leaves a SKIPPED session alone (does not re-flag an already-confirmed skip)", () => {
     const session = workSessionRepository.create(
       WorkSession.create({
-        id: "session-legacy-skipped",
+        id: "session-already-skipped",
         workSessionStateId: workSessionStateIdFor(db, "SKIPPED"),
         startTime: new Date(PAST.getTime() - 60 * 60 * 1000),
         endTime: PAST,
         completedAt: null,
+        skippedAt: PAST,
         createdAt: PAST,
       }),
     );
 
-    const flagged = checkMissedWorkSessions.execute();
-
-    expect(flagged).toBe(1);
-    expect(workSessionRepository.getById(session.id)?.workSessionStateId).toBe(workSessionStateIdFor(db, "WAIT_CONFIRM"));
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(checkMissedWorkSessions.execute()).toBe(0);
+    expect(workSessionRepository.getById(session.id)?.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
+    expect(listNotifications.execute()).toHaveLength(0);
   });
 
   test("ignores a future session", () => {
@@ -365,9 +428,12 @@ describe("auto-resolve on assignment resolution", () => {
 });
 
 describe("auto-resolve on work session resolution", () => {
-  test("rescheduling a missed session clears its unread notification", () => {
+  test("rescheduling a skipped session clears its unread notification", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+    // Confirming skip already clears the notification; simulate a fresh one to prove reschedule also clears it.
+    notificationRepository.create(makeNotification({ id: "notification-skip-3", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
 
     rescheduleWorkSession.execute({
       id: session.id,
@@ -378,11 +444,23 @@ describe("auto-resolve on work session resolution", () => {
     expect(listNotifications.execute()).toHaveLength(0);
   });
 
-  test("removing a missed session clears its unread notification", () => {
+  test("confirm-skipping a missed session clears its unread notification", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
 
-    deleteWorkSession.execute(session.id);
+    confirmSkipWorkSession.execute(session.id);
+
+    expect(listNotifications.execute()).toHaveLength(0);
+  });
+
+  test("wrapping up late a skipped session clears its unread notification", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+    // Confirming skip already clears the notification; simulate a fresh one to prove wrap-up-late also clears it.
+    notificationRepository.create(makeNotification({ id: "notification-skip-2", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
+
+    wrapUpLateWorkSession.execute(session.id);
 
     expect(listNotifications.execute()).toHaveLength(0);
   });
@@ -401,6 +479,154 @@ describe("CompleteWorkSessionUseCase / UncompleteWorkSessionUseCase WAIT_CONFIRM
     checkMissedWorkSessions.execute();
 
     expect(() => uncompleteWorkSession.execute(session.id)).toThrow(CannotUncompleteNonCompletedWorkSessionError);
+  });
+});
+
+describe("ConfirmCompleteWorkSessionUseCase", () => {
+  test("completes a WAIT_CONFIRM session and clears its unread notification", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+
+    const result = confirmCompleteWorkSession.execute(session.id);
+
+    expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "COMPLETED"));
+    expect(result.completedAt).toEqual(NOW);
+    expect(result.waitConfirmAt).toBeNull();
+    expect(listNotifications.execute()).toHaveLength(0);
+  });
+
+  test("rejects an in-progress session", () => {
+    const session = createMissedWorkSession();
+
+    expect(() => confirmCompleteWorkSession.execute(session.id)).toThrow(
+      CannotConfirmCompleteNonWaitConfirmWorkSessionError,
+    );
+  });
+});
+
+describe("ConfirmSkipWorkSessionUseCase", () => {
+  test("marks a WAIT_CONFIRM session as SKIPPED, stamps skippedAt, and clears its unread notification", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+
+    const result = confirmSkipWorkSession.execute(session.id);
+
+    expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
+    expect(result.skippedAt).toEqual(NOW);
+    expect(result.waitConfirmAt).toBeNull();
+    expect(listNotifications.execute()).toHaveLength(0);
+  });
+
+  test("rejects an in-progress session", () => {
+    const session = createMissedWorkSession();
+
+    expect(() => confirmSkipWorkSession.execute(session.id)).toThrow(
+      CannotConfirmSkipNonWaitConfirmWorkSessionError,
+    );
+  });
+});
+
+describe("DeleteWorkSessionUseCase / WrapUpLateWorkSessionUseCase guards", () => {
+  test("DeleteWorkSessionUseCase allows an in-progress session", () => {
+    const session = createMissedWorkSession();
+
+    expect(() => deleteWorkSession.execute(session.id)).not.toThrow();
+  });
+
+  test("DeleteWorkSessionUseCase rejects a WAIT_CONFIRM session", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+
+    expect(() => deleteWorkSession.execute(session.id)).toThrow(CannotDeleteNonInProgressWorkSessionError);
+  });
+
+  test("DeleteWorkSessionUseCase rejects a SKIPPED session", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+
+    expect(() => deleteWorkSession.execute(session.id)).toThrow(CannotDeleteNonInProgressWorkSessionError);
+  });
+
+  test("WrapUpLateWorkSessionUseCase rejects an in-progress session", () => {
+    const session = createMissedWorkSession();
+
+    expect(() => wrapUpLateWorkSession.execute(session.id)).toThrow(CannotWrapUpLateNonSkippedWorkSessionError);
+  });
+
+  test("WrapUpLateWorkSessionUseCase rejects a WAIT_CONFIRM session", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+
+    expect(() => wrapUpLateWorkSession.execute(session.id)).toThrow(CannotWrapUpLateNonSkippedWorkSessionError);
+  });
+
+  test("WrapUpLateWorkSessionUseCase soft-deletes a skipped session", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+
+    const result = wrapUpLateWorkSession.execute(session.id);
+
+    expect(result.isDeleted).toBe(true);
+    expect(workSessionRepository.getById(session.id)).toBeNull();
+  });
+});
+
+describe("CreateWorkSessionUseCase", () => {
+  test("always creates a session in the INPROGRESS state", () => {
+    const result = createWorkSession.execute({ startTime: FUTURE, endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000) });
+
+    expect(result.session.workSessionStateId).toBe(workSessionStateIdFor(db, "INPROGRESS"));
+    expect(result.session.completedAt).toBeNull();
+  });
+});
+
+describe("AutoSkipStaleWorkSessionsUseCase", () => {
+  test("skips a WAIT_CONFIRM session stale for more than a week", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    clock.set(new Date(NOW.getTime() + 8 * ONE_DAY_MS));
+
+    const count = autoSkipStaleWorkSessions.execute();
+
+    expect(count).toBe(1);
+    const updated = workSessionRepository.getById(session.id);
+    expect(updated?.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
+    expect(updated?.skippedAt).toEqual(new Date(NOW.getTime() + 8 * ONE_DAY_MS));
+    expect(updated?.waitConfirmAt).toBeNull();
+  });
+
+  test("leaves a WAIT_CONFIRM session under a week old untouched", () => {
+    createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    clock.set(new Date(NOW.getTime() + 6 * ONE_DAY_MS));
+
+    expect(autoSkipStaleWorkSessions.execute()).toBe(0);
+  });
+});
+
+describe("AutoWrapUpLateStaleWorkSessionsUseCase", () => {
+  test("wraps up a SKIPPED session stale for more than a week", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+    clock.set(new Date(NOW.getTime() + 8 * ONE_DAY_MS));
+
+    const count = autoWrapUpLateStaleWorkSessions.execute();
+
+    expect(count).toBe(1);
+    expect(workSessionRepository.getById(session.id)).toBeNull();
+  });
+
+  test("leaves a SKIPPED session under a week old untouched", () => {
+    const session = createMissedWorkSession();
+    checkMissedWorkSessions.execute();
+    confirmSkipWorkSession.execute(session.id);
+    clock.set(new Date(NOW.getTime() + 6 * ONE_DAY_MS));
+
+    expect(autoWrapUpLateStaleWorkSessions.execute()).toBe(0);
+    expect(workSessionRepository.getById(session.id)).not.toBeNull();
   });
 });
 

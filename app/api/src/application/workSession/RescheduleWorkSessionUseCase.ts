@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
 import {
-  CannotRescheduleNonWaitConfirmWorkSessionError,
+  CannotRescheduleNonSkippedWorkSessionError,
   WorkSessionStateNotFoundError,
 } from "../../domain/workSession/WorkSessionError";
 import {
@@ -33,8 +33,8 @@ export class RescheduleWorkSessionUseCase {
       }
 
       const currentState = this.workSessionStateRepository.getById(existing.workSessionStateId);
-      if (currentState?.state !== "WAIT_CONFIRM") {
-        throw new CannotRescheduleNonWaitConfirmWorkSessionError(currentState?.state ?? "UNKNOWN");
+      if (currentState?.state !== "SKIPPED") {
+        throw new CannotRescheduleNonSkippedWorkSessionError(currentState?.state ?? "UNKNOWN");
       }
 
       const now = this.clock.now();
@@ -58,6 +58,8 @@ export class RescheduleWorkSessionUseCase {
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,
         rescheduleAt: now,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: null,
         createdAt: existing.createdAt,
       });
 

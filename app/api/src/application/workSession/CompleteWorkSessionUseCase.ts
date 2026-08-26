@@ -43,6 +43,8 @@ export class CompleteWorkSessionUseCase {
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,
         rescheduleAt: existing.rescheduleAt,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: existing.skippedAt,
         createdAt: existing.createdAt,
       });
 

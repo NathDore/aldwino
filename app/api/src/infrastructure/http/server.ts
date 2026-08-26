@@ -26,8 +26,11 @@ import type { CreateWorkSessionUseCase } from "../../application/workSession/Cre
 import type { GetWorkSessionByIdUseCase } from "../../application/workSession/GetWorkSessionByIdUseCase";
 import type { ListWorkSessionsUseCase } from "../../application/workSession/ListWorkSessionsUseCase";
 import type { CompleteWorkSessionUseCase } from "../../application/workSession/CompleteWorkSessionUseCase";
+import type { ConfirmCompleteWorkSessionUseCase } from "../../application/workSession/ConfirmCompleteWorkSessionUseCase";
+import type { ConfirmSkipWorkSessionUseCase } from "../../application/workSession/ConfirmSkipWorkSessionUseCase";
 import type { UncompleteWorkSessionUseCase } from "../../application/workSession/UncompleteWorkSessionUseCase";
 import type { DeleteWorkSessionUseCase } from "../../application/workSession/DeleteWorkSessionUseCase";
+import type { WrapUpLateWorkSessionUseCase } from "../../application/workSession/WrapUpLateWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../application/workSession/RescheduleWorkSessionUseCase";
 import type { EditWorkSessionUseCase } from "../../application/workSession/EditWorkSessionUseCase";
 import type { CloseWorkSessionUseCase } from "../../application/workSession/CloseWorkSessionUseCase";
@@ -70,8 +73,11 @@ export interface ServerDeps {
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
   listWorkSessionsUseCase: ListWorkSessionsUseCase;
   completeWorkSessionUseCase: CompleteWorkSessionUseCase;
+  confirmCompleteWorkSessionUseCase: ConfirmCompleteWorkSessionUseCase;
+  confirmSkipWorkSessionUseCase: ConfirmSkipWorkSessionUseCase;
   uncompleteWorkSessionUseCase: UncompleteWorkSessionUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
+  wrapUpLateWorkSessionUseCase: WrapUpLateWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
   editWorkSessionUseCase: EditWorkSessionUseCase;
   closeWorkSessionUseCase: CloseWorkSessionUseCase;

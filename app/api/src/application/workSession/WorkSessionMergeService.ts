@@ -49,6 +49,8 @@ export class WorkSessionMergeService {
           deletedAt: now,
           wrapUpAt: original.wrapUpAt,
           rescheduleAt: original.rescheduleAt,
+          waitConfirmAt: original.waitConfirmAt,
+          skippedAt: original.skippedAt,
           createdAt: original.createdAt,
         }),
       );

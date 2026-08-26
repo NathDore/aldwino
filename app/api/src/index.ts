@@ -25,6 +25,8 @@ import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/data
 import { migrate as migrateAssignmentWorkSessionWorkedOn } from "./infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
 import { migrate as migrateAssignmentWorkSessionDetachReason } from "./infrastructure/database/migrations/022_add_assignment_work_session_detach_reason_column";
 import { migrate as migrateNotificationTable } from "./infrastructure/database/migrations/023_create_notification_table";
+import { migrate as migrateWorkSessionWaitConfirmAt } from "./infrastructure/database/migrations/024_add_work_session_wait_confirm_at_column";
+import { migrate as migrateWorkSessionSkippedAt } from "./infrastructure/database/migrations/025_add_work_session_skipped_at_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -57,9 +59,14 @@ import { CreateWorkSessionUseCase } from "./application/workSession/CreateWorkSe
 import { GetWorkSessionByIdUseCase } from "./application/workSession/GetWorkSessionByIdUseCase";
 import { ListWorkSessionsUseCase } from "./application/workSession/ListWorkSessionsUseCase";
 import { CompleteWorkSessionUseCase } from "./application/workSession/CompleteWorkSessionUseCase";
+import { ConfirmCompleteWorkSessionUseCase } from "./application/workSession/ConfirmCompleteWorkSessionUseCase";
+import { ConfirmSkipWorkSessionUseCase } from "./application/workSession/ConfirmSkipWorkSessionUseCase";
 import { UncompleteWorkSessionUseCase } from "./application/workSession/UncompleteWorkSessionUseCase";
 import { GetRandomWorkSessionCompletionMessageUseCase } from "./application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
+import { WrapUpLateWorkSessionUseCase } from "./application/workSession/WrapUpLateWorkSessionUseCase";
+import { AutoSkipStaleWorkSessionsUseCase } from "./application/workSession/AutoSkipStaleWorkSessionsUseCase";
+import { AutoWrapUpLateStaleWorkSessionsUseCase } from "./application/workSession/AutoWrapUpLateStaleWorkSessionsUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
 import { EditWorkSessionUseCase } from "./application/workSession/EditWorkSessionUseCase";
 import { CloseWorkSessionUseCase } from "./application/workSession/CloseWorkSessionUseCase";
@@ -109,6 +116,8 @@ migrateWorkSessionRescheduleAt(db);
 migrateAssignmentWorkSessionWorkedOn(db);
 migrateAssignmentWorkSessionDetachReason(db);
 migrateNotificationTable(db);
+migrateWorkSessionWaitConfirmAt(db);
+migrateWorkSessionSkippedAt(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -181,6 +190,18 @@ const checkUpcomingAssignmentsUseCase = new CheckUpcomingAssignmentsUseCase(
   notificationRepository,
   clock,
 );
+const autoSkipStaleWorkSessionsUseCase = new AutoSkipStaleWorkSessionsUseCase(
+  workSessionRepository,
+  workSessionStateRepository,
+  clock,
+);
+const autoWrapUpLateStaleWorkSessionsUseCase = new AutoWrapUpLateStaleWorkSessionsUseCase(
+  workSessionRepository,
+  workSessionStateRepository,
+  assignmentWorkSessionRepository,
+  notificationRepository,
+  clock,
+);
 const runNotificationChecks = () => {
   const overdueCount = checkOverdueAssignmentsUseCase.execute();
   if (overdueCount > 0) {
@@ -193,6 +214,14 @@ const runNotificationChecks = () => {
   const dueSoonCount = checkUpcomingAssignmentsUseCase.execute();
   if (dueSoonCount > 0) {
     console.log(`[app-api] created ${dueSoonCount} due-soon assignment notification(s)`);
+  }
+  const autoSkippedCount = autoSkipStaleWorkSessionsUseCase.execute();
+  if (autoSkippedCount > 0) {
+    console.log(`[app-api] auto-skipped ${autoSkippedCount} stale WAIT_CONFIRM work session(s)`);
+  }
+  const autoWrappedUpCount = autoWrapUpLateStaleWorkSessionsUseCase.execute();
+  if (autoWrappedUpCount > 0) {
+    console.log(`[app-api] auto-wrapped-up ${autoWrappedUpCount} stale SKIPPED work session(s)`);
   }
 };
 runNotificationChecks();
@@ -269,6 +298,20 @@ const app = createServer({
     clock,
     db,
   ),
+  confirmCompleteWorkSessionUseCase: new ConfirmCompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  confirmSkipWorkSessionUseCase: new ConfirmSkipWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
   uncompleteWorkSessionUseCase: new UncompleteWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
@@ -278,6 +321,15 @@ const app = createServer({
   ),
   deleteWorkSessionUseCase: new DeleteWorkSessionUseCase(
     workSessionRepository,
+    workSessionStateRepository,
+    assignmentWorkSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  wrapUpLateWorkSessionUseCase: new WrapUpLateWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
     assignmentWorkSessionRepository,
     notificationRepository,
     clock,

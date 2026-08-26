@@ -61,10 +61,10 @@ export class StartTimeInPastError extends WorkSessionValidationError {
   }
 }
 
-export class CannotRescheduleNonWaitConfirmWorkSessionError extends WorkSessionValidationError {
+export class CannotRescheduleNonSkippedWorkSessionError extends WorkSessionValidationError {
   constructor(state: string) {
-    super(`Only a work session awaiting confirmation can be rescheduled (state: ${state})`);
-    this.name = "CannotRescheduleNonWaitConfirmWorkSessionError";
+    super(`Only a skipped work session can be rescheduled (state: ${state})`);
+    this.name = "CannotRescheduleNonSkippedWorkSessionError";
   }
 }
 
@@ -79,6 +79,34 @@ export class CannotUncompleteNonCompletedWorkSessionError extends WorkSessionVal
   constructor(state: string) {
     super(`Only a completed work session can be uncompleted (state: ${state})`);
     this.name = "CannotUncompleteNonCompletedWorkSessionError";
+  }
+}
+
+export class CannotDeleteNonInProgressWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only an in-progress work session can be deleted (state: ${state})`);
+    this.name = "CannotDeleteNonInProgressWorkSessionError";
+  }
+}
+
+export class CannotConfirmSkipNonWaitConfirmWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only a work session awaiting confirmation can be confirmed as skipped (state: ${state})`);
+    this.name = "CannotConfirmSkipNonWaitConfirmWorkSessionError";
+  }
+}
+
+export class CannotConfirmCompleteNonWaitConfirmWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only a work session awaiting confirmation can be confirmed as complete (state: ${state})`);
+    this.name = "CannotConfirmCompleteNonWaitConfirmWorkSessionError";
+  }
+}
+
+export class CannotWrapUpLateNonSkippedWorkSessionError extends WorkSessionValidationError {
+  constructor(state: string) {
+    super(`Only a skipped work session can be wrapped up late (state: ${state})`);
+    this.name = "CannotWrapUpLateNonSkippedWorkSessionError";
   }
 }
 

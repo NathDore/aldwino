@@ -2,18 +2,25 @@ import type { Hono } from "hono";
 import {
   WorkSessionValidationError,
   WorkSessionStateNotFoundError,
-  CannotRescheduleNonWaitConfirmWorkSessionError,
+  CannotRescheduleNonSkippedWorkSessionError,
   CannotEditNonInProgressWorkSessionError,
   CannotUncompletePastWorkSessionError,
   CannotCompleteNonInProgressWorkSessionError,
   CannotUncompleteNonCompletedWorkSessionError,
+  CannotDeleteNonInProgressWorkSessionError,
+  CannotConfirmSkipNonWaitConfirmWorkSessionError,
+  CannotConfirmCompleteNonWaitConfirmWorkSessionError,
+  CannotWrapUpLateNonSkippedWorkSessionError,
 } from "../../../domain/workSession/WorkSessionError";
 import type { CreateWorkSessionUseCase } from "../../../application/workSession/CreateWorkSessionUseCase";
 import type { GetWorkSessionByIdUseCase } from "../../../application/workSession/GetWorkSessionByIdUseCase";
 import type { ListWorkSessionsUseCase } from "../../../application/workSession/ListWorkSessionsUseCase";
 import type { CompleteWorkSessionUseCase } from "../../../application/workSession/CompleteWorkSessionUseCase";
+import type { ConfirmCompleteWorkSessionUseCase } from "../../../application/workSession/ConfirmCompleteWorkSessionUseCase";
+import type { ConfirmSkipWorkSessionUseCase } from "../../../application/workSession/ConfirmSkipWorkSessionUseCase";
 import type { UncompleteWorkSessionUseCase } from "../../../application/workSession/UncompleteWorkSessionUseCase";
 import type { DeleteWorkSessionUseCase } from "../../../application/workSession/DeleteWorkSessionUseCase";
+import type { WrapUpLateWorkSessionUseCase } from "../../../application/workSession/WrapUpLateWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../../application/workSession/RescheduleWorkSessionUseCase";
 import type { EditWorkSessionUseCase } from "../../../application/workSession/EditWorkSessionUseCase";
 import type { CloseWorkSessionUseCase } from "../../../application/workSession/CloseWorkSessionUseCase";
@@ -25,8 +32,11 @@ interface WorkSessionRouteDeps {
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
   listWorkSessionsUseCase: ListWorkSessionsUseCase;
   completeWorkSessionUseCase: CompleteWorkSessionUseCase;
+  confirmCompleteWorkSessionUseCase: ConfirmCompleteWorkSessionUseCase;
+  confirmSkipWorkSessionUseCase: ConfirmSkipWorkSessionUseCase;
   uncompleteWorkSessionUseCase: UncompleteWorkSessionUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
+  wrapUpLateWorkSessionUseCase: WrapUpLateWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
   editWorkSessionUseCase: EditWorkSessionUseCase;
   closeWorkSessionUseCase: CloseWorkSessionUseCase;
@@ -35,11 +45,15 @@ interface WorkSessionRouteDeps {
 
 function handleWorkSessionError(error: unknown) {
   if (
-    error instanceof CannotRescheduleNonWaitConfirmWorkSessionError ||
+    error instanceof CannotRescheduleNonSkippedWorkSessionError ||
     error instanceof CannotEditNonInProgressWorkSessionError ||
     error instanceof CannotUncompletePastWorkSessionError ||
     error instanceof CannotCompleteNonInProgressWorkSessionError ||
-    error instanceof CannotUncompleteNonCompletedWorkSessionError
+    error instanceof CannotUncompleteNonCompletedWorkSessionError ||
+    error instanceof CannotDeleteNonInProgressWorkSessionError ||
+    error instanceof CannotConfirmSkipNonWaitConfirmWorkSessionError ||
+    error instanceof CannotConfirmCompleteNonWaitConfirmWorkSessionError ||
+    error instanceof CannotWrapUpLateNonSkippedWorkSessionError
   ) {
     return { body: { error: error.message }, status: 409 as const };
   }
@@ -66,7 +80,6 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
       const body = (await c.req.json()) as {
         startTime?: string;
         endTime?: string;
-        workSessionStateId?: string;
       };
 
       if (!body.startTime || !body.endTime) {
@@ -83,11 +96,7 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
         return c.json({ error: "endTime must be a valid ISO 8601 date" }, 400);
       }
 
-      const result = deps.createWorkSessionUseCase.execute({
-        startTime,
-        endTime,
-        workSessionStateId: body.workSessionStateId,
-      });
+      const result = deps.createWorkSessionUseCase.execute({ startTime, endTime });
       return c.json(toWorkSessionResponse(result), 201);
     } catch (error) {
       const handled = handleWorkSessionError(error);
@@ -129,6 +138,32 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
     }
   });
 
+  app.post("/work-sessions/:id/confirm-complete", (c) => {
+    try {
+      const workSession = deps.confirmCompleteWorkSessionUseCase.execute(c.req.param("id"));
+      return c.json(workSession.toJSON(), 200);
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/work-sessions/:id/confirm-skip", (c) => {
+    try {
+      const workSession = deps.confirmSkipWorkSessionUseCase.execute(c.req.param("id"));
+      return c.json(workSession.toJSON(), 200);
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
   app.post("/work-sessions/:id/uncomplete", (c) => {
     try {
       const result = deps.uncompleteWorkSessionUseCase.execute(c.req.param("id"));
@@ -147,6 +182,19 @@ export function registerWorkSessionRoutes(app: Hono, deps: WorkSessionRouteDeps)
       const id = c.req.param("id");
       deps.deleteWorkSessionUseCase.execute(id);
       return new Response(null, { status: 204 });
+    } catch (error) {
+      const handled = handleWorkSessionError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.post("/work-sessions/:id/wrap-up-late", (c) => {
+    try {
+      const workSession = deps.wrapUpLateWorkSessionUseCase.execute(c.req.param("id"));
+      return c.json(workSession.toJSON(), 200);
     } catch (error) {
       const handled = handleWorkSessionError(error);
       if (handled) {

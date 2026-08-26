@@ -22,7 +22,7 @@ import { EditWorkSessionUseCase } from "../src/application/workSession/EditWorkS
 import { AssignmentStateTransitionError } from "../src/domain/assignment/AssignmentError";
 import { CannotDeleteAutoDetachedLinkError, WorkSessionCompletedError } from "../src/domain/assignmentWorkSession/AssignmentWorkSessionError";
 import {
-  CannotRescheduleNonWaitConfirmWorkSessionError,
+  CannotRescheduleNonSkippedWorkSessionError,
   CannotEditNonInProgressWorkSessionError,
   StartTimeInPastError,
 } from "../src/domain/workSession/WorkSessionError";
@@ -102,7 +102,14 @@ beforeEach(() => {
   );
   wrapUp = new WrapUpAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
   deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
-  deleteWorkSession = new DeleteWorkSessionUseCase(workSessionRepository, linkRepository, notificationRepository, clock, db);
+  deleteWorkSession = new DeleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    linkRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   link = new CreateAssignmentWorkSessionUseCase(
     linkRepository,
     assignmentRepository,
@@ -444,14 +451,15 @@ describe("workedOn tracking", () => {
 });
 
 describe("RescheduleWorkSessionUseCase", () => {
-  test("reschedules a wait-confirm session, stamps rescheduleAt, and resets to in-progress", () => {
-    const session = newWorkSession("WAIT_CONFIRM");
+  test("reschedules a skipped session, stamps rescheduleAt, clears skippedAt, and resets to in-progress", () => {
+    const session = newWorkSession("SKIPPED");
 
     const result = rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END });
 
     expect(result.session.startTime).toEqual(NEW_START);
     expect(result.session.endTime).toEqual(NEW_END);
     expect(result.session.rescheduleAt).toEqual(NOW);
+    expect(result.session.skippedAt).toBeNull();
     expect(result.session.workSessionStateId).toBe(workSessionStateIdFor(db, "INPROGRESS"));
     expect(result.mergedFrom).toEqual([]);
   });
@@ -460,7 +468,15 @@ describe("RescheduleWorkSessionUseCase", () => {
     const session = newWorkSession("INPROGRESS");
 
     expect(() => rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
-      CannotRescheduleNonWaitConfirmWorkSessionError,
+      CannotRescheduleNonSkippedWorkSessionError,
+    );
+  });
+
+  test("rejects a wait-confirm session", () => {
+    const session = newWorkSession("WAIT_CONFIRM");
+
+    expect(() => rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
+      CannotRescheduleNonSkippedWorkSessionError,
     );
   });
 
@@ -468,12 +484,12 @@ describe("RescheduleWorkSessionUseCase", () => {
     const session = newWorkSession("COMPLETED");
 
     expect(() => rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
-      CannotRescheduleNonWaitConfirmWorkSessionError,
+      CannotRescheduleNonSkippedWorkSessionError,
     );
   });
 
   test("rejects a start time in the past", () => {
-    const session = newWorkSession("WAIT_CONFIRM");
+    const session = newWorkSession("SKIPPED");
     const past = new Date("2026-06-01T14:00:00.000Z");
     const pastEnd = new Date("2026-06-01T16:00:00.000Z");
 
@@ -483,7 +499,7 @@ describe("RescheduleWorkSessionUseCase", () => {
   });
 
   test("tolerates a start time a few seconds in the past", () => {
-    const session = newWorkSession("WAIT_CONFIRM");
+    const session = newWorkSession("SKIPPED");
     const justPassed = new Date(NOW.getTime() - 2000);
     const end = new Date(NOW.getTime() + 60 * 60 * 1000);
 
@@ -494,7 +510,7 @@ describe("RescheduleWorkSessionUseCase", () => {
     const session = workSessionRepository.create(
       WorkSession.create({
         id: "session-wrapped",
-        workSessionStateId: workSessionStateIdFor(db, "WAIT_CONFIRM"),
+        workSessionStateId: workSessionStateIdFor(db, "SKIPPED"),
         startTime: SESSION_START,
         endTime: SESSION_END,
         completedAt: null,
