@@ -41,6 +41,7 @@ import { ListAssignmentsUseCase } from "./application/assignment/ListAssignments
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { ConfirmCompleteAssignmentUseCase } from "./application/assignment/ConfirmCompleteAssignmentUseCase";
 import { UncompleteAssignmentUseCase } from "./application/assignment/UncompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
@@ -55,12 +56,13 @@ import { WorkSessionStateRepository } from "./infrastructure/database/repositori
 import { CreateWorkSessionUseCase } from "./application/workSession/CreateWorkSessionUseCase";
 import { GetWorkSessionByIdUseCase } from "./application/workSession/GetWorkSessionByIdUseCase";
 import { ListWorkSessionsUseCase } from "./application/workSession/ListWorkSessionsUseCase";
-import { ChangeWorkSessionStateUseCase } from "./application/workSession/ChangeWorkSessionStateUseCase";
+import { CompleteWorkSessionUseCase } from "./application/workSession/CompleteWorkSessionUseCase";
+import { UncompleteWorkSessionUseCase } from "./application/workSession/UncompleteWorkSessionUseCase";
 import { GetRandomWorkSessionCompletionMessageUseCase } from "./application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
 import { EditWorkSessionUseCase } from "./application/workSession/EditWorkSessionUseCase";
-import { WrapUpWorkSessionUseCase } from "./application/workSession/WrapUpWorkSessionUseCase";
+import { CloseWorkSessionUseCase } from "./application/workSession/CloseWorkSessionUseCase";
 import { WorkSessionMergeService } from "./application/workSession/WorkSessionMergeService";
 import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
 import { AssignmentWorkSessionRepository } from "./infrastructure/database/repositories/AssignmentWorkSessionRepository";
@@ -161,7 +163,7 @@ runPurge();
 const PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 setInterval(runPurge, PURGE_INTERVAL_MS).unref();
 
-// Notification checks: run once at every launch, then daily at local midnight
+// Notification checks: run once at every launch, then every 60s while the app is open
 const checkOverdueAssignmentsUseCase = new CheckOverdueAssignmentsUseCase(
   assignmentRepository,
   assignmentStateRepository,
@@ -194,16 +196,8 @@ const runNotificationChecks = () => {
   }
 };
 runNotificationChecks();
-const NOTIFICATION_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
-function msUntilNextMidnight(now: Date): number {
-  const nextMidnight = new Date(now);
-  nextMidnight.setHours(24, 0, 0, 0);
-  return nextMidnight.getTime() - now.getTime();
-}
-setTimeout(() => {
-  runNotificationChecks();
-  setInterval(runNotificationChecks, NOTIFICATION_CHECK_INTERVAL_MS).unref();
-}, msUntilNextMidnight(clock.now())).unref();
+const NOTIFICATION_CHECK_INTERVAL_MS = 60 * 1000;
+setInterval(runNotificationChecks, NOTIFICATION_CHECK_INTERVAL_MS).unref();
 
 // Create app with all dependencies
 const app = createServer({
@@ -225,6 +219,15 @@ const app = createServer({
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
   deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
   completeAssignmentUseCase: new CompleteAssignmentUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  confirmCompleteAssignmentUseCase: new ConfirmCompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
     assignmentWorkSessionRepository,
@@ -260,7 +263,13 @@ const app = createServer({
   ),
   getWorkSessionByIdUseCase: new GetWorkSessionByIdUseCase(workSessionRepository),
   listWorkSessionsUseCase: new ListWorkSessionsUseCase(workSessionRepository),
-  changeWorkSessionStateUseCase: new ChangeWorkSessionStateUseCase(
+  completeWorkSessionUseCase: new CompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    clock,
+    db,
+  ),
+  uncompleteWorkSessionUseCase: new UncompleteWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
     workSessionMergeService,
@@ -282,7 +291,7 @@ const app = createServer({
     db,
   ),
   editWorkSessionUseCase: new EditWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
-  wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
+  closeWorkSessionUseCase: new CloseWorkSessionUseCase(workSessionRepository, clock, db),
   getRandomWorkSessionCompletionMessageUseCase: new GetRandomWorkSessionCompletionMessageUseCase(),
   listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),
   createAssignmentWorkSessionUseCase: new CreateAssignmentWorkSessionUseCase(
