@@ -41,6 +41,9 @@ import type { DeleteAssignmentWorkSessionUseCase } from "../../application/assig
 import type { MarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
 import type { UnmarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 import { registerAssignmentWorkSessionRoutes } from "./routes/assignmentWorkSession.route";
+import type { ListNotificationsUseCase } from "../../application/notification/ListNotificationsUseCase";
+import type { MarkNotificationReadUseCase } from "../../application/notification/MarkNotificationReadUseCase";
+import { registerNotificationRoutes } from "./routes/notification.route";
 
 export interface ServerDeps {
   getHealthUseCase: GetHealthUseCase;
@@ -77,6 +80,8 @@ export interface ServerDeps {
   deleteAssignmentWorkSessionUseCase: DeleteAssignmentWorkSessionUseCase;
   markAssignmentWorkedOnUseCase: MarkAssignmentWorkedOnUseCase;
   unmarkAssignmentWorkedOnUseCase: UnmarkAssignmentWorkedOnUseCase;
+  listNotificationsUseCase: ListNotificationsUseCase;
+  markNotificationReadUseCase: MarkNotificationReadUseCase;
   allowedOrigins: string[];
 }
 
@@ -90,5 +95,6 @@ export function createServer(deps: ServerDeps): Hono {
   registerWorkSessionRoutes(app, deps);
   registerWorkSessionStateRoutes(app, deps);
   registerAssignmentWorkSessionRoutes(app, deps);
+  registerNotificationRoutes(app, deps);
   return app;
 }
