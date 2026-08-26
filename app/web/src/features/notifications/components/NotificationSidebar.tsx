@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "@/shared/components/Button";
+import { CloseIcon } from "@/features/calendar/components/icons";
 import { mockNotifications } from "../mock/mockNotifications";
 import { useNotificationsSidebarStore } from "../store/notificationsSidebarStore";
 import { NotificationCard } from "./NotificationCard";
@@ -44,8 +46,12 @@ export function NotificationSidebar() {
         isVisible ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      <div className="px-6 py-5 border-b border-slate-200 shrink-0">
+      <div className="px-6 py-5 border-b border-slate-200 shrink-0 flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
+        <Button variant="ghost" size="sm" onClick={toggle}>
+          <span className="sr-only">Close</span>
+          <CloseIcon />
+        </Button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
         {mockNotifications.length === 0 ? (
