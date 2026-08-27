@@ -13,6 +13,7 @@ export class Notification {
     public readonly isDeleted: boolean,
     public readonly deletedAt: Date | null,
     public readonly createdAt: Date,
+    public readonly actionTaken: boolean,
   ) {}
 
   static create(params: {
@@ -24,6 +25,7 @@ export class Notification {
     isDeleted?: boolean;
     deletedAt?: Date | null;
     createdAt: Date;
+    actionTaken?: boolean;
   }): Notification {
     validateType(params.type);
     validateEntityType(params.entityType);
@@ -37,6 +39,7 @@ export class Notification {
       params.isDeleted ?? false,
       params.deletedAt ?? null,
       params.createdAt,
+      params.actionTaken ?? false,
     );
   }
 
@@ -50,6 +53,7 @@ export class Notification {
       isDeleted: this.isDeleted,
       deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
       createdAt: this.createdAt.toISOString(),
+      actionTaken: this.actionTaken,
     };
   }
 }

@@ -48,6 +48,7 @@ import type { UnmarkAssignmentWorkedOnUseCase } from "../../application/assignme
 import { registerAssignmentWorkSessionRoutes } from "./routes/assignmentWorkSession.route";
 import type { ListNotificationsUseCase } from "../../application/notification/ListNotificationsUseCase";
 import type { MarkNotificationReadUseCase } from "../../application/notification/MarkNotificationReadUseCase";
+import type { GetNotificationByIdUseCase } from "../../application/notification/GetNotificationByIdUseCase";
 import { registerNotificationRoutes } from "./routes/notification.route";
 
 export interface ServerDeps {
@@ -92,6 +93,7 @@ export interface ServerDeps {
   unmarkAssignmentWorkedOnUseCase: UnmarkAssignmentWorkedOnUseCase;
   listNotificationsUseCase: ListNotificationsUseCase;
   markNotificationReadUseCase: MarkNotificationReadUseCase;
+  getNotificationByIdUseCase: GetNotificationByIdUseCase;
   allowedOrigins: string[];
 }
 

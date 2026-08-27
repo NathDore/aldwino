@@ -11,6 +11,8 @@ import { CheckMissedWorkSessionsUseCase } from "../src/application/notification/
 import { CheckUpcomingAssignmentsUseCase } from "../src/application/notification/CheckUpcomingAssignmentsUseCase";
 import { ListNotificationsUseCase } from "../src/application/notification/ListNotificationsUseCase";
 import { PurgeDeletedNotificationsUseCase } from "../src/application/notification/PurgeDeletedNotificationsUseCase";
+import { MarkNotificationReadUseCase } from "../src/application/notification/MarkNotificationReadUseCase";
+import { GetNotificationByIdUseCase } from "../src/application/notification/GetNotificationByIdUseCase";
 import { ConfirmCompleteAssignmentUseCase } from "../src/application/assignment/ConfirmCompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "../src/application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "../src/application/assignment/WrapUpLateAssignmentUseCase";
@@ -61,6 +63,8 @@ let checkMissedWorkSessions: CheckMissedWorkSessionsUseCase;
 let checkUpcomingAssignments: CheckUpcomingAssignmentsUseCase;
 let listNotifications: ListNotificationsUseCase;
 let purgeNotifications: PurgeDeletedNotificationsUseCase;
+let markNotificationRead: MarkNotificationReadUseCase;
+let getNotificationById: GetNotificationByIdUseCase;
 let confirmCompleteAssignment: ConfirmCompleteAssignmentUseCase;
 let rescheduleAssignment: RescheduleAssignmentUseCase;
 let wrapUpLateAssignment: WrapUpLateAssignmentUseCase;
@@ -103,6 +107,8 @@ beforeEach(() => {
   checkUpcomingAssignments = new CheckUpcomingAssignmentsUseCase(assignmentRepository, notificationRepository, clock);
   listNotifications = new ListNotificationsUseCase(notificationRepository);
   purgeNotifications = new PurgeDeletedNotificationsUseCase(notificationRepository, clock);
+  markNotificationRead = new MarkNotificationReadUseCase(notificationRepository);
+  getNotificationById = new GetNotificationByIdUseCase(notificationRepository);
   confirmCompleteAssignment = new ConfirmCompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
@@ -410,6 +416,7 @@ describe("auto-resolve on assignment resolution", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 
   test("rescheduling an overdue assignment marks its notification as read and resets state", () => {
@@ -422,6 +429,7 @@ describe("auto-resolve on assignment resolution", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 
   test("wrapping up late an overdue assignment marks its notification as read", () => {
@@ -433,6 +441,7 @@ describe("auto-resolve on assignment resolution", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 });
 
@@ -452,6 +461,7 @@ describe("auto-resolve on work session resolution", () => {
 
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items.every((n) => n.isRead)).toBe(true);
+    expect(items.every((n) => n.actionTaken)).toBe(true);
   });
 
   test("confirm-skipping a missed session marks its notification as read", () => {
@@ -463,6 +473,7 @@ describe("auto-resolve on work session resolution", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 
   test("wrapping up late a skipped session marks its notification as read", () => {
@@ -476,6 +487,7 @@ describe("auto-resolve on work session resolution", () => {
 
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items.every((n) => n.isRead)).toBe(true);
+    expect(items.every((n) => n.actionTaken)).toBe(true);
   });
 });
 
@@ -508,6 +520,7 @@ describe("ConfirmCompleteWorkSessionUseCase", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 
   test("rejects an in-progress session", () => {
@@ -532,6 +545,7 @@ describe("ConfirmSkipWorkSessionUseCase", () => {
     const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(items).toHaveLength(1);
     expect(items[0].isRead).toBe(true);
+    expect(items[0].actionTaken).toBe(true);
   });
 
   test("rejects an in-progress session", () => {
@@ -709,6 +723,49 @@ describe("countUnread / unreadCount", () => {
 
     expect(result.total).toBe(3);
     expect(result.unreadCount).toBe(2);
+  });
+});
+
+describe("actionTaken semantics", () => {
+  test("markAsRead (opening a notification) never sets actionTaken", () => {
+    const notification = notificationRepository.create(makeNotification({ id: "notification-open-only" }));
+
+    const updated = markNotificationRead.execute(notification.id);
+
+    expect(updated.isRead).toBe(true);
+    expect(updated.actionTaken).toBe(false);
+  });
+
+  test("markResolvedForEntity flips actionTaken for every notification tied to that entity", () => {
+    const assignment = createOverdueAssignment();
+    checkOverdueAssignments.execute();
+    // A second, unrelated-in-type notification for the same assignment should also resolve.
+    notificationRepository.create(
+      makeNotification({
+        id: "notification-due-soon-same-assignment",
+        type: "ASSIGNMENT_DUE_SOON",
+        entityType: "ASSIGNMENT",
+        entityId: assignment.id,
+      }),
+    );
+
+    confirmCompleteAssignment.execute(assignment.id);
+
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(2);
+    expect(items.every((n) => n.isRead && n.actionTaken)).toBe(true);
+  });
+});
+
+describe("GetNotificationByIdUseCase", () => {
+  test("returns the notification when it exists", () => {
+    const notification = notificationRepository.create(makeNotification({ id: "notification-lookup" }));
+
+    expect(getNotificationById.execute(notification.id)?.id).toBe(notification.id);
+  });
+
+  test("returns null when the notification does not exist", () => {
+    expect(getNotificationById.execute("missing-id")).toBeNull();
   });
 });
 

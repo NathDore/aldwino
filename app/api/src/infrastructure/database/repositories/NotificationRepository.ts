@@ -13,7 +13,7 @@ export interface INotificationRepository {
     type: NotificationType,
   ): Notification | null;
   markAsRead(id: string): Notification | null;
-  markAllReadForEntity(entityType: NotificationEntityType, entityId: string): number;
+  markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number;
   purgeDeletedBefore(cutoff: Date): number;
 }
 
@@ -23,7 +23,7 @@ export class NotificationRepository implements INotificationRepository {
   create(notification: Notification): Notification {
     const json = notification.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO notifications (id, type, entityType, entityId, isRead, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO notifications (id, type, entityType, entityId, isRead, isDeleted, deletedAt, createdAt, actionTaken) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -34,6 +34,7 @@ export class NotificationRepository implements INotificationRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.createdAt,
+      json.actionTaken ? 1 : 0,
     );
     return notification;
   }
@@ -98,12 +99,13 @@ export class NotificationRepository implements INotificationRepository {
       isDeleted: existing.isDeleted,
       deletedAt: existing.deletedAt,
       createdAt: existing.createdAt,
+      actionTaken: existing.actionTaken,
     });
   }
 
-  markAllReadForEntity(entityType: NotificationEntityType, entityId: string): number {
+  markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number {
     const stmt = this.db.prepare(
-      "UPDATE notifications SET isRead = 1 WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
+      "UPDATE notifications SET isRead = 1, actionTaken = 1 WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
     );
     const result = stmt.run(entityType, entityId);
     return result.changes;
@@ -125,6 +127,7 @@ export class NotificationRepository implements INotificationRepository {
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       createdAt: new Date(row.createdAt as string),
+      actionTaken: Boolean(row.actionTaken),
     });
   }
 }

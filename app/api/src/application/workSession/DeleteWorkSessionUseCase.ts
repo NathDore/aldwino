@@ -64,7 +64,7 @@ export class DeleteWorkSessionUseCase {
       }
 
       this.relabelStaleCompletionLinks(id);
-      this.notificationRepository.markAllReadForEntity("WORK_SESSION", id);
+      this.notificationRepository.markResolvedForEntity("WORK_SESSION", id);
 
       return updated;
     })();

@@ -9,6 +9,7 @@ export {
   useRescheduleAssignmentMutation,
   useWrapUpAssignmentMutation,
   useWrapUpLateAssignmentMutation,
+  useConfirmCompleteAssignmentMutation,
 } from "./queries/useMutations";
 export { useAssignmentForm } from "./hooks/useAssignmentForm";
 export {

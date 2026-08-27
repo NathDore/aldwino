@@ -2,10 +2,12 @@ import type { Hono } from "hono";
 import { NotificationNotFoundError } from "../../../domain/notification/NotificationError";
 import type { ListNotificationsUseCase } from "../../../application/notification/ListNotificationsUseCase";
 import type { MarkNotificationReadUseCase } from "../../../application/notification/MarkNotificationReadUseCase";
+import type { GetNotificationByIdUseCase } from "../../../application/notification/GetNotificationByIdUseCase";
 
 interface NotificationRouteDeps {
   listNotificationsUseCase: ListNotificationsUseCase;
   markNotificationReadUseCase: MarkNotificationReadUseCase;
+  getNotificationByIdUseCase: GetNotificationByIdUseCase;
 }
 
 function handleNotificationError(error: unknown) {
@@ -40,6 +42,14 @@ export function registerNotificationRoutes(app: Hono, deps: NotificationRouteDep
     const offset = parseOffset(c.req.query("offset"));
     const { items, total, unreadCount } = deps.listNotificationsUseCase.execute({ limit, offset });
     return c.json({ items: items.map((notification) => notification.toJSON()), total, unreadCount }, 200);
+  });
+
+  app.get("/notifications/:id", (c) => {
+    const notification = deps.getNotificationByIdUseCase.execute(c.req.param("id"));
+    if (!notification) {
+      return c.json({ error: "Notification not found" }, 404);
+    }
+    return c.json(notification.toJSON(), 200);
   });
 
   app.post("/notifications/:id/read", (c) => {

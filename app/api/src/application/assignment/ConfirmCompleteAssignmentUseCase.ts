@@ -52,7 +52,7 @@ export class ConfirmCompleteAssignmentUseCase {
 
       const result = this.repository.update(updated);
       this.detachFromFutureWorkSessions(id, now);
-      this.notificationRepository.markAllReadForEntity("ASSIGNMENT", id);
+      this.notificationRepository.markResolvedForEntity("ASSIGNMENT", id);
       return result;
     })();
   }
