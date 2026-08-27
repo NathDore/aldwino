@@ -49,6 +49,7 @@ import { registerAssignmentWorkSessionRoutes } from "./routes/assignmentWorkSess
 import type { ListNotificationsUseCase } from "../../application/notification/ListNotificationsUseCase";
 import type { MarkNotificationReadUseCase } from "../../application/notification/MarkNotificationReadUseCase";
 import type { GetNotificationByIdUseCase } from "../../application/notification/GetNotificationByIdUseCase";
+import type { RemoveNotificationUseCase } from "../../application/notification/RemoveNotificationUseCase";
 import { registerNotificationRoutes } from "./routes/notification.route";
 
 export interface ServerDeps {
@@ -94,6 +95,7 @@ export interface ServerDeps {
   listNotificationsUseCase: ListNotificationsUseCase;
   markNotificationReadUseCase: MarkNotificationReadUseCase;
   getNotificationByIdUseCase: GetNotificationByIdUseCase;
+  removeNotificationUseCase: RemoveNotificationUseCase;
   allowedOrigins: string[];
 }
 

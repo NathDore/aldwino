@@ -85,6 +85,7 @@ import { NotificationRepository } from "./infrastructure/database/repositories/N
 import { ListNotificationsUseCase } from "./application/notification/ListNotificationsUseCase";
 import { MarkNotificationReadUseCase } from "./application/notification/MarkNotificationReadUseCase";
 import { GetNotificationByIdUseCase } from "./application/notification/GetNotificationByIdUseCase";
+import { RemoveNotificationUseCase } from "./application/notification/RemoveNotificationUseCase";
 import { CheckOverdueAssignmentsUseCase } from "./application/notification/CheckOverdueAssignmentsUseCase";
 import { CheckMissedWorkSessionsUseCase } from "./application/notification/CheckMissedWorkSessionsUseCase";
 import { CheckUpcomingAssignmentsUseCase } from "./application/notification/CheckUpcomingAssignmentsUseCase";
@@ -384,6 +385,7 @@ const app = createServer({
   listNotificationsUseCase: new ListNotificationsUseCase(notificationRepository),
   markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository),
   getNotificationByIdUseCase: new GetNotificationByIdUseCase(notificationRepository),
+  removeNotificationUseCase: new RemoveNotificationUseCase(notificationRepository, clock),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
 });
 

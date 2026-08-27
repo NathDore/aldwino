@@ -12,3 +12,7 @@ export async function markNotificationRead(id: string): Promise<NotificationDto>
 export async function fetchNotificationById(id: string): Promise<NotificationDto> {
   return apiClient<NotificationDto>(`/notifications/${id}`);
 }
+
+export async function removeNotification(id: string): Promise<void> {
+  await apiClient<void>(`/notifications/${id}`, { method: "DELETE" });
+}

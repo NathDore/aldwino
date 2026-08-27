@@ -13,6 +13,8 @@ import { ListNotificationsUseCase } from "../src/application/notification/ListNo
 import { PurgeDeletedNotificationsUseCase } from "../src/application/notification/PurgeDeletedNotificationsUseCase";
 import { MarkNotificationReadUseCase } from "../src/application/notification/MarkNotificationReadUseCase";
 import { GetNotificationByIdUseCase } from "../src/application/notification/GetNotificationByIdUseCase";
+import { RemoveNotificationUseCase } from "../src/application/notification/RemoveNotificationUseCase";
+import { NotificationNotFoundError, CannotRemoveNotificationError } from "../src/domain/notification/NotificationError";
 import { ConfirmCompleteAssignmentUseCase } from "../src/application/assignment/ConfirmCompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "../src/application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "../src/application/assignment/WrapUpLateAssignmentUseCase";
@@ -65,6 +67,7 @@ let listNotifications: ListNotificationsUseCase;
 let purgeNotifications: PurgeDeletedNotificationsUseCase;
 let markNotificationRead: MarkNotificationReadUseCase;
 let getNotificationById: GetNotificationByIdUseCase;
+let removeNotification: RemoveNotificationUseCase;
 let confirmCompleteAssignment: ConfirmCompleteAssignmentUseCase;
 let rescheduleAssignment: RescheduleAssignmentUseCase;
 let wrapUpLateAssignment: WrapUpLateAssignmentUseCase;
@@ -109,6 +112,7 @@ beforeEach(() => {
   purgeNotifications = new PurgeDeletedNotificationsUseCase(notificationRepository, clock);
   markNotificationRead = new MarkNotificationReadUseCase(notificationRepository);
   getNotificationById = new GetNotificationByIdUseCase(notificationRepository);
+  removeNotification = new RemoveNotificationUseCase(notificationRepository, clock);
   confirmCompleteAssignment = new ConfirmCompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
@@ -699,6 +703,14 @@ describe("PurgeDeletedNotificationsUseCase", () => {
 
     expect(purgeNotifications.execute()).toBe(0);
   });
+
+  test("purges a notification removed via RemoveNotificationUseCase once past the retention window", () => {
+    notificationRepository.create(makeNotification({ id: "notification-removed", isRead: true, actionTaken: true }));
+    removeNotification.execute("notification-removed");
+    clock.set(new Date(NOW.getTime() + 8 * ONE_DAY_MS));
+
+    expect(purgeNotifications.execute()).toBe(1);
+  });
 });
 
 describe("countUnread / unreadCount", () => {
@@ -766,6 +778,73 @@ describe("GetNotificationByIdUseCase", () => {
 
   test("returns null when the notification does not exist", () => {
     expect(getNotificationById.execute("missing-id")).toBeNull();
+  });
+});
+
+describe("RemoveNotificationUseCase", () => {
+  test("rejects an unread notification", () => {
+    notificationRepository.create(makeNotification({ id: "notification-unread", isRead: false }));
+
+    expect(() => removeNotification.execute("notification-unread")).toThrow(CannotRemoveNotificationError);
+  });
+
+  test("rejects a read-but-unactioned WORK_SESSION_SKIPPED notification", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-wss", type: "WORK_SESSION_SKIPPED", isRead: true, actionTaken: false }),
+    );
+
+    expect(() => removeNotification.execute("notification-wss")).toThrow(CannotRemoveNotificationError);
+  });
+
+  test("rejects a read-but-unactioned ASSIGNMENT_OVERDUE notification", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-overdue", type: "ASSIGNMENT_OVERDUE", isRead: true, actionTaken: false }),
+    );
+
+    expect(() => removeNotification.execute("notification-overdue")).toThrow(CannotRemoveNotificationError);
+  });
+
+  test("allows a read and actioned WORK_SESSION_SKIPPED notification", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-wss", type: "WORK_SESSION_SKIPPED", isRead: true, actionTaken: true }),
+    );
+
+    const removed = removeNotification.execute("notification-wss");
+
+    expect(removed.isDeleted).toBe(true);
+    expect(getNotificationById.execute("notification-wss")).toBeNull();
+  });
+
+  test("allows a read and actioned ASSIGNMENT_OVERDUE notification", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-overdue", type: "ASSIGNMENT_OVERDUE", isRead: true, actionTaken: true }),
+    );
+
+    const removed = removeNotification.execute("notification-overdue");
+
+    expect(removed.isDeleted).toBe(true);
+  });
+
+  test("allows a read ASSIGNMENT_DUE_SOON notification regardless of actionTaken", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-due-soon", type: "ASSIGNMENT_DUE_SOON", isRead: true, actionTaken: false }),
+    );
+
+    const removed = removeNotification.execute("notification-due-soon");
+
+    expect(removed.isDeleted).toBe(true);
+  });
+
+  test("rejects an already-deleted notification with NotificationNotFoundError", () => {
+    notificationRepository.create(
+      makeNotification({ id: "notification-gone", isRead: true, actionTaken: true, isDeleted: true, deletedAt: NOW }),
+    );
+
+    expect(() => removeNotification.execute("notification-gone")).toThrow(NotificationNotFoundError);
+  });
+
+  test("rejects an unknown id with NotificationNotFoundError", () => {
+    expect(() => removeNotification.execute("does-not-exist")).toThrow(NotificationNotFoundError);
   });
 });
 

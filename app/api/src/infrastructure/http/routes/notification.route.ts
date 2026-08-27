@@ -1,16 +1,21 @@
 import type { Hono } from "hono";
-import { NotificationNotFoundError } from "../../../domain/notification/NotificationError";
+import { NotificationNotFoundError, NotificationStateTransitionError } from "../../../domain/notification/NotificationError";
 import type { ListNotificationsUseCase } from "../../../application/notification/ListNotificationsUseCase";
 import type { MarkNotificationReadUseCase } from "../../../application/notification/MarkNotificationReadUseCase";
 import type { GetNotificationByIdUseCase } from "../../../application/notification/GetNotificationByIdUseCase";
+import type { RemoveNotificationUseCase } from "../../../application/notification/RemoveNotificationUseCase";
 
 interface NotificationRouteDeps {
   listNotificationsUseCase: ListNotificationsUseCase;
   markNotificationReadUseCase: MarkNotificationReadUseCase;
   getNotificationByIdUseCase: GetNotificationByIdUseCase;
+  removeNotificationUseCase: RemoveNotificationUseCase;
 }
 
 function handleNotificationError(error: unknown) {
+  if (error instanceof NotificationStateTransitionError) {
+    return { body: { error: error.message }, status: 409 as const };
+  }
   if (error instanceof NotificationNotFoundError) {
     return { body: { error: error.message }, status: 404 as const };
   }
@@ -57,6 +62,20 @@ export function registerNotificationRoutes(app: Hono, deps: NotificationRouteDep
       const id = c.req.param("id");
       const notification = deps.markNotificationReadUseCase.execute(id);
       return c.json(notification.toJSON(), 200);
+    } catch (error) {
+      const handled = handleNotificationError(error);
+      if (handled) {
+        return c.json(handled.body, handled.status);
+      }
+      throw error;
+    }
+  });
+
+  app.delete("/notifications/:id", (c) => {
+    try {
+      const id = c.req.param("id");
+      deps.removeNotificationUseCase.execute(id);
+      return new Response(null, { status: 204 });
     } catch (error) {
       const handled = handleNotificationError(error);
       if (handled) {

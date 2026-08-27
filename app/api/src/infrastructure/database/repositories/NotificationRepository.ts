@@ -14,6 +14,7 @@ export interface INotificationRepository {
   ): Notification | null;
   markAsRead(id: string): Notification | null;
   markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number;
+  softDeleteById(id: string, now: Date): Notification | null;
   purgeDeletedBefore(cutoff: Date): number;
 }
 
@@ -109,6 +110,26 @@ export class NotificationRepository implements INotificationRepository {
     );
     const result = stmt.run(entityType, entityId);
     return result.changes;
+  }
+
+  softDeleteById(id: string, now: Date): Notification | null {
+    const existing = this.getById(id);
+    if (!existing) {
+      return null;
+    }
+    const stmt = this.db.prepare("UPDATE notifications SET isDeleted = 1, deletedAt = ? WHERE id = ? AND isDeleted = 0");
+    stmt.run(now.toISOString(), id);
+    return Notification.create({
+      id: existing.id,
+      type: existing.type,
+      entityType: existing.entityType,
+      entityId: existing.entityId,
+      isRead: existing.isRead,
+      isDeleted: true,
+      deletedAt: now,
+      createdAt: existing.createdAt,
+      actionTaken: existing.actionTaken,
+    });
   }
 
   purgeDeletedBefore(cutoff: Date): number {
