@@ -66,6 +66,13 @@ export class CannotCompleteAssignmentError extends AssignmentStateTransitionErro
   }
 }
 
+export class CannotConfirmCompleteAssignmentError extends AssignmentStateTransitionError {
+  constructor(state: AssignmentLifecycleState) {
+    super(`Cannot confirm-complete an assignment in the ${state} state`, state);
+    this.name = "CannotConfirmCompleteAssignmentError";
+  }
+}
+
 export class CannotUncompleteAssignmentError extends AssignmentStateTransitionError {
   constructor(state: AssignmentLifecycleState) {
     super(`Cannot mark an assignment in the ${state} state as incomplete`, state);

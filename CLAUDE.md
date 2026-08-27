@@ -88,6 +88,7 @@ src/
 - `application/` orchestrates; don't duplicate domain logic in use cases
 - `repositories/` transform DB rows into domain entities and vice versa; domain entities never contain DB logic
 - New DB schema changes go in a new sequentially-numbered file in `infrastructure/database/migrations/`, never by editing an existing migration
+- No generic routes: never add an endpoint that accepts an arbitrary target state/action as a body parameter (e.g. a `PATCH .../:id/state` taking a `stateId`). Every distinct action gets its own dedicated route and use case, mirroring Assignment's `complete`/`uncomplete`/`reschedule`/`wrap-up`/`wrap-up-late` — this keeps each action's guard, error type, and route independently named and testable instead of collapsed behind one client-supplied parameter.
 
 **Tests:** `app/api/tests/*.test.ts`, run via `bun:sqlite`'s bundled test runner (`bun test`). Shared fixtures/builders live in `app/api/tests/support/`.
 

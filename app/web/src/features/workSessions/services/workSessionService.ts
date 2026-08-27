@@ -39,20 +39,32 @@ export async function editWorkSession(id: string, data: EditWorkSessionData): Pr
   });
 }
 
-export async function changeWorkSessionState(id: string, workSessionStateId: string): Promise<WorkSessionDto> {
-  return apiClient<WorkSessionDto>(`/work-sessions/${id}/state`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ workSessionStateId }),
-  });
+export async function completeWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/complete`, { method: "POST" });
+}
+
+export async function uncompleteWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/uncomplete`, { method: "POST" });
+}
+
+export async function confirmCompleteWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/confirm-complete`, { method: "POST" });
+}
+
+export async function confirmSkipWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/confirm-skip`, { method: "POST" });
 }
 
 export async function deleteWorkSession(id: string): Promise<void> {
   await apiClient<void>(`/work-sessions/${id}`, { method: "DELETE" });
 }
 
-export async function wrapUpWorkSession(id: string): Promise<WorkSessionDto> {
-  return apiClient<WorkSessionDto>(`/work-sessions/${id}/wrap-up`, { method: "POST" });
+export async function wrapUpLateWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/wrap-up-late`, { method: "POST" });
+}
+
+export async function closeWorkSession(id: string): Promise<WorkSessionDto> {
+  return apiClient<WorkSessionDto>(`/work-sessions/${id}/close`, { method: "POST" });
 }
 
 export async function fetchWorkSessionCompletionMessage(): Promise<{ message: string }> {

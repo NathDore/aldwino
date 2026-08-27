@@ -7,6 +7,7 @@ import type { IAssignmentRepository } from "../../infrastructure/database/reposi
 import type { IAssignmentStateRepository } from "../../infrastructure/database/repositories/AssignmentStateRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class CompleteAssignmentUseCase {
@@ -15,6 +16,7 @@ export class CompleteAssignmentUseCase {
     private readonly assignmentStateRepository: IAssignmentStateRepository,
     private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
     private readonly workSessionRepository: IWorkSessionRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -50,6 +52,7 @@ export class CompleteAssignmentUseCase {
 
       const result = this.repository.update(updated);
       this.detachFromFutureWorkSessions(id, now);
+      this.notificationRepository.markAllReadForEntity("ASSIGNMENT", id, now);
       return result;
     })();
   }

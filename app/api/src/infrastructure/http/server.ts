@@ -14,6 +14,7 @@ import type { ListAssignmentsUseCase } from "../../application/assignment/ListAs
 import type { UpdateAssignmentUseCase } from "../../application/assignment/UpdateAssignmentUseCase";
 import type { DeleteAssignmentUseCase } from "../../application/assignment/DeleteAssignmentUseCase";
 import type { CompleteAssignmentUseCase } from "../../application/assignment/CompleteAssignmentUseCase";
+import type { ConfirmCompleteAssignmentUseCase } from "../../application/assignment/ConfirmCompleteAssignmentUseCase";
 import type { UncompleteAssignmentUseCase } from "../../application/assignment/UncompleteAssignmentUseCase";
 import type { RescheduleAssignmentUseCase } from "../../application/assignment/RescheduleAssignmentUseCase";
 import type { WrapUpAssignmentUseCase } from "../../application/assignment/WrapUpAssignmentUseCase";
@@ -24,11 +25,15 @@ import { registerAssignmentStateRoutes } from "./routes/assignmentState.route";
 import type { CreateWorkSessionUseCase } from "../../application/workSession/CreateWorkSessionUseCase";
 import type { GetWorkSessionByIdUseCase } from "../../application/workSession/GetWorkSessionByIdUseCase";
 import type { ListWorkSessionsUseCase } from "../../application/workSession/ListWorkSessionsUseCase";
-import type { ChangeWorkSessionStateUseCase } from "../../application/workSession/ChangeWorkSessionStateUseCase";
+import type { CompleteWorkSessionUseCase } from "../../application/workSession/CompleteWorkSessionUseCase";
+import type { ConfirmCompleteWorkSessionUseCase } from "../../application/workSession/ConfirmCompleteWorkSessionUseCase";
+import type { ConfirmSkipWorkSessionUseCase } from "../../application/workSession/ConfirmSkipWorkSessionUseCase";
+import type { UncompleteWorkSessionUseCase } from "../../application/workSession/UncompleteWorkSessionUseCase";
 import type { DeleteWorkSessionUseCase } from "../../application/workSession/DeleteWorkSessionUseCase";
+import type { WrapUpLateWorkSessionUseCase } from "../../application/workSession/WrapUpLateWorkSessionUseCase";
 import type { RescheduleWorkSessionUseCase } from "../../application/workSession/RescheduleWorkSessionUseCase";
 import type { EditWorkSessionUseCase } from "../../application/workSession/EditWorkSessionUseCase";
-import type { WrapUpWorkSessionUseCase } from "../../application/workSession/WrapUpWorkSessionUseCase";
+import type { CloseWorkSessionUseCase } from "../../application/workSession/CloseWorkSessionUseCase";
 import type { GetRandomWorkSessionCompletionMessageUseCase } from "../../application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { registerWorkSessionRoutes } from "./routes/workSession.route";
 import type { ListWorkSessionStatesUseCase } from "../../application/workSessionState/ListWorkSessionStatesUseCase";
@@ -41,6 +46,9 @@ import type { DeleteAssignmentWorkSessionUseCase } from "../../application/assig
 import type { MarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
 import type { UnmarkAssignmentWorkedOnUseCase } from "../../application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
 import { registerAssignmentWorkSessionRoutes } from "./routes/assignmentWorkSession.route";
+import type { ListNotificationsUseCase } from "../../application/notification/ListNotificationsUseCase";
+import type { MarkNotificationReadUseCase } from "../../application/notification/MarkNotificationReadUseCase";
+import { registerNotificationRoutes } from "./routes/notification.route";
 
 export interface ServerDeps {
   getHealthUseCase: GetHealthUseCase;
@@ -55,6 +63,7 @@ export interface ServerDeps {
   updateAssignmentUseCase: UpdateAssignmentUseCase;
   deleteAssignmentUseCase: DeleteAssignmentUseCase;
   completeAssignmentUseCase: CompleteAssignmentUseCase;
+  confirmCompleteAssignmentUseCase: ConfirmCompleteAssignmentUseCase;
   uncompleteAssignmentUseCase: UncompleteAssignmentUseCase;
   rescheduleAssignmentUseCase: RescheduleAssignmentUseCase;
   wrapUpAssignmentUseCase: WrapUpAssignmentUseCase;
@@ -63,11 +72,15 @@ export interface ServerDeps {
   createWorkSessionUseCase: CreateWorkSessionUseCase;
   getWorkSessionByIdUseCase: GetWorkSessionByIdUseCase;
   listWorkSessionsUseCase: ListWorkSessionsUseCase;
-  changeWorkSessionStateUseCase: ChangeWorkSessionStateUseCase;
+  completeWorkSessionUseCase: CompleteWorkSessionUseCase;
+  confirmCompleteWorkSessionUseCase: ConfirmCompleteWorkSessionUseCase;
+  confirmSkipWorkSessionUseCase: ConfirmSkipWorkSessionUseCase;
+  uncompleteWorkSessionUseCase: UncompleteWorkSessionUseCase;
   deleteWorkSessionUseCase: DeleteWorkSessionUseCase;
+  wrapUpLateWorkSessionUseCase: WrapUpLateWorkSessionUseCase;
   rescheduleWorkSessionUseCase: RescheduleWorkSessionUseCase;
   editWorkSessionUseCase: EditWorkSessionUseCase;
-  wrapUpWorkSessionUseCase: WrapUpWorkSessionUseCase;
+  closeWorkSessionUseCase: CloseWorkSessionUseCase;
   getRandomWorkSessionCompletionMessageUseCase: GetRandomWorkSessionCompletionMessageUseCase;
   listWorkSessionStatesUseCase: ListWorkSessionStatesUseCase;
   createAssignmentWorkSessionUseCase: CreateAssignmentWorkSessionUseCase;
@@ -77,6 +90,8 @@ export interface ServerDeps {
   deleteAssignmentWorkSessionUseCase: DeleteAssignmentWorkSessionUseCase;
   markAssignmentWorkedOnUseCase: MarkAssignmentWorkedOnUseCase;
   unmarkAssignmentWorkedOnUseCase: UnmarkAssignmentWorkedOnUseCase;
+  listNotificationsUseCase: ListNotificationsUseCase;
+  markNotificationReadUseCase: MarkNotificationReadUseCase;
   allowedOrigins: string[];
 }
 
@@ -90,5 +105,6 @@ export function createServer(deps: ServerDeps): Hono {
   registerWorkSessionRoutes(app, deps);
   registerWorkSessionStateRoutes(app, deps);
   registerAssignmentWorkSessionRoutes(app, deps);
+  registerNotificationRoutes(app, deps);
   return app;
 }

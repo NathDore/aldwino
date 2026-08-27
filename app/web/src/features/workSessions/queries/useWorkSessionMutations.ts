@@ -3,9 +3,13 @@ import {
   createWorkSession,
   rescheduleWorkSession,
   editWorkSession,
-  changeWorkSessionState,
+  completeWorkSession,
+  confirmCompleteWorkSession,
+  confirmSkipWorkSession,
+  uncompleteWorkSession,
   deleteWorkSession,
-  wrapUpWorkSession,
+  wrapUpLateWorkSession,
+  closeWorkSession,
 } from "../services/workSessionService";
 import type { CreateWorkSessionData, RescheduleWorkSessionData, EditWorkSessionData } from "../types/workSession.types";
 
@@ -45,12 +49,47 @@ export function useEditWorkSessionMutation() {
   });
 }
 
-export function useChangeWorkSessionStateMutation() {
+export function useCompleteWorkSessionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, workSessionStateId }: { id: string; workSessionStateId: string }) =>
-      changeWorkSessionState(id, workSessionStateId),
+    mutationFn: completeWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useConfirmCompleteWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: confirmCompleteWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useConfirmSkipWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: confirmSkipWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useUncompleteWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: uncompleteWorkSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
@@ -70,11 +109,23 @@ export function useDeleteWorkSessionMutation() {
   });
 }
 
-export function useWrapUpWorkSessionMutation() {
+export function useWrapUpLateWorkSessionMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: wrapUpWorkSession,
+    mutationFn: wrapUpLateWorkSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+    },
+  });
+}
+
+export function useCloseWorkSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: closeWorkSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });

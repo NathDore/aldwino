@@ -1,4 +1,4 @@
-export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED";
+export type WorkSessionStateName = "INPROGRESS" | "COMPLETED" | "SKIPPED" | "WAIT_CONFIRM";
 
 export interface WorkSessionStateDto {
   id: string;
@@ -15,6 +15,8 @@ export interface WorkSessionDto {
   deletedAt: string | null;
   wrapUpAt: string | null;
   rescheduleAt: string | null;
+  waitConfirmAt: string | null;
+  skippedAt: string | null;
   createdAt: string;
   mergedFrom?: string[];
 }

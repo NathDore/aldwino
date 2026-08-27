@@ -21,25 +21,21 @@ export class CreateWorkSessionUseCase {
     private readonly db: Database,
   ) {}
 
-  execute(params: { startTime: Date; endTime: Date; workSessionStateId?: string }): WorkSessionMergeResult {
+  execute(params: { startTime: Date; endTime: Date }): WorkSessionMergeResult {
     return this.db.transaction(() => {
       validateStartTime(params.startTime);
       validateEndTime(params.endTime);
       validateStartBeforeEnd(params.startTime, params.endTime);
       validateSameDay(params.startTime, params.endTime);
 
-      const workSessionState = params.workSessionStateId
-        ? this.workSessionStateRepository.getById(params.workSessionStateId)
-        : this.workSessionStateRepository.findByState("INPROGRESS");
+      const workSessionState = this.workSessionStateRepository.findByState("INPROGRESS");
       if (!workSessionState) {
-        throw new WorkSessionStateNotFoundError(params.workSessionStateId ?? "INPROGRESS");
+        throw new WorkSessionStateNotFoundError("INPROGRESS");
       }
 
-      if (workSessionState.state === "INPROGRESS") {
-        const merged = this.mergeService.checkAndMerge({ startTime: params.startTime, endTime: params.endTime });
-        if (merged) {
-          return merged;
-        }
+      const merged = this.mergeService.checkAndMerge({ startTime: params.startTime, endTime: params.endTime });
+      if (merged) {
+        return merged;
       }
 
       const now = this.clock.now();
@@ -49,7 +45,7 @@ export class CreateWorkSessionUseCase {
         workSessionStateId: workSessionState.id,
         startTime: params.startTime,
         endTime: params.endTime,
-        completedAt: workSessionState.state === "COMPLETED" ? now : null,
+        completedAt: null,
         createdAt: now,
       });
       return { session: this.repository.create(workSession), mergedFrom: [] };

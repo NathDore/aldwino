@@ -1,9 +1,4 @@
-import {
-  useWorkSessionsQuery,
-  useWorkSessionStatesQuery,
-  useAssignmentWorkSessionsQuery,
-  useSkippedWorkSessionSync,
-} from "@/features/workSessions";
+import { useWorkSessionsQuery, useAssignmentWorkSessionsQuery } from "@/features/workSessions";
 import { useAssignmentsQuery } from "@/features/assignments";
 import { useCoursesQuery } from "@/features/courses";
 import { useCalendarWorkSessions } from "../hooks/useCalendarWorkSessions";
@@ -13,14 +8,11 @@ import { WeekGrid } from "./WeekGrid";
 
 export function CalendarPage() {
   const { data: workSessions = [] } = useWorkSessionsQuery();
-  const { data: workSessionStates } = useWorkSessionStatesQuery();
   const { data: assignmentLinks = [] } = useAssignmentWorkSessionsQuery();
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
 
   const calendarWorkSessions = useCalendarWorkSessions(workSessions, assignmentLinks, assignments, courses);
-
-  useSkippedWorkSessionSync(workSessions, workSessionStates);
 
   const currentWeekStart = useCalendarStore((s) => s.currentWeekStart);
   const goToPrevWeek = useCalendarStore((s) => s.goToPrevWeek);

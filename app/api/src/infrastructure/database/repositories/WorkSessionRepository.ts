@@ -16,7 +16,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
   create(workSession: WorkSession): WorkSession {
     const json = workSession.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO workSessions (id, workSessionStateId, startTime, endTime, completedAt, isDeleted, deletedAt, wrapUpAt, rescheduleAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO workSessions (id, workSessionStateId, startTime, endTime, completedAt, isDeleted, deletedAt, wrapUpAt, rescheduleAt, waitConfirmAt, skippedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -28,6 +28,8 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       json.deletedAt,
       json.wrapUpAt,
       json.rescheduleAt,
+      json.waitConfirmAt,
+      json.skippedAt,
       json.createdAt,
     );
     return workSession;
@@ -51,7 +53,7 @@ export class WorkSessionRepository implements IWorkSessionRepository {
   update(workSession: WorkSession): WorkSession {
     const json = workSession.toJSON();
     const stmt = this.db.prepare(
-      "UPDATE workSessions SET workSessionStateId = ?, startTime = ?, endTime = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ?, rescheduleAt = ? WHERE id = ?",
+      "UPDATE workSessions SET workSessionStateId = ?, startTime = ?, endTime = ?, completedAt = ?, isDeleted = ?, deletedAt = ?, wrapUpAt = ?, rescheduleAt = ?, waitConfirmAt = ?, skippedAt = ? WHERE id = ?",
     );
     stmt.run(
       json.workSessionStateId,
@@ -62,6 +64,8 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       json.deletedAt,
       json.wrapUpAt,
       json.rescheduleAt,
+      json.waitConfirmAt,
+      json.skippedAt,
       json.id,
     );
     return workSession;
@@ -112,6 +116,8 @@ export class WorkSessionRepository implements IWorkSessionRepository {
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       wrapUpAt: row.wrapUpAt ? new Date(row.wrapUpAt as string) : null,
       rescheduleAt: row.rescheduleAt ? new Date(row.rescheduleAt as string) : null,
+      waitConfirmAt: row.waitConfirmAt ? new Date(row.waitConfirmAt as string) : null,
+      skippedAt: row.skippedAt ? new Date(row.skippedAt as string) : null,
       createdAt: new Date(row.createdAt as string),
     });
   }

@@ -24,6 +24,9 @@ import { migrate as migrateAssignmentRescheduleAt } from "./infrastructure/datab
 import { migrate as migrateWorkSessionRescheduleAt } from "./infrastructure/database/migrations/020_add_work_session_reschedule_at_column";
 import { migrate as migrateAssignmentWorkSessionWorkedOn } from "./infrastructure/database/migrations/021_add_assignment_work_session_worked_on_column";
 import { migrate as migrateAssignmentWorkSessionDetachReason } from "./infrastructure/database/migrations/022_add_assignment_work_session_detach_reason_column";
+import { migrate as migrateNotificationTable } from "./infrastructure/database/migrations/023_create_notification_table";
+import { migrate as migrateWorkSessionWaitConfirmAt } from "./infrastructure/database/migrations/024_add_work_session_wait_confirm_at_column";
+import { migrate as migrateWorkSessionSkippedAt } from "./infrastructure/database/migrations/025_add_work_session_skipped_at_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -40,6 +43,7 @@ import { ListAssignmentsUseCase } from "./application/assignment/ListAssignments
 import { UpdateAssignmentUseCase } from "./application/assignment/UpdateAssignmentUseCase";
 import { DeleteAssignmentUseCase } from "./application/assignment/DeleteAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "./application/assignment/CompleteAssignmentUseCase";
+import { ConfirmCompleteAssignmentUseCase } from "./application/assignment/ConfirmCompleteAssignmentUseCase";
 import { UncompleteAssignmentUseCase } from "./application/assignment/UncompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "./application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpAssignmentUseCase } from "./application/assignment/WrapUpAssignmentUseCase";
@@ -54,12 +58,18 @@ import { WorkSessionStateRepository } from "./infrastructure/database/repositori
 import { CreateWorkSessionUseCase } from "./application/workSession/CreateWorkSessionUseCase";
 import { GetWorkSessionByIdUseCase } from "./application/workSession/GetWorkSessionByIdUseCase";
 import { ListWorkSessionsUseCase } from "./application/workSession/ListWorkSessionsUseCase";
-import { ChangeWorkSessionStateUseCase } from "./application/workSession/ChangeWorkSessionStateUseCase";
+import { CompleteWorkSessionUseCase } from "./application/workSession/CompleteWorkSessionUseCase";
+import { ConfirmCompleteWorkSessionUseCase } from "./application/workSession/ConfirmCompleteWorkSessionUseCase";
+import { ConfirmSkipWorkSessionUseCase } from "./application/workSession/ConfirmSkipWorkSessionUseCase";
+import { UncompleteWorkSessionUseCase } from "./application/workSession/UncompleteWorkSessionUseCase";
 import { GetRandomWorkSessionCompletionMessageUseCase } from "./application/workSession/GetRandomWorkSessionCompletionMessageUseCase";
 import { DeleteWorkSessionUseCase } from "./application/workSession/DeleteWorkSessionUseCase";
+import { WrapUpLateWorkSessionUseCase } from "./application/workSession/WrapUpLateWorkSessionUseCase";
+import { AutoSkipStaleWorkSessionsUseCase } from "./application/workSession/AutoSkipStaleWorkSessionsUseCase";
+import { AutoWrapUpLateStaleWorkSessionsUseCase } from "./application/workSession/AutoWrapUpLateStaleWorkSessionsUseCase";
 import { RescheduleWorkSessionUseCase } from "./application/workSession/RescheduleWorkSessionUseCase";
 import { EditWorkSessionUseCase } from "./application/workSession/EditWorkSessionUseCase";
-import { WrapUpWorkSessionUseCase } from "./application/workSession/WrapUpWorkSessionUseCase";
+import { CloseWorkSessionUseCase } from "./application/workSession/CloseWorkSessionUseCase";
 import { WorkSessionMergeService } from "./application/workSession/WorkSessionMergeService";
 import { ListWorkSessionStatesUseCase } from "./application/workSessionState/ListWorkSessionStatesUseCase";
 import { AssignmentWorkSessionRepository } from "./infrastructure/database/repositories/AssignmentWorkSessionRepository";
@@ -70,6 +80,13 @@ import { UpdateAssignmentWorkSessionUseCase } from "./application/assignmentWork
 import { DeleteAssignmentWorkSessionUseCase } from "./application/assignmentWorkSession/DeleteAssignmentWorkSessionUseCase";
 import { MarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/MarkAssignmentWorkedOnUseCase";
 import { UnmarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSession/UnmarkAssignmentWorkedOnUseCase";
+import { NotificationRepository } from "./infrastructure/database/repositories/NotificationRepository";
+import { ListNotificationsUseCase } from "./application/notification/ListNotificationsUseCase";
+import { MarkNotificationReadUseCase } from "./application/notification/MarkNotificationReadUseCase";
+import { CheckOverdueAssignmentsUseCase } from "./application/notification/CheckOverdueAssignmentsUseCase";
+import { CheckMissedWorkSessionsUseCase } from "./application/notification/CheckMissedWorkSessionsUseCase";
+import { CheckUpcomingAssignmentsUseCase } from "./application/notification/CheckUpcomingAssignmentsUseCase";
+import { PurgeDeletedNotificationsUseCase } from "./application/notification/PurgeDeletedNotificationsUseCase";
 
 const PORT = Number(process.env.API_PORT ?? 4287);
 const clock = new SystemClock();
@@ -98,6 +115,9 @@ migrateAssignmentRescheduleAt(db);
 migrateWorkSessionRescheduleAt(db);
 migrateAssignmentWorkSessionWorkedOn(db);
 migrateAssignmentWorkSessionDetachReason(db);
+migrateNotificationTable(db);
+migrateWorkSessionWaitConfirmAt(db);
+migrateWorkSessionSkippedAt(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -110,6 +130,7 @@ const assignmentStateRepository = new AssignmentStateRepository(db);
 const workSessionRepository = new WorkSessionRepository(db);
 const workSessionStateRepository = new WorkSessionStateRepository(db);
 const assignmentWorkSessionRepository = new AssignmentWorkSessionRepository(db);
+const notificationRepository = new NotificationRepository(db);
 const workSessionMergeService = new WorkSessionMergeService(
   workSessionRepository,
   assignmentWorkSessionRepository,
@@ -124,6 +145,7 @@ const purgeDeletedAssignmentWorkSessionsUseCase = new PurgeDeletedAssignmentWork
   assignmentWorkSessionRepository,
   clock,
 );
+const purgeDeletedNotificationsUseCase = new PurgeDeletedNotificationsUseCase(notificationRepository, clock);
 const runPurge = () => {
   const purgedAssignments = purgeDeletedAssignmentsUseCase.execute();
   if (purgedAssignments > 0) {
@@ -141,10 +163,70 @@ const runPurge = () => {
   if (purgedAssignmentWorkSessions > 0) {
     console.log(`[app-api] purged ${purgedAssignmentWorkSessions} expired soft-deleted assignment-work-session link(s)`);
   }
+  const purgedNotifications = purgeDeletedNotificationsUseCase.execute();
+  if (purgedNotifications > 0) {
+    console.log(`[app-api] purged ${purgedNotifications} expired soft-deleted notification(s)`);
+  }
 };
 runPurge();
 const PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 setInterval(runPurge, PURGE_INTERVAL_MS).unref();
+
+// Notification checks: run once at every launch, then every 60s while the app is open
+const checkOverdueAssignmentsUseCase = new CheckOverdueAssignmentsUseCase(
+  assignmentRepository,
+  assignmentStateRepository,
+  notificationRepository,
+  clock,
+);
+const checkMissedWorkSessionsUseCase = new CheckMissedWorkSessionsUseCase(
+  workSessionRepository,
+  workSessionStateRepository,
+  notificationRepository,
+  clock,
+);
+const checkUpcomingAssignmentsUseCase = new CheckUpcomingAssignmentsUseCase(
+  assignmentRepository,
+  notificationRepository,
+  clock,
+);
+const autoSkipStaleWorkSessionsUseCase = new AutoSkipStaleWorkSessionsUseCase(
+  workSessionRepository,
+  workSessionStateRepository,
+  clock,
+);
+const autoWrapUpLateStaleWorkSessionsUseCase = new AutoWrapUpLateStaleWorkSessionsUseCase(
+  workSessionRepository,
+  workSessionStateRepository,
+  assignmentWorkSessionRepository,
+  notificationRepository,
+  clock,
+);
+const runNotificationChecks = () => {
+  const overdueCount = checkOverdueAssignmentsUseCase.execute();
+  if (overdueCount > 0) {
+    console.log(`[app-api] flagged ${overdueCount} overdue assignment(s) as WAIT_CONFIRM`);
+  }
+  const missedCount = checkMissedWorkSessionsUseCase.execute();
+  if (missedCount > 0) {
+    console.log(`[app-api] flagged ${missedCount} missed work session(s) as WAIT_CONFIRM`);
+  }
+  const dueSoonCount = checkUpcomingAssignmentsUseCase.execute();
+  if (dueSoonCount > 0) {
+    console.log(`[app-api] created ${dueSoonCount} due-soon assignment notification(s)`);
+  }
+  const autoSkippedCount = autoSkipStaleWorkSessionsUseCase.execute();
+  if (autoSkippedCount > 0) {
+    console.log(`[app-api] auto-skipped ${autoSkippedCount} stale WAIT_CONFIRM work session(s)`);
+  }
+  const autoWrappedUpCount = autoWrapUpLateStaleWorkSessionsUseCase.execute();
+  if (autoWrappedUpCount > 0) {
+    console.log(`[app-api] auto-wrapped-up ${autoWrappedUpCount} stale SKIPPED work session(s)`);
+  }
+};
+runNotificationChecks();
+const NOTIFICATION_CHECK_INTERVAL_MS = 60 * 1000;
+setInterval(runNotificationChecks, NOTIFICATION_CHECK_INTERVAL_MS).unref();
 
 // Create app with all dependencies
 const app = createServer({
@@ -170,6 +252,16 @@ const app = createServer({
     assignmentStateRepository,
     assignmentWorkSessionRepository,
     workSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  confirmCompleteAssignmentUseCase: new ConfirmCompleteAssignmentUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    assignmentWorkSessionRepository,
+    workSessionRepository,
+    notificationRepository,
     clock,
     db,
   ),
@@ -181,9 +273,15 @@ const app = createServer({
     clock,
     db,
   ),
-  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(assignmentRepository, clock, db),
+  rescheduleAssignmentUseCase: new RescheduleAssignmentUseCase(
+    assignmentRepository,
+    assignmentStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
   wrapUpAssignmentUseCase: new WrapUpAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
-  wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, clock, db),
+  wrapUpLateAssignmentUseCase: new WrapUpLateAssignmentUseCase(assignmentRepository, notificationRepository, clock, db),
   listAssignmentStatesUseCase: new ListAssignmentStatesUseCase(assignmentStateRepository),
   createWorkSessionUseCase: new CreateWorkSessionUseCase(
     workSessionRepository,
@@ -194,7 +292,27 @@ const app = createServer({
   ),
   getWorkSessionByIdUseCase: new GetWorkSessionByIdUseCase(workSessionRepository),
   listWorkSessionsUseCase: new ListWorkSessionsUseCase(workSessionRepository),
-  changeWorkSessionStateUseCase: new ChangeWorkSessionStateUseCase(
+  completeWorkSessionUseCase: new CompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    clock,
+    db,
+  ),
+  confirmCompleteWorkSessionUseCase: new ConfirmCompleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  confirmSkipWorkSessionUseCase: new ConfirmSkipWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  uncompleteWorkSessionUseCase: new UncompleteWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
     workSessionMergeService,
@@ -203,18 +321,29 @@ const app = createServer({
   ),
   deleteWorkSessionUseCase: new DeleteWorkSessionUseCase(
     workSessionRepository,
+    workSessionStateRepository,
     assignmentWorkSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
+  wrapUpLateWorkSessionUseCase: new WrapUpLateWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    assignmentWorkSessionRepository,
+    notificationRepository,
     clock,
     db,
   ),
   rescheduleWorkSessionUseCase: new RescheduleWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
+    notificationRepository,
     clock,
     db,
   ),
   editWorkSessionUseCase: new EditWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db),
-  wrapUpWorkSessionUseCase: new WrapUpWorkSessionUseCase(workSessionRepository, clock, db),
+  closeWorkSessionUseCase: new CloseWorkSessionUseCase(workSessionRepository, clock, db),
   getRandomWorkSessionCompletionMessageUseCase: new GetRandomWorkSessionCompletionMessageUseCase(),
   listWorkSessionStatesUseCase: new ListWorkSessionStatesUseCase(workSessionStateRepository),
   createAssignmentWorkSessionUseCase: new CreateAssignmentWorkSessionUseCase(
@@ -249,6 +378,8 @@ const app = createServer({
     workSessionRepository,
     db,
   ),
+  listNotificationsUseCase: new ListNotificationsUseCase(notificationRepository),
+  markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository, clock),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
 });
 

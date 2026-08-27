@@ -1,6 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
-import { CannotRescheduleNonSkippedWorkSessionError } from "../../domain/workSession/WorkSessionError";
+import {
+  CannotRescheduleNonSkippedWorkSessionError,
+  WorkSessionStateNotFoundError,
+} from "../../domain/workSession/WorkSessionError";
 import {
   validateEndTime,
   validateStartBeforeEnd,
@@ -9,6 +12,7 @@ import {
 } from "../../domain/workSession/WorkSessionRules";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 import type { WorkSessionMergeResult } from "./WorkSessionMergeService";
 
@@ -16,6 +20,7 @@ export class RescheduleWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
     private readonly workSessionStateRepository: IWorkSessionStateRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) { }
@@ -38,9 +43,14 @@ export class RescheduleWorkSessionUseCase {
       validateStartBeforeEnd(params.startTime, params.endTime);
       validateSameDay(params.startTime, params.endTime);
 
+      const inProgressState = this.workSessionStateRepository.findByState("INPROGRESS");
+      if (!inProgressState) {
+        throw new WorkSessionStateNotFoundError("INPROGRESS");
+      }
+
       const updated = WorkSession.create({
         id: existing.id,
-        workSessionStateId: existing.workSessionStateId,
+        workSessionStateId: inProgressState.id,
         startTime: params.startTime,
         endTime: params.endTime,
         completedAt: existing.completedAt,
@@ -48,10 +58,14 @@ export class RescheduleWorkSessionUseCase {
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,
         rescheduleAt: now,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: null,
         createdAt: existing.createdAt,
       });
 
-      return { session: this.repository.update(updated), mergedFrom: [] };
+      const result = this.repository.update(updated);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", existing.id, now);
+      return { session: result, mergedFrom: [] };
     })();
   }
 }

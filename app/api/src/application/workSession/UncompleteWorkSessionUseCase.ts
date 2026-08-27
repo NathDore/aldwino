@@ -1,15 +1,16 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
 import {
-  WorkSessionStateNotFoundError,
+  CannotUncompleteNonCompletedWorkSessionError,
   CannotUncompletePastWorkSessionError,
+  WorkSessionStateNotFoundError,
 } from "../../domain/workSession/WorkSessionError";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
 import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
 import type { Clock } from "../health/ports/Clock";
 import type { WorkSessionMergeService, WorkSessionMergeResult } from "./WorkSessionMergeService";
 
-export class ChangeWorkSessionStateUseCase {
+export class UncompleteWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
     private readonly workSessionStateRepository: IWorkSessionStateRepository,
@@ -18,50 +19,48 @@ export class ChangeWorkSessionStateUseCase {
     private readonly db: Database,
   ) {}
 
-  execute(params: { id: string; workSessionStateId: string }): WorkSessionMergeResult {
+  execute(id: string): WorkSessionMergeResult {
     return this.db.transaction(() => {
-      const existing = this.repository.getById(params.id);
+      const existing = this.repository.getById(id);
       if (!existing) {
-        throw new Error(`WorkSession with id ${params.id} not found`);
+        throw new Error(`WorkSession with id ${id} not found`);
       }
 
-      const newState = this.workSessionStateRepository.getById(params.workSessionStateId);
-      if (!newState) {
-        throw new WorkSessionStateNotFoundError(params.workSessionStateId);
+      const currentState = this.workSessionStateRepository.getById(existing.workSessionStateId);
+      if (currentState?.state !== "COMPLETED") {
+        throw new CannotUncompleteNonCompletedWorkSessionError(currentState?.state ?? "UNKNOWN");
       }
 
-      if (newState.state === "INPROGRESS" && existing.completedAt !== null && existing.endTime < this.clock.now()) {
+      if (existing.endTime < this.clock.now()) {
         throw new CannotUncompletePastWorkSessionError();
       }
 
-      const completedAt =
-        newState.state === "COMPLETED"
-          ? existing.workSessionStateId === newState.id
-            ? existing.completedAt
-            : this.clock.now()
-          : null;
+      const inProgressState = this.workSessionStateRepository.findByState("INPROGRESS");
+      if (!inProgressState) {
+        throw new WorkSessionStateNotFoundError("INPROGRESS");
+      }
 
-      if (newState.state === "INPROGRESS") {
-        const merged = this.mergeService.checkAndMerge({
-          startTime: existing.startTime,
-          endTime: existing.endTime,
-          self: existing,
-        });
-        if (merged) {
-          return merged;
-        }
+      const merged = this.mergeService.checkAndMerge({
+        startTime: existing.startTime,
+        endTime: existing.endTime,
+        self: existing,
+      });
+      if (merged) {
+        return merged;
       }
 
       const updated = WorkSession.create({
         id: existing.id,
-        workSessionStateId: newState.id,
+        workSessionStateId: inProgressState.id,
         startTime: existing.startTime,
         endTime: existing.endTime,
-        completedAt,
+        completedAt: null,
         isDeleted: existing.isDeleted,
         deletedAt: existing.deletedAt,
         wrapUpAt: existing.wrapUpAt,
         rescheduleAt: existing.rescheduleAt,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: existing.skippedAt,
         createdAt: existing.createdAt,
       });
 

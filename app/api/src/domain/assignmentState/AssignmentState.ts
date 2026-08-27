@@ -1,6 +1,6 @@
 import { validateState } from "./AssignmentStateRules";
 
-export type AssignmentStateName = "UNCOMPLETED" | "COMPLETED" | "SKIPPED";
+export type AssignmentStateName = "UNCOMPLETED" | "COMPLETED" | "SKIPPED" | "WAIT_CONFIRM";
 
 export class AssignmentState {
   private constructor(

@@ -1,14 +1,19 @@
 import type { Database } from "bun:sqlite";
 import { WorkSession } from "../../domain/workSession/WorkSession";
 import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/AssignmentWorkSession";
+import { CannotDeleteNonInProgressWorkSessionError } from "../../domain/workSession/WorkSessionError";
 import type { IWorkSessionRepository } from "../../infrastructure/database/repositories/WorkSessionRepository";
+import type { IWorkSessionStateRepository } from "../../infrastructure/database/repositories/WorkSessionStateRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class DeleteWorkSessionUseCase {
   constructor(
     private readonly repository: IWorkSessionRepository,
+    private readonly workSessionStateRepository: IWorkSessionStateRepository,
     private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -18,6 +23,11 @@ export class DeleteWorkSessionUseCase {
       const existing = this.repository.getById(id);
       if (!existing) {
         throw new Error(`WorkSession with id ${id} not found`);
+      }
+
+      const currentState = this.workSessionStateRepository.getById(existing.workSessionStateId);
+      if (currentState?.state !== "INPROGRESS") {
+        throw new CannotDeleteNonInProgressWorkSessionError(currentState?.state ?? "UNKNOWN");
       }
 
       const now = this.clock.now();
@@ -32,6 +42,8 @@ export class DeleteWorkSessionUseCase {
         deletedAt: now,
         wrapUpAt: existing.wrapUpAt,
         rescheduleAt: existing.rescheduleAt,
+        waitConfirmAt: existing.waitConfirmAt,
+        skippedAt: existing.skippedAt,
         createdAt: existing.createdAt,
       });
       const updated = this.repository.update(deleted);
@@ -52,6 +64,7 @@ export class DeleteWorkSessionUseCase {
       }
 
       this.relabelStaleCompletionLinks(id);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", id, now);
 
       return updated;
     })();

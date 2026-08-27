@@ -6,6 +6,7 @@ import { AssignmentWorkSessionRepository } from "../src/infrastructure/database/
 import { CourseRepository } from "../src/infrastructure/database/repositories/CourseRepository";
 import { WorkSessionRepository } from "../src/infrastructure/database/repositories/WorkSessionRepository";
 import { WorkSessionStateRepository } from "../src/infrastructure/database/repositories/WorkSessionStateRepository";
+import { NotificationRepository } from "../src/infrastructure/database/repositories/NotificationRepository";
 import { CreateAssignmentUseCase } from "../src/application/assignment/CreateAssignmentUseCase";
 import { CompleteAssignmentUseCase } from "../src/application/assignment/CompleteAssignmentUseCase";
 import { UncompleteAssignmentUseCase } from "../src/application/assignment/UncompleteAssignmentUseCase";
@@ -41,6 +42,7 @@ let assignmentRepository: AssignmentRepository;
 let workSessionRepository: WorkSessionRepository;
 let linkRepository: AssignmentWorkSessionRepository;
 let workSessionStateRepository: WorkSessionStateRepository;
+let notificationRepository: NotificationRepository;
 
 let create: CreateAssignmentUseCase;
 let complete: CompleteAssignmentUseCase;
@@ -71,6 +73,7 @@ beforeEach(() => {
   workSessionRepository = new WorkSessionRepository(db);
   linkRepository = new AssignmentWorkSessionRepository(db);
   workSessionStateRepository = new WorkSessionStateRepository(db);
+  notificationRepository = new NotificationRepository(db);
   makeCourse(db);
 
   create = new CreateAssignmentUseCase(
@@ -85,6 +88,7 @@ beforeEach(() => {
     new AssignmentStateRepository(db),
     linkRepository,
     workSessionRepository,
+    notificationRepository,
     clock,
     db,
   );
@@ -98,7 +102,14 @@ beforeEach(() => {
   );
   wrapUp = new WrapUpAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
   deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
-  deleteWorkSession = new DeleteWorkSessionUseCase(workSessionRepository, linkRepository, clock, db);
+  deleteWorkSession = new DeleteWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    linkRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   link = new CreateAssignmentWorkSessionUseCase(
     linkRepository,
     assignmentRepository,
@@ -115,7 +126,13 @@ beforeEach(() => {
   );
   markWorkedOn = new MarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
   unmarkWorkedOn = new UnmarkAssignmentWorkedOnUseCase(linkRepository, workSessionRepository, db);
-  rescheduleSession = new RescheduleWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
+  rescheduleSession = new RescheduleWorkSessionUseCase(
+    workSessionRepository,
+    workSessionStateRepository,
+    notificationRepository,
+    clock,
+    db,
+  );
   editSession = new EditWorkSessionUseCase(workSessionRepository, workSessionStateRepository, clock, db);
 });
 
@@ -434,7 +451,7 @@ describe("workedOn tracking", () => {
 });
 
 describe("RescheduleWorkSessionUseCase", () => {
-  test("reschedules a skipped session and stamps rescheduleAt", () => {
+  test("reschedules a skipped session, stamps rescheduleAt, clears skippedAt, and resets to in-progress", () => {
     const session = newWorkSession("SKIPPED");
 
     const result = rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END });
@@ -442,11 +459,21 @@ describe("RescheduleWorkSessionUseCase", () => {
     expect(result.session.startTime).toEqual(NEW_START);
     expect(result.session.endTime).toEqual(NEW_END);
     expect(result.session.rescheduleAt).toEqual(NOW);
+    expect(result.session.skippedAt).toBeNull();
+    expect(result.session.workSessionStateId).toBe(workSessionStateIdFor(db, "INPROGRESS"));
     expect(result.mergedFrom).toEqual([]);
   });
 
   test("rejects an in-progress session", () => {
     const session = newWorkSession("INPROGRESS");
+
+    expect(() => rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
+      CannotRescheduleNonSkippedWorkSessionError,
+    );
+  });
+
+  test("rejects a wait-confirm session", () => {
+    const session = newWorkSession("WAIT_CONFIRM");
 
     expect(() => rescheduleSession.execute({ id: session.id, startTime: NEW_START, endTime: NEW_END })).toThrow(
       CannotRescheduleNonSkippedWorkSessionError,
