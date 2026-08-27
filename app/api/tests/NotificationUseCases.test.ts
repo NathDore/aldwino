@@ -213,7 +213,7 @@ describe("CheckOverdueAssignmentsUseCase", () => {
 
     expect(flagged).toBe(1);
     expect(assignmentRepository.getById(assignment.id)?.assignmentStateId).toBe(stateIdFor(db, "WAIT_CONFIRM"));
-    const notifications = listNotifications.execute();
+    const notifications = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(notifications).toHaveLength(1);
     expect(notifications[0].type).toBe("ASSIGNMENT_OVERDUE");
     expect(notifications[0].entityType).toBe("ASSIGNMENT");
@@ -227,7 +227,7 @@ describe("CheckOverdueAssignmentsUseCase", () => {
     const flaggedAgain = checkOverdueAssignments.execute();
 
     expect(flaggedAgain).toBe(0);
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
   });
 
   test("ignores an upcoming assignment", () => {
@@ -236,7 +236,7 @@ describe("CheckOverdueAssignmentsUseCase", () => {
     );
 
     expect(checkOverdueAssignments.execute()).toBe(0);
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("ignores an already-completed assignment even if its due date has passed", () => {
@@ -250,7 +250,7 @@ describe("CheckOverdueAssignmentsUseCase", () => {
     );
 
     expect(checkOverdueAssignments.execute()).toBe(0);
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 });
 
@@ -262,7 +262,7 @@ describe("CheckMissedWorkSessionsUseCase", () => {
 
     expect(flagged).toBe(1);
     expect(workSessionRepository.getById(session.id)?.workSessionStateId).toBe(workSessionStateIdFor(db, "WAIT_CONFIRM"));
-    const notifications = listNotifications.execute();
+    const notifications = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(notifications).toHaveLength(1);
     expect(notifications[0].type).toBe("WORK_SESSION_SKIPPED");
     expect(notifications[0].entityType).toBe("WORK_SESSION");
@@ -274,7 +274,7 @@ describe("CheckMissedWorkSessionsUseCase", () => {
     checkMissedWorkSessions.execute();
 
     expect(checkMissedWorkSessions.execute()).toBe(0);
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
   });
 
   test("leaves a SKIPPED session alone (does not re-flag an already-confirmed skip)", () => {
@@ -292,7 +292,7 @@ describe("CheckMissedWorkSessionsUseCase", () => {
 
     expect(checkMissedWorkSessions.execute()).toBe(0);
     expect(workSessionRepository.getById(session.id)?.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("ignores a future session", () => {
@@ -339,7 +339,7 @@ describe("CheckUpcomingAssignmentsUseCase", () => {
     const created = checkUpcomingAssignments.execute();
 
     expect(created).toBe(1);
-    const notifications = listNotifications.execute();
+    const notifications = listNotifications.execute({ limit: 20, offset: 0 }).items;
     expect(notifications).toHaveLength(1);
     expect(notifications[0].type).toBe("ASSIGNMENT_DUE_SOON");
     expect(notifications[0].entityId).toBe(assignment.id);
@@ -374,7 +374,7 @@ describe("CheckUpcomingAssignmentsUseCase", () => {
     checkUpcomingAssignments.execute();
 
     expect(checkUpcomingAssignments.execute()).toBe(0);
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
   });
 
   test("creates a new notification once the prior one has been read", () => {
@@ -386,13 +386,13 @@ describe("CheckUpcomingAssignmentsUseCase", () => {
       }),
     );
     checkUpcomingAssignments.execute();
-    const [existing] = listNotifications.execute();
+    const [existing] = listNotifications.execute({ limit: 20, offset: 0 }).items;
     notificationRepository.markAsRead(existing.id, NOW);
 
     const created = checkUpcomingAssignments.execute();
 
     expect(created).toBe(1);
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
   });
 });
 
@@ -400,11 +400,11 @@ describe("auto-resolve on assignment resolution", () => {
   test("confirm-completing an overdue assignment clears its unread notification", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
-    expect(listNotifications.execute()).toHaveLength(1);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
 
     confirmCompleteAssignment.execute(assignment.id);
 
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("rescheduling an overdue assignment clears its unread notification and resets state", () => {
@@ -414,7 +414,7 @@ describe("auto-resolve on assignment resolution", () => {
     const rescheduled = rescheduleAssignment.execute({ id: assignment.id, dueDate: FUTURE });
 
     expect(rescheduled.assignmentStateId).toBe(stateIdFor(db, "UNCOMPLETED"));
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("wrapping up late an overdue assignment clears its unread notification", () => {
@@ -423,7 +423,7 @@ describe("auto-resolve on assignment resolution", () => {
 
     wrapUpLateAssignment.execute(assignment.id);
 
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 });
 
@@ -441,7 +441,7 @@ describe("auto-resolve on work session resolution", () => {
       endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000),
     });
 
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("confirm-skipping a missed session clears its unread notification", () => {
@@ -450,7 +450,7 @@ describe("auto-resolve on work session resolution", () => {
 
     confirmSkipWorkSession.execute(session.id);
 
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("wrapping up late a skipped session clears its unread notification", () => {
@@ -462,7 +462,7 @@ describe("auto-resolve on work session resolution", () => {
 
     wrapUpLateWorkSession.execute(session.id);
 
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 });
 
@@ -492,7 +492,7 @@ describe("ConfirmCompleteWorkSessionUseCase", () => {
     expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "COMPLETED"));
     expect(result.completedAt).toEqual(NOW);
     expect(result.waitConfirmAt).toBeNull();
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("rejects an in-progress session", () => {
@@ -514,7 +514,7 @@ describe("ConfirmSkipWorkSessionUseCase", () => {
     expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
     expect(result.skippedAt).toEqual(NOW);
     expect(result.waitConfirmAt).toBeNull();
-    expect(listNotifications.execute()).toHaveLength(0);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("rejects an in-progress session", () => {
@@ -667,5 +667,47 @@ describe("PurgeDeletedNotificationsUseCase", () => {
     notificationRepository.create(makeNotification({ id: "notification-active" }));
 
     expect(purgeNotifications.execute()).toBe(0);
+  });
+});
+
+describe("ListNotificationsUseCase pagination", () => {
+  function seedNotifications(count: number) {
+    for (let i = 0; i < count; i++) {
+      notificationRepository.create(
+        makeNotification({
+          id: `notification-${i}`,
+          createdAt: new Date(NOW.getTime() + i * 1000),
+        }),
+      );
+    }
+  }
+
+  test("total reflects the full count even when limit is smaller than it", () => {
+    seedNotifications(5);
+
+    const result = listNotifications.execute({ limit: 2, offset: 0 });
+
+    expect(result.items).toHaveLength(2);
+    expect(result.total).toBe(5);
+  });
+
+  test("a second page returns the next slice in createdAt DESC order with no overlap or gaps", () => {
+    seedNotifications(5);
+
+    const firstPage = listNotifications.execute({ limit: 2, offset: 0 });
+    const secondPage = listNotifications.execute({ limit: 2, offset: 2 });
+
+    expect(firstPage.items.map((n) => n.id)).toEqual(["notification-4", "notification-3"]);
+    expect(secondPage.items.map((n) => n.id)).toEqual(["notification-2", "notification-1"]);
+    expect(secondPage.total).toBe(5);
+  });
+
+  test("an offset past the end returns an empty items array with total still correct", () => {
+    seedNotifications(3);
+
+    const result = listNotifications.execute({ limit: 20, offset: 10 });
+
+    expect(result.items).toHaveLength(0);
+    expect(result.total).toBe(3);
   });
 });

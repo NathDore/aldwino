@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/shared/components/Button";
 import { CloseIcon } from "@/features/calendar/components/icons";
-import { mockNotifications } from "../mock/mockNotifications";
+import { useAssignmentsQuery } from "@/features/assignments";
+import { useCoursesQuery } from "@/features/courses";
+import { useWorkSessionsQuery } from "@/features/workSessions";
 import { useNotificationsSidebarStore } from "../store/notificationsSidebarStore";
+import { useNotificationsQuery } from "../queries/useNotificationsQuery";
 import { NotificationCard } from "./NotificationCard";
 
 const TRANSITION_MS = 200;
@@ -14,6 +17,18 @@ export function NotificationSidebar() {
 
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
+
+  const { data: assignments = [], isLoading: isAssignmentsLoading } = useAssignmentsQuery();
+  const { data: courses = [] } = useCoursesQuery();
+  const { data: workSessions = [], isLoading: isWorkSessionsLoading } = useWorkSessionsQuery();
+  const {
+    data: notificationsData,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useNotificationsQuery();
+
+  const notifications = notificationsData?.pages.flatMap((page) => page.items) ?? [];
 
   useEffect(() => {
     if (isOpen) {
@@ -54,10 +69,29 @@ export function NotificationSidebar() {
         </Button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {mockNotifications.length === 0 ? (
+        {notifications.length === 0 ? (
           <p className="text-center py-16 text-slate-600 text-sm">No notifications right now.</p>
         ) : (
-          mockNotifications.map((notification) => <NotificationCard key={notification.id} notification={notification} />)
+          <>
+            {notifications.map((notification) => (
+              <NotificationCard
+                key={notification.id}
+                notification={notification}
+                assignments={assignments}
+                courses={courses}
+                workSessions={workSessions}
+                isAssignmentsLoading={isAssignmentsLoading}
+                isWorkSessionsLoading={isWorkSessionsLoading}
+              />
+            ))}
+            {hasNextPage && (
+              <div className="px-6 py-4">
+                <Button variant="ghost" size="sm" disabled={isFetchingNextPage} onClick={() => fetchNextPage()} className="w-full">
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>,

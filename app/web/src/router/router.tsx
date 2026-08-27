@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { HomePage } from "@/pages/HomePage";
 import { CalendarPage } from "@/features/calendar";
 import { ManagePage } from "@/features/management";
+import { NotificationDetailPage } from "@/features/notifications";
 import { AppLayout } from "@/shared/components/AppLayout";
 
 export const router = createBrowserRouter([
@@ -19,6 +20,10 @@ export const router = createBrowserRouter([
       {
         path: "/manage",
         element: <ManagePage />,
+      },
+      {
+        path: "/notifications/:id",
+        element: <NotificationDetailPage />,
       },
     ],
   },

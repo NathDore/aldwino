@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { AppToolbar } from "./AppToolbar";
-import { NotificationSidebar } from "@/features/notifications/components/NotificationSidebar";
+import { NotificationSidebar } from "@/features/notifications";
 
 export function AppLayout() {
   return (

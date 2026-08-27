@@ -15,10 +15,31 @@ function handleNotificationError(error: unknown) {
   return null;
 }
 
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+function parseLimit(raw: string | undefined): number {
+  const parsed = Number(raw);
+  if (!raw || !Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_LIMIT;
+  }
+  return Math.min(parsed, MAX_LIMIT);
+}
+
+function parseOffset(raw: string | undefined): number {
+  const parsed = Number(raw);
+  if (!raw || !Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+  return parsed;
+}
+
 export function registerNotificationRoutes(app: Hono, deps: NotificationRouteDeps) {
   app.get("/notifications", (c) => {
-    const notifications = deps.listNotificationsUseCase.execute();
-    return c.json(notifications.map((notification) => notification.toJSON()), 200);
+    const limit = parseLimit(c.req.query("limit"));
+    const offset = parseOffset(c.req.query("offset"));
+    const { items, total } = deps.listNotificationsUseCase.execute({ limit, offset });
+    return c.json({ items: items.map((notification) => notification.toJSON()), total }, 200);
   });
 
   app.post("/notifications/:id/read", (c) => {

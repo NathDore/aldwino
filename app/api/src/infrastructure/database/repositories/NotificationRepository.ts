@@ -4,7 +4,8 @@ import { Notification, type NotificationType, type NotificationEntityType } from
 export interface INotificationRepository {
   create(notification: Notification): Notification;
   getById(id: string): Notification | null;
-  getAll(): Notification[];
+  getAll(limit: number, offset: number): Notification[];
+  countAll(): number;
   findUnreadByEntity(
     entityType: NotificationEntityType,
     entityId: string,
@@ -45,10 +46,18 @@ export class NotificationRepository implements INotificationRepository {
     return this.rowToNotification(row);
   }
 
-  getAll(): Notification[] {
-    const stmt = this.db.prepare("SELECT * FROM notifications WHERE isDeleted = 0 ORDER BY createdAt DESC");
-    const rows = stmt.all() as Record<string, string | number | null>[];
+  getAll(limit: number, offset: number): Notification[] {
+    const stmt = this.db.prepare(
+      "SELECT * FROM notifications WHERE isDeleted = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?",
+    );
+    const rows = stmt.all(limit, offset) as Record<string, string | number | null>[];
     return rows.map((row) => this.rowToNotification(row));
+  }
+
+  countAll(): number {
+    const stmt = this.db.prepare("SELECT COUNT(*) as count FROM notifications WHERE isDeleted = 0");
+    const row = stmt.get() as { count: number };
+    return row.count;
   }
 
   findUnreadByEntity(
