@@ -9,6 +9,7 @@ export interface ListNotificationsParams {
 export interface ListNotificationsResult {
   items: Notification[];
   total: number;
+  unreadCount: number;
 }
 
 export class ListNotificationsUseCase {
@@ -17,6 +18,7 @@ export class ListNotificationsUseCase {
   execute(params: ListNotificationsParams): ListNotificationsResult {
     const items = this.repository.getAll(params.limit, params.offset);
     const total = this.repository.countAll();
-    return { items, total };
+    const unreadCount = this.repository.countUnread();
+    return { items, total, unreadCount };
   }
 }

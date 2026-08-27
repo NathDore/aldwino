@@ -37,7 +37,7 @@ export class WrapUpLateAssignmentUseCase {
       });
 
       const result = this.repository.update(wrappedUp);
-      this.notificationRepository.markAllReadForEntity("ASSIGNMENT", id, now);
+      this.notificationRepository.markResolvedForEntity("ASSIGNMENT", id);
       return result;
     })();
   }

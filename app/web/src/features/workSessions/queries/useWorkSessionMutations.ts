@@ -33,6 +33,7 @@ export function useRescheduleWorkSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -69,6 +70,7 @@ export function useConfirmCompleteWorkSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -81,6 +83,7 @@ export function useConfirmSkipWorkSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -105,6 +108,7 @@ export function useDeleteWorkSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -117,6 +121,7 @@ export function useWrapUpLateWorkSessionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workSessions"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

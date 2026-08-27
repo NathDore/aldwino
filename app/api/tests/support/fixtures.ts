@@ -19,6 +19,7 @@ import { migrate as migrateAssignmentWorkSessionDetachReason } from "../../src/i
 import { migrate as migrateNotificationTable } from "../../src/infrastructure/database/migrations/023_create_notification_table";
 import { migrate as migrateWorkSessionWaitConfirmAt } from "../../src/infrastructure/database/migrations/024_add_work_session_wait_confirm_at_column";
 import { migrate as migrateWorkSessionSkippedAt } from "../../src/infrastructure/database/migrations/025_add_work_session_skipped_at_column";
+import { migrate as migrateNotificationActionTaken } from "../../src/infrastructure/database/migrations/026_add_notification_action_taken_column";
 import { seedAssignmentStates } from "../../src/infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "../../src/infrastructure/database/seeds/seedWorkSessionStates";
 
@@ -61,6 +62,7 @@ export function createTestDatabase(): Database {
   migrateNotificationTable(db);
   migrateWorkSessionWaitConfirmAt(db);
   migrateWorkSessionSkippedAt(db);
+  migrateNotificationActionTaken(db);
   seedAssignmentStates(db);
   seedWorkSessionStates(db);
   return db;
@@ -117,6 +119,7 @@ interface NotificationOverrides {
   isDeleted?: boolean;
   deletedAt?: Date | null;
   createdAt?: Date;
+  actionTaken?: boolean;
 }
 
 export function makeNotification(overrides: NotificationOverrides = {}): Notification {
@@ -129,5 +132,6 @@ export function makeNotification(overrides: NotificationOverrides = {}): Notific
     isDeleted: overrides.isDeleted ?? false,
     deletedAt: overrides.deletedAt ?? null,
     createdAt: overrides.createdAt ?? NOW,
+    actionTaken: overrides.actionTaken ?? false,
   });
 }

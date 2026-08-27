@@ -7,6 +7,7 @@ import { useCoursesQuery } from "@/features/courses";
 import { useWorkSessionsQuery } from "@/features/workSessions";
 import { useNotificationsSidebarStore } from "../store/notificationsSidebarStore";
 import { useNotificationsQuery } from "../queries/useNotificationsQuery";
+import { useRemoveNotificationsMutation } from "../queries/useNotificationMutations";
 import { NotificationCard } from "./NotificationCard";
 
 const TRANSITION_MS = 200;
@@ -14,6 +15,9 @@ const TRANSITION_MS = 200;
 export function NotificationSidebar() {
   const isOpen = useNotificationsSidebarStore((state) => state.isOpen);
   const toggle = useNotificationsSidebarStore((state) => state.toggle);
+  const selectedIds = useNotificationsSidebarStore((state) => state.selectedIds);
+  const clearSelected = useNotificationsSidebarStore((state) => state.clearSelected);
+  const removeSelectedMutation = useRemoveNotificationsMutation();
 
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
@@ -29,6 +33,10 @@ export function NotificationSidebar() {
   } = useNotificationsQuery();
 
   const notifications = notificationsData?.pages.flatMap((page) => page.items) ?? [];
+
+  function handleRemoveSelected() {
+    removeSelectedMutation.mutate([...selectedIds], { onSuccess: clearSelected });
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -88,6 +96,19 @@ export function NotificationSidebar() {
               <div className="px-6 py-4">
                 <Button variant="ghost" size="sm" disabled={isFetchingNextPage} onClick={() => fetchNextPage()} className="w-full">
                   {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              </div>
+            )}
+            {selectedIds.size > 0 && (
+              <div className="px-6 py-4">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={removeSelectedMutation.isPending}
+                  onClick={handleRemoveSelected}
+                  className="w-full"
+                >
+                  {removeSelectedMutation.isPending ? "Removing…" : `Remove selected (${selectedIds.size})`}
                 </Button>
               </div>
             )}

@@ -48,7 +48,7 @@ export class RescheduleAssignmentUseCase {
       });
 
       const result = this.repository.update(rescheduled);
-      this.notificationRepository.markAllReadForEntity("ASSIGNMENT", existing.id, now);
+      this.notificationRepository.markResolvedForEntity("ASSIGNMENT", existing.id);
       return result;
     })();
   }

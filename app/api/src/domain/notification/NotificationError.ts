@@ -32,3 +32,20 @@ export class NotificationNotFoundError extends Error {
     this.name = "NotificationNotFoundError";
   }
 }
+
+export class NotificationStateTransitionError extends Error {
+  constructor(
+    message: string,
+    public readonly state: string,
+  ) {
+    super(message);
+    this.name = "NotificationStateTransitionError";
+  }
+}
+
+export class CannotRemoveNotificationError extends NotificationStateTransitionError {
+  constructor(state: string) {
+    super(`Cannot remove a notification in the ${state} state`, state);
+    this.name = "CannotRemoveNotificationError";
+  }
+}

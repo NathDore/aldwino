@@ -53,3 +53,7 @@ export async function wrapUpAssignment(id: string): Promise<AssignmentDto> {
 export async function wrapUpLateAssignment(id: string): Promise<AssignmentDto> {
   return apiClient<AssignmentDto>(`/assignments/${id}/wrap-up-late`, { method: "POST" });
 }
+
+export async function confirmCompleteAssignment(id: string): Promise<AssignmentDto> {
+  return apiClient<AssignmentDto>(`/assignments/${id}/confirm-complete`, { method: "POST" });
+}

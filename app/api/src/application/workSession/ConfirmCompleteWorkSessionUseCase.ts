@@ -52,7 +52,7 @@ export class ConfirmCompleteWorkSessionUseCase {
       });
 
       const result = this.repository.update(updated);
-      this.notificationRepository.markAllReadForEntity("WORK_SESSION", existing.id, now);
+      this.notificationRepository.markResolvedForEntity("WORK_SESSION", existing.id);
       return result;
     })();
   }

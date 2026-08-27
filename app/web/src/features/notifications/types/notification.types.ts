@@ -10,9 +10,11 @@ export interface NotificationDto {
   isDeleted: boolean;
   deletedAt: string | null;
   createdAt: string;
+  actionTaken: boolean;
 }
 
 export interface NotificationsPage {
   items: NotificationDto[];
   total: number;
+  unreadCount: number;
 }

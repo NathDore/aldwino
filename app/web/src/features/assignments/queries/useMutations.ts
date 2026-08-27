@@ -8,6 +8,7 @@ import {
   rescheduleAssignment,
   wrapUpAssignment,
   wrapUpLateAssignment,
+  confirmCompleteAssignment,
 } from "../services/assignmentService";
 import type { AssignmentEditData } from "../types/assignment.types";
 
@@ -52,6 +53,20 @@ export function useCompleteAssignmentMutation() {
     mutationFn: completeAssignment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}
+
+export function useConfirmCompleteAssignmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: confirmCompleteAssignment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -75,6 +90,7 @@ export function useRescheduleAssignmentMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }
@@ -99,6 +115,7 @@ export function useWrapUpLateAssignmentMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["assignmentWorkSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 }

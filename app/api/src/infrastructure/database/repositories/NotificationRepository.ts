@@ -6,13 +6,15 @@ export interface INotificationRepository {
   getById(id: string): Notification | null;
   getAll(limit: number, offset: number): Notification[];
   countAll(): number;
+  countUnread(): number;
   findUnreadByEntity(
     entityType: NotificationEntityType,
     entityId: string,
     type: NotificationType,
   ): Notification | null;
-  markAsRead(id: string, now: Date): Notification | null;
-  markAllReadForEntity(entityType: NotificationEntityType, entityId: string, now: Date): number;
+  markAsRead(id: string): Notification | null;
+  markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number;
+  softDeleteById(id: string, now: Date): Notification | null;
   purgeDeletedBefore(cutoff: Date): number;
 }
 
@@ -22,7 +24,7 @@ export class NotificationRepository implements INotificationRepository {
   create(notification: Notification): Notification {
     const json = notification.toJSON();
     const stmt = this.db.prepare(
-      "INSERT INTO notifications (id, type, entityType, entityId, isRead, isDeleted, deletedAt, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO notifications (id, type, entityType, entityId, isRead, isDeleted, deletedAt, createdAt, actionTaken) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
     stmt.run(
       json.id,
@@ -33,6 +35,7 @@ export class NotificationRepository implements INotificationRepository {
       json.isDeleted ? 1 : 0,
       json.deletedAt,
       json.createdAt,
+      json.actionTaken ? 1 : 0,
     );
     return notification;
   }
@@ -60,6 +63,12 @@ export class NotificationRepository implements INotificationRepository {
     return row.count;
   }
 
+  countUnread(): number {
+    const stmt = this.db.prepare("SELECT COUNT(*) as count FROM notifications WHERE isDeleted = 0 AND isRead = 0");
+    const row = stmt.get() as { count: number };
+    return row.count;
+  }
+
   findUnreadByEntity(
     entityType: NotificationEntityType,
     entityId: string,
@@ -75,33 +84,52 @@ export class NotificationRepository implements INotificationRepository {
     return this.rowToNotification(row);
   }
 
-  markAsRead(id: string, now: Date): Notification | null {
+  markAsRead(id: string): Notification | null {
     const existing = this.getById(id);
     if (!existing) {
       return null;
     }
-    const stmt = this.db.prepare(
-      "UPDATE notifications SET isRead = 1, isDeleted = 1, deletedAt = ? WHERE id = ? AND isDeleted = 0",
-    );
-    stmt.run(now.toISOString(), id);
+    const stmt = this.db.prepare("UPDATE notifications SET isRead = 1 WHERE id = ? AND isDeleted = 0");
+    stmt.run(id);
     return Notification.create({
       id: existing.id,
       type: existing.type,
       entityType: existing.entityType,
       entityId: existing.entityId,
       isRead: true,
-      isDeleted: true,
-      deletedAt: now,
+      isDeleted: existing.isDeleted,
+      deletedAt: existing.deletedAt,
       createdAt: existing.createdAt,
+      actionTaken: existing.actionTaken,
     });
   }
 
-  markAllReadForEntity(entityType: NotificationEntityType, entityId: string, now: Date): number {
+  markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number {
     const stmt = this.db.prepare(
-      "UPDATE notifications SET isRead = 1, isDeleted = 1, deletedAt = ? WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
+      "UPDATE notifications SET isRead = 1, actionTaken = 1 WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
     );
-    const result = stmt.run(now.toISOString(), entityType, entityId);
+    const result = stmt.run(entityType, entityId);
     return result.changes;
+  }
+
+  softDeleteById(id: string, now: Date): Notification | null {
+    const existing = this.getById(id);
+    if (!existing) {
+      return null;
+    }
+    const stmt = this.db.prepare("UPDATE notifications SET isDeleted = 1, deletedAt = ? WHERE id = ? AND isDeleted = 0");
+    stmt.run(now.toISOString(), id);
+    return Notification.create({
+      id: existing.id,
+      type: existing.type,
+      entityType: existing.entityType,
+      entityId: existing.entityId,
+      isRead: existing.isRead,
+      isDeleted: true,
+      deletedAt: now,
+      createdAt: existing.createdAt,
+      actionTaken: existing.actionTaken,
+    });
   }
 
   purgeDeletedBefore(cutoff: Date): number {
@@ -120,6 +148,7 @@ export class NotificationRepository implements INotificationRepository {
       isDeleted: Boolean(row.isDeleted),
       deletedAt: row.deletedAt ? new Date(row.deletedAt as string) : null,
       createdAt: new Date(row.createdAt as string),
+      actionTaken: Boolean(row.actionTaken),
     });
   }
 }

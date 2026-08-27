@@ -27,6 +27,7 @@ import { migrate as migrateAssignmentWorkSessionDetachReason } from "./infrastru
 import { migrate as migrateNotificationTable } from "./infrastructure/database/migrations/023_create_notification_table";
 import { migrate as migrateWorkSessionWaitConfirmAt } from "./infrastructure/database/migrations/024_add_work_session_wait_confirm_at_column";
 import { migrate as migrateWorkSessionSkippedAt } from "./infrastructure/database/migrations/025_add_work_session_skipped_at_column";
+import { migrate as migrateNotificationActionTaken } from "./infrastructure/database/migrations/026_add_notification_action_taken_column";
 import { seedAssignmentStates } from "./infrastructure/database/seeds/seedAssignmentStates";
 import { seedWorkSessionStates } from "./infrastructure/database/seeds/seedWorkSessionStates";
 import { CourseRepository } from "./infrastructure/database/repositories/CourseRepository";
@@ -83,6 +84,8 @@ import { UnmarkAssignmentWorkedOnUseCase } from "./application/assignmentWorkSes
 import { NotificationRepository } from "./infrastructure/database/repositories/NotificationRepository";
 import { ListNotificationsUseCase } from "./application/notification/ListNotificationsUseCase";
 import { MarkNotificationReadUseCase } from "./application/notification/MarkNotificationReadUseCase";
+import { GetNotificationByIdUseCase } from "./application/notification/GetNotificationByIdUseCase";
+import { RemoveNotificationUseCase } from "./application/notification/RemoveNotificationUseCase";
 import { CheckOverdueAssignmentsUseCase } from "./application/notification/CheckOverdueAssignmentsUseCase";
 import { CheckMissedWorkSessionsUseCase } from "./application/notification/CheckMissedWorkSessionsUseCase";
 import { CheckUpcomingAssignmentsUseCase } from "./application/notification/CheckUpcomingAssignmentsUseCase";
@@ -118,6 +121,7 @@ migrateAssignmentWorkSessionDetachReason(db);
 migrateNotificationTable(db);
 migrateWorkSessionWaitConfirmAt(db);
 migrateWorkSessionSkippedAt(db);
+migrateNotificationActionTaken(db);
 
 // Seed lookup tables (idempotent, runs every startup)
 seedAssignmentStates(db);
@@ -379,7 +383,9 @@ const app = createServer({
     db,
   ),
   listNotificationsUseCase: new ListNotificationsUseCase(notificationRepository),
-  markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository, clock),
+  markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository),
+  getNotificationByIdUseCase: new GetNotificationByIdUseCase(notificationRepository),
+  removeNotificationUseCase: new RemoveNotificationUseCase(notificationRepository, clock),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
 });
 
