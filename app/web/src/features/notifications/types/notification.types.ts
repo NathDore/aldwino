@@ -15,4 +15,5 @@ export interface NotificationDto {
 export interface NotificationsPage {
   items: NotificationDto[];
   total: number;
+  unreadCount: number;
 }

@@ -9,7 +9,7 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
 
 export function AppToolbar() {
   const { data: notificationsData } = useNotificationsQuery();
-  const unreadCount = notificationsData?.pages[0]?.total ?? 0;
+  const unreadCount = notificationsData?.pages[0]?.unreadCount ?? 0;
 
   return (
     <div className="h-16 shrink-0 flex items-center justify-between gap-2 px-3 sm:px-8 border-b border-slate-200 bg-white">

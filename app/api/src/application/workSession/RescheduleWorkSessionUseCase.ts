@@ -64,7 +64,7 @@ export class RescheduleWorkSessionUseCase {
       });
 
       const result = this.repository.update(updated);
-      this.notificationRepository.markAllReadForEntity("WORK_SESSION", existing.id, now);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", existing.id);
       return { session: result, mergedFrom: [] };
     })();
   }

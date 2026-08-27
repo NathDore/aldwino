@@ -379,7 +379,7 @@ const app = createServer({
     db,
   ),
   listNotificationsUseCase: new ListNotificationsUseCase(notificationRepository),
-  markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository, clock),
+  markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository),
   allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
 });
 

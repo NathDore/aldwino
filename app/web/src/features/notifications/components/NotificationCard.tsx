@@ -56,11 +56,15 @@ export function NotificationCard({
     if (isOpen) toggle();
   }
 
+  const readStateClassName = notification.isRead
+    ? "bg-white hover:bg-slate-50 font-normal"
+    : "bg-slate-50 hover:bg-slate-100 font-semibold";
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      className="w-full flex items-start gap-3 px-6 py-4 border-b border-slate-200 text-sm text-slate-900 text-left hover:bg-slate-50 transition-colors"
+      className={`w-full flex items-start gap-3 px-6 py-4 border-b border-slate-200 text-sm text-slate-900 text-left transition-colors ${readStateClassName}`}
     >
       {swatch}
       <span className="flex-1 min-w-0">{view.message}</span>

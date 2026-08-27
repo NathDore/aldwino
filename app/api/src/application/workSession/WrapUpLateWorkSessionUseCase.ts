@@ -64,7 +64,7 @@ export class WrapUpLateWorkSessionUseCase {
       }
 
       this.relabelStaleCompletionLinks(id);
-      this.notificationRepository.markAllReadForEntity("WORK_SESSION", id, now);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", id);
 
       return updated;
     })();

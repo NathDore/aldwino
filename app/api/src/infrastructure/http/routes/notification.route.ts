@@ -38,8 +38,8 @@ export function registerNotificationRoutes(app: Hono, deps: NotificationRouteDep
   app.get("/notifications", (c) => {
     const limit = parseLimit(c.req.query("limit"));
     const offset = parseOffset(c.req.query("offset"));
-    const { items, total } = deps.listNotificationsUseCase.execute({ limit, offset });
-    return c.json({ items: items.map((notification) => notification.toJSON()), total }, 200);
+    const { items, total, unreadCount } = deps.listNotificationsUseCase.execute({ limit, offset });
+    return c.json({ items: items.map((notification) => notification.toJSON()), total, unreadCount }, 200);
   });
 
   app.post("/notifications/:id/read", (c) => {

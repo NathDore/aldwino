@@ -387,52 +387,61 @@ describe("CheckUpcomingAssignmentsUseCase", () => {
     );
     checkUpcomingAssignments.execute();
     const [existing] = listNotifications.execute({ limit: 20, offset: 0 }).items;
-    notificationRepository.markAsRead(existing.id, NOW);
+    notificationRepository.markAsRead(existing.id);
 
     const created = checkUpcomingAssignments.execute();
 
     expect(created).toBe(1);
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(2);
+    expect(items.filter((n) => n.isRead)).toHaveLength(1);
+    expect(items.filter((n) => !n.isRead)).toHaveLength(1);
   });
 });
 
 describe("auto-resolve on assignment resolution", () => {
-  test("confirm-completing an overdue assignment clears its unread notification", () => {
+  test("confirm-completing an overdue assignment marks its notification as read", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
     expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
 
     confirmCompleteAssignment.execute(assignment.id);
 
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 
-  test("rescheduling an overdue assignment clears its unread notification and resets state", () => {
+  test("rescheduling an overdue assignment marks its notification as read and resets state", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
 
     const rescheduled = rescheduleAssignment.execute({ id: assignment.id, dueDate: FUTURE });
 
     expect(rescheduled.assignmentStateId).toBe(stateIdFor(db, "UNCOMPLETED"));
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 
-  test("wrapping up late an overdue assignment clears its unread notification", () => {
+  test("wrapping up late an overdue assignment marks its notification as read", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
 
     wrapUpLateAssignment.execute(assignment.id);
 
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 });
 
 describe("auto-resolve on work session resolution", () => {
-  test("rescheduling a skipped session clears its unread notification", () => {
+  test("rescheduling a skipped session marks its notification as read", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
     confirmSkipWorkSession.execute(session.id);
-    // Confirming skip already clears the notification; simulate a fresh one to prove reschedule also clears it.
+    // Confirming skip already marks the notification read; simulate a fresh unread one to prove reschedule also marks it read.
     notificationRepository.create(makeNotification({ id: "notification-skip-3", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
 
     rescheduleWorkSession.execute({
@@ -441,28 +450,32 @@ describe("auto-resolve on work session resolution", () => {
       endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000),
     });
 
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items.every((n) => n.isRead)).toBe(true);
   });
 
-  test("confirm-skipping a missed session clears its unread notification", () => {
+  test("confirm-skipping a missed session marks its notification as read", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
 
     confirmSkipWorkSession.execute(session.id);
 
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 
-  test("wrapping up late a skipped session clears its unread notification", () => {
+  test("wrapping up late a skipped session marks its notification as read", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
     confirmSkipWorkSession.execute(session.id);
-    // Confirming skip already clears the notification; simulate a fresh one to prove wrap-up-late also clears it.
+    // Confirming skip already marks the notification read; simulate a fresh unread one to prove wrap-up-late also marks it read.
     notificationRepository.create(makeNotification({ id: "notification-skip-2", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
 
     wrapUpLateWorkSession.execute(session.id);
 
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items.every((n) => n.isRead)).toBe(true);
   });
 });
 
@@ -483,7 +496,7 @@ describe("CompleteWorkSessionUseCase / UncompleteWorkSessionUseCase WAIT_CONFIRM
 });
 
 describe("ConfirmCompleteWorkSessionUseCase", () => {
-  test("completes a WAIT_CONFIRM session and clears its unread notification", () => {
+  test("completes a WAIT_CONFIRM session and marks its notification as read", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
 
@@ -492,7 +505,9 @@ describe("ConfirmCompleteWorkSessionUseCase", () => {
     expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "COMPLETED"));
     expect(result.completedAt).toEqual(NOW);
     expect(result.waitConfirmAt).toBeNull();
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 
   test("rejects an in-progress session", () => {
@@ -505,7 +520,7 @@ describe("ConfirmCompleteWorkSessionUseCase", () => {
 });
 
 describe("ConfirmSkipWorkSessionUseCase", () => {
-  test("marks a WAIT_CONFIRM session as SKIPPED, stamps skippedAt, and clears its unread notification", () => {
+  test("marks a WAIT_CONFIRM session as SKIPPED, stamps skippedAt, and marks its notification as read", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
 
@@ -514,7 +529,9 @@ describe("ConfirmSkipWorkSessionUseCase", () => {
     expect(result.workSessionStateId).toBe(workSessionStateIdFor(db, "SKIPPED"));
     expect(result.skippedAt).toEqual(NOW);
     expect(result.waitConfirmAt).toBeNull();
-    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
+    expect(items).toHaveLength(1);
+    expect(items[0].isRead).toBe(true);
   });
 
   test("rejects an in-progress session", () => {
@@ -667,6 +684,31 @@ describe("PurgeDeletedNotificationsUseCase", () => {
     notificationRepository.create(makeNotification({ id: "notification-active" }));
 
     expect(purgeNotifications.execute()).toBe(0);
+  });
+});
+
+describe("countUnread / unreadCount", () => {
+  test("countUnread only counts unread, non-deleted notifications", () => {
+    notificationRepository.create(makeNotification({ id: "notification-unread" }));
+    const read = notificationRepository.create(makeNotification({ id: "notification-read" }));
+    notificationRepository.markAsRead(read.id);
+    notificationRepository.create(
+      makeNotification({ id: "notification-deleted", isDeleted: true, deletedAt: NOW }),
+    );
+
+    expect(notificationRepository.countUnread()).toBe(1);
+  });
+
+  test("ListNotificationsUseCase returns unreadCount alongside items and total", () => {
+    notificationRepository.create(makeNotification({ id: "notification-unread-1" }));
+    notificationRepository.create(makeNotification({ id: "notification-unread-2" }));
+    const read = notificationRepository.create(makeNotification({ id: "notification-read" }));
+    notificationRepository.markAsRead(read.id);
+
+    const result = listNotifications.execute({ limit: 20, offset: 0 });
+
+    expect(result.total).toBe(3);
+    expect(result.unreadCount).toBe(2);
   });
 });
 

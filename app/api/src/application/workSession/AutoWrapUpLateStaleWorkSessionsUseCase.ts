@@ -63,7 +63,7 @@ export class AutoWrapUpLateStaleWorkSessionsUseCase {
         );
       }
 
-      this.notificationRepository.markAllReadForEntity("WORK_SESSION", workSession.id, now);
+      this.notificationRepository.markAllReadForEntity("WORK_SESSION", workSession.id);
       wrappedUp++;
     }
     return wrappedUp;
