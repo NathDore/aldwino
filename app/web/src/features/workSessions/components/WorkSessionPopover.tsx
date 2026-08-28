@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Popover } from "@/shared/components/Popover";
 import { Modal } from "@/shared/components/Modal";
@@ -6,6 +6,7 @@ import { DeleteConfirmation } from "@/shared/components/DeleteConfirmation";
 import { Button } from "@/shared/components/Button";
 import { CheckIcon, MoreIcon } from "@/features/calendar/components/icons";
 import { useCalendarStore } from "@/features/calendar/store/calendarStore";
+import { useAnchoredMenu } from "@/shared/hooks/useAnchoredMenu";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
 import {
   useCompleteWorkSessionMutation,
@@ -54,8 +55,8 @@ function formatDateHeading(startTime: string): { weekday: string; date: string }
 export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSessionPopoverProps) {
   const { workSession } = calendarWorkSession;
   const { weekday, date } = formatDateHeading(workSession.startTime);
-  const { data: workSessionStates } = useWorkSessionStatesQuery();
-  const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSession.id);
+  const { data: workSessionStates, isLoading: isStatesLoading } = useWorkSessionStatesQuery();
+  const { data: links = [], isLoading: isLinksLoading } = useWorkSessionAssignmentLinksQuery(workSession.id);
   const completeMutation = useCompleteWorkSessionMutation();
   const confirmCompleteMutation = useConfirmCompleteWorkSessionMutation();
   const confirmSkipMutation = useConfirmSkipWorkSessionMutation();
@@ -65,10 +66,16 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
   const closeMutation = useCloseWorkSessionMutation();
   const goToWeekOf = useCalendarStore((s) => s.goToWeekOf);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const menuTriggerRef = useRef<HTMLSpanElement>(null);
-  const menuPanelRef = useRef<HTMLDivElement>(null);
+  const {
+    isOpen: isMenuOpen,
+    position: menuPosition,
+    triggerRef: menuTriggerRef,
+    panelRef: menuPanelRef,
+    toggle: toggleMenu,
+    close: closeMenu,
+  } = useAnchoredMenu<{ top: number; left: number }, HTMLSpanElement, HTMLDivElement>({
+    computePosition: (rect) => ({ top: rect.bottom + 4, left: rect.right }),
+  });
   const [modeStack, setModeStack] = useState<Mode[]>(["session"]);
   const mode = modeStack[modeStack.length - 1];
   const [pendingAssignmentId, setPendingAssignmentId] = useState<string | undefined>(undefined);
@@ -128,39 +135,6 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
     await confirmSkipMutation.mutateAsync(workSession.id);
   };
 
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    function updatePosition() {
-      const rect = menuTriggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setMenuPosition({ top: rect.bottom + 4, left: rect.right });
-    }
-
-    updatePosition();
-
-    function handlePointerDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (menuPanelRef.current?.contains(target) || menuTriggerRef.current?.contains(target)) return;
-      setIsMenuOpen(false);
-    }
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setIsMenuOpen(false);
-    }
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [isMenuOpen]);
-
   return (
     <Popover
       onClose={onClose}
@@ -177,15 +151,19 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusPill.bg} ${statusPill.fg}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${statusPill.dot}`} aria-hidden="true" />
-              {statusPill.label}
-            </span>
-            {isInProgress && (
+            {isStatesLoading ? (
+              <span className="inline-block h-[26px] w-24 rounded-full bg-slate-100 animate-pulse" />
+            ) : (
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusPill.bg} ${statusPill.fg}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusPill.dot}`} aria-hidden="true" />
+                {statusPill.label}
+              </span>
+            )}
+            {!isStatesLoading && isInProgress && (
               <span ref={menuTriggerRef} className="inline-flex shrink-0">
-                <Button variant="ghost" size="sm" onClick={() => setIsMenuOpen((v) => !v)}>
+                <Button variant="ghost" size="sm" onClick={toggleMenu}>
                   <span className="sr-only">More actions</span>
                   <MoreIcon />
                 </Button>
@@ -202,7 +180,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 <button
                   type="button"
                   onClick={() => {
-                    setIsMenuOpen(false);
+                    closeMenu();
                     pushMode("edit-session");
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
@@ -212,7 +190,7 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 <button
                   type="button"
                   onClick={() => {
-                    setIsMenuOpen(false);
+                    closeMenu();
                     setIsConfirmingDelete(true);
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
@@ -253,15 +231,15 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                 >
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-                      Assignments · {totalLinked}
+                      Assignments{!isLinksLoading && ` · ${totalLinked}`}
                     </p>
-                    {isInProgress && (
+                    {!isStatesLoading && isInProgress && (
                       <Button variant="ghost" size="sm" onClick={() => pushMode("link-assignment")}>
                         + Add
                       </Button>
                     )}
                   </div>
-                  {totalLinked > 0 && (
+                  {!isLinksLoading && totalLinked > 0 && (
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
                         <div
@@ -274,100 +252,109 @@ export function WorkSessionPopover({ calendarWorkSession, onClose }: WorkSession
                       </span>
                     </div>
                   )}
-                  <LinkedAssignmentsList workSessionId={workSession.id} canEdit={isInProgress} />
+                  <LinkedAssignmentsList workSessionId={workSession.id} canEdit={!isStatesLoading && isInProgress} />
 
                   <div className="space-y-2 pt-2 border-t border-slate-200">
-                    {isWaitConfirm && <p className="text-sm text-slate-600">{WAIT_CONFIRM_MESSAGE}</p>}
-                    {isSkipped && <p className="text-sm text-slate-600">{SKIPPED_MESSAGE}</p>}
-                    {isCompletedPastDue && <p className="text-sm text-slate-600">{completionMessage}</p>}
-                    <div className="flex items-center gap-2">
-                      {isWaitConfirm && (
-                        <>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={handleConfirmComplete}
-                            disabled={confirmCompleteMutation.isPending}
-                          >
-                            <span className="inline-flex items-center gap-1.5">
-                              <CheckIcon className="w-3 h-3" />
-                              Complete
-                            </span>
-                          </Button>
-                          <span className="text-sm text-slate-500">or</span>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={handleConfirmSkip}
-                            disabled={confirmSkipMutation.isPending}
-                          >
-                            Confirm skipped
-                          </Button>
-                        </>
-                      )}
-                      {isSkipped && (
-                        <>
-                          <Button variant="warning" size="sm" onClick={() => pushMode("reschedule-session")}>
-                            Reschedule
-                          </Button>
-                          <span className="text-sm text-slate-500">or</span>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setIsConfirmingDelete(true)}
-                            disabled={wrapUpLateMutation.isPending}
-                          >
-                            Remove
-                          </Button>
-                        </>
-                      )}
-                      {isCompletedCurrent && (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={handleUncomplete}
-                            disabled={uncompleteMutation.isPending}
-                          >
-                            <span className="inline-flex items-center gap-1.5">
-                              <CheckIcon className="w-3 h-3" />
-                              Completed
-                            </span>
-                          </Button>
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={handleCloseSession}
-                            disabled={closeMutation.isPending}
-                          >
-                            Close
-                          </Button>
-                        </>
-                      )}
-                      {isCompletedPastDue && (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={handleCloseSession}
-                          disabled={closeMutation.isPending}
-                        >
-                          Close
-                        </Button>
-                      )}
-                      {isInProgress && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={handleComplete}
-                          disabled={completeMutation.isPending}
-                        >
-                          <span className="inline-flex items-center gap-1.5">
-                            <CheckIcon className="w-3 h-3" />
-                            Complete
-                          </span>
-                        </Button>
-                      )}
-                    </div>
+                    {isStatesLoading ? (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block h-8 w-24 rounded-lg bg-slate-100 animate-pulse" />
+                        <span className="inline-block h-8 w-24 rounded-lg bg-slate-100 animate-pulse" />
+                      </div>
+                    ) : (
+                      <>
+                        {isWaitConfirm && <p className="text-sm text-slate-600">{WAIT_CONFIRM_MESSAGE}</p>}
+                        {isSkipped && <p className="text-sm text-slate-600">{SKIPPED_MESSAGE}</p>}
+                        {isCompletedPastDue && <p className="text-sm text-slate-600">{completionMessage}</p>}
+                        <div className="flex items-center gap-2">
+                          {isWaitConfirm && (
+                            <>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleConfirmComplete}
+                                disabled={confirmCompleteMutation.isPending}
+                              >
+                                <span className="inline-flex items-center gap-1.5">
+                                  <CheckIcon className="w-3 h-3" />
+                                  Complete
+                                </span>
+                              </Button>
+                              <span className="text-sm text-slate-500">or</span>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={handleConfirmSkip}
+                                disabled={confirmSkipMutation.isPending}
+                              >
+                                Confirm skipped
+                              </Button>
+                            </>
+                          )}
+                          {isSkipped && (
+                            <>
+                              <Button variant="warning" size="sm" onClick={() => pushMode("reschedule-session")}>
+                                Reschedule
+                              </Button>
+                              <span className="text-sm text-slate-500">or</span>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => setIsConfirmingDelete(true)}
+                                disabled={wrapUpLateMutation.isPending}
+                              >
+                                Remove
+                              </Button>
+                            </>
+                          )}
+                          {isCompletedCurrent && (
+                            <>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleUncomplete}
+                                disabled={uncompleteMutation.isPending}
+                              >
+                                <span className="inline-flex items-center gap-1.5">
+                                  <CheckIcon className="w-3 h-3" />
+                                  Completed
+                                </span>
+                              </Button>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={handleCloseSession}
+                                disabled={closeMutation.isPending}
+                              >
+                                Close
+                              </Button>
+                            </>
+                          )}
+                          {isCompletedPastDue && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={handleCloseSession}
+                              disabled={closeMutation.isPending}
+                            >
+                              Close
+                            </Button>
+                          )}
+                          {isInProgress && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={handleComplete}
+                              disabled={completeMutation.isPending}
+                            >
+                              <span className="inline-flex items-center gap-1.5">
+                                <CheckIcon className="w-3 h-3" />
+                                Complete
+                              </span>
+                            </Button>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
                 {mode === "create-assignment" && (
