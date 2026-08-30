@@ -52,6 +52,7 @@ Alongside `src/` sits the sibling `src-tauri/` Rust project (the Tauri shell): `
 **Guidelines:**
 - Keep features isolated; avoid cross-feature imports except through `shared/`
 - Business logic belongs in services or backend, not in components
+- Keep components pure and presentational: derived values, side-effecting handlers, and business logic belong in hooks or utils, not inlined in the component body — a component should primarily assemble JSX from values a hook or util already computed
 - Each feature is self-contained with its own types, queries, and state
 
 Design system (colors, typography, spacing, component patterns) is documented in `docs/DESIGN_SYSTEM.md` — follow it for any UI work.

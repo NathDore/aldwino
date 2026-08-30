@@ -10,6 +10,8 @@ import { getCourseColor } from "@/features/assignments/utils/assignmentStatus";
 import { CheckIcon } from "@/features/calendar/components/icons";
 import { WorkSessionPopover } from "./WorkSessionPopover";
 import { useWorkSessionStatesQuery } from "../queries/useWorkSessionStatesQuery";
+import { formatWorkSessionTimeRange } from "../utils/formatWorkSessionTime";
+import { getWorkSessionStateName, isWorkSessionCompleted, isWorkSessionSkipped } from "../utils/workSessionStatus";
 import {
   COMPACT_EVENT_THRESHOLD_MINUTES,
   SINGLE_ASSIGNMENT_COMPACT_THRESHOLD_MINUTES,
@@ -20,11 +22,6 @@ import type { CalendarAssignment, CalendarWorkSession } from "@/features/calenda
 interface WorkSessionBlockProps {
   calendarWorkSession: CalendarWorkSession;
   rowLayout: RowLayout;
-}
-
-function formatTimeRange(startTime: string, endTime: string): string {
-  const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
-  return `${new Date(startTime).toLocaleTimeString(undefined, opts)} – ${new Date(endTime).toLocaleTimeString(undefined, opts)}`;
 }
 
 function AssignmentRow({ item, textColorClass }: { item: CalendarAssignment; textColorClass: string }) {
@@ -61,9 +58,9 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
   const collapseWorkSession = useCalendarStore((s) => s.collapseWorkSession);
   const isExpanded = expandedWorkSessionId === workSession.id;
   const isActive = useIsEventActive(workSession.startTime, workSession.endTime);
-  const isCompleted = workSession.completedAt !== null;
-  const stateName = workSessionStates?.find((s) => s.id === workSession.workSessionStateId)?.state;
-  const isSkipped = stateName === "SKIPPED";
+  const isCompleted = isWorkSessionCompleted(workSession);
+  const stateName = getWorkSessionStateName(workSession, workSessionStates);
+  const isSkipped = isWorkSessionSkipped(stateName);
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const chipRowRef = useRef<HTMLDivElement>(null);
@@ -109,7 +106,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
     >
       {!hasAssignments ? (
         <p className={`truncate text-[10px] font-medium w-full ${headerTextClass}`}>
-          {formatTimeRange(workSession.startTime, workSession.endTime)}
+          {formatWorkSessionTimeRange(workSession.startTime, workSession.endTime)}
         </p>
       ) : isSingleCompactAssignment ? (
         <AssignmentRow item={assignments[0]} textColorClass={statusTextClass} />
@@ -128,7 +125,7 @@ export const WorkSessionBlock = memo(function WorkSessionBlock({ calendarWorkSes
         <div className="space-y-1">
           <div ref={headerRef} className="flex items-center justify-between gap-1">
             <p className={`text-[11px] font-semibold truncate ${headerTextClass}`}>
-              {formatTimeRange(workSession.startTime, workSession.endTime)}
+              {formatWorkSessionTimeRange(workSession.startTime, workSession.endTime)}
             </p>
           </div>
           {assignments.map((item, index) => (
