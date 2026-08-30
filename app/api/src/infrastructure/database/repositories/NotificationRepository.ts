@@ -14,6 +14,7 @@ export interface INotificationRepository {
   ): Notification | null;
   markAsRead(id: string): Notification | null;
   markResolvedForEntity(entityType: NotificationEntityType, entityId: string): number;
+  softDeleteAllForEntity(entityType: NotificationEntityType, entityId: string, now: Date): number;
   softDeleteById(id: string, now: Date): Notification | null;
   purgeDeletedBefore(cutoff: Date): number;
 }
@@ -109,6 +110,14 @@ export class NotificationRepository implements INotificationRepository {
       "UPDATE notifications SET isRead = 1, actionTaken = 1 WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
     );
     const result = stmt.run(entityType, entityId);
+    return result.changes;
+  }
+
+  softDeleteAllForEntity(entityType: NotificationEntityType, entityId: string, now: Date): number {
+    const stmt = this.db.prepare(
+      "UPDATE notifications SET isDeleted = 1, deletedAt = ? WHERE entityType = ? AND entityId = ? AND isDeleted = 0",
+    );
+    const result = stmt.run(now.toISOString(), entityType, entityId);
     return result.changes;
   }
 

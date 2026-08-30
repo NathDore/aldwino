@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import type { Database } from "bun:sqlite";
 import { AssignmentRepository } from "../src/infrastructure/database/repositories/AssignmentRepository";
 import { AssignmentStateRepository } from "../src/infrastructure/database/repositories/AssignmentStateRepository";
+import { CourseRepository } from "../src/infrastructure/database/repositories/CourseRepository";
 import { AssignmentWorkSessionRepository } from "../src/infrastructure/database/repositories/AssignmentWorkSessionRepository";
 import { WorkSessionRepository } from "../src/infrastructure/database/repositories/WorkSessionRepository";
 import { WorkSessionStateRepository } from "../src/infrastructure/database/repositories/WorkSessionStateRepository";
@@ -18,6 +19,8 @@ import { NotificationNotFoundError, CannotRemoveNotificationError } from "../src
 import { ConfirmCompleteAssignmentUseCase } from "../src/application/assignment/ConfirmCompleteAssignmentUseCase";
 import { RescheduleAssignmentUseCase } from "../src/application/assignment/RescheduleAssignmentUseCase";
 import { WrapUpLateAssignmentUseCase } from "../src/application/assignment/WrapUpLateAssignmentUseCase";
+import { DeleteAssignmentUseCase } from "../src/application/assignment/DeleteAssignmentUseCase";
+import { DeleteCourseUseCase } from "../src/application/course/DeleteCourseUseCase";
 import { RescheduleWorkSessionUseCase } from "../src/application/workSession/RescheduleWorkSessionUseCase";
 import { DeleteWorkSessionUseCase } from "../src/application/workSession/DeleteWorkSessionUseCase";
 import { WrapUpLateWorkSessionUseCase } from "../src/application/workSession/WrapUpLateWorkSessionUseCase";
@@ -55,6 +58,7 @@ let db: Database;
 let clock: FixedClock;
 let assignmentRepository: AssignmentRepository;
 let assignmentStateRepository: AssignmentStateRepository;
+let courseRepository: CourseRepository;
 let linkRepository: AssignmentWorkSessionRepository;
 let workSessionRepository: WorkSessionRepository;
 let workSessionStateRepository: WorkSessionStateRepository;
@@ -71,6 +75,8 @@ let removeNotification: RemoveNotificationUseCase;
 let confirmCompleteAssignment: ConfirmCompleteAssignmentUseCase;
 let rescheduleAssignment: RescheduleAssignmentUseCase;
 let wrapUpLateAssignment: WrapUpLateAssignmentUseCase;
+let deleteAssignment: DeleteAssignmentUseCase;
+let deleteCourse: DeleteCourseUseCase;
 let rescheduleWorkSession: RescheduleWorkSessionUseCase;
 let deleteWorkSession: DeleteWorkSessionUseCase;
 let wrapUpLateWorkSession: WrapUpLateWorkSessionUseCase;
@@ -89,6 +95,7 @@ beforeEach(() => {
   clock = new FixedClock(NOW);
   assignmentRepository = new AssignmentRepository(db);
   assignmentStateRepository = new AssignmentStateRepository(db);
+  courseRepository = new CourseRepository(db);
   linkRepository = new AssignmentWorkSessionRepository(db);
   workSessionRepository = new WorkSessionRepository(db);
   workSessionStateRepository = new WorkSessionStateRepository(db);
@@ -130,6 +137,8 @@ beforeEach(() => {
     db,
   );
   wrapUpLateAssignment = new WrapUpLateAssignmentUseCase(assignmentRepository, notificationRepository, clock, db);
+  deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, notificationRepository, clock, db);
+  deleteCourse = new DeleteCourseUseCase(courseRepository, assignmentRepository, notificationRepository, clock, db);
   rescheduleWorkSession = new RescheduleWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,
@@ -423,38 +432,42 @@ describe("auto-resolve on assignment resolution", () => {
     expect(items[0].actionTaken).toBe(true);
   });
 
-  test("rescheduling an overdue assignment marks its notification as read and resets state", () => {
+  test("rescheduling an overdue assignment removes its due-date notification(s) and resets state", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
+    // A stale DUE_SOON notification from before the assignment went overdue should also be cleared.
+    notificationRepository.create(
+      makeNotification({
+        id: "notification-due-soon-stale",
+        type: "ASSIGNMENT_DUE_SOON",
+        entityType: "ASSIGNMENT",
+        entityId: assignment.id,
+      }),
+    );
 
     const rescheduled = rescheduleAssignment.execute({ id: assignment.id, dueDate: FUTURE });
 
     expect(rescheduled.assignmentStateId).toBe(stateIdFor(db, "UNCOMPLETED"));
-    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
-    expect(items).toHaveLength(1);
-    expect(items[0].isRead).toBe(true);
-    expect(items[0].actionTaken).toBe(true);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
-  test("wrapping up late an overdue assignment marks its notification as read", () => {
+  test("wrapping up late an overdue assignment removes its notification", () => {
     const assignment = createOverdueAssignment();
     checkOverdueAssignments.execute();
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
 
     wrapUpLateAssignment.execute(assignment.id);
 
-    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
-    expect(items).toHaveLength(1);
-    expect(items[0].isRead).toBe(true);
-    expect(items[0].actionTaken).toBe(true);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 });
 
 describe("auto-resolve on work session resolution", () => {
-  test("rescheduling a skipped session marks its notification as read", () => {
+  test("rescheduling a skipped session removes its notifications, even while unread", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
     confirmSkipWorkSession.execute(session.id);
-    // Confirming skip already marks the notification read; simulate a fresh unread one to prove reschedule also marks it read.
+    // Confirming skip already marks the notification read; add a fresh unread one to prove reschedule removes it too, bypassing the REMOVABLE guard.
     notificationRepository.create(makeNotification({ id: "notification-skip-3", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
 
     rescheduleWorkSession.execute({
@@ -463,9 +476,7 @@ describe("auto-resolve on work session resolution", () => {
       endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000),
     });
 
-    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
-    expect(items.every((n) => n.isRead)).toBe(true);
-    expect(items.every((n) => n.actionTaken)).toBe(true);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("confirm-skipping a missed session marks its notification as read", () => {
@@ -480,18 +491,16 @@ describe("auto-resolve on work session resolution", () => {
     expect(items[0].actionTaken).toBe(true);
   });
 
-  test("wrapping up late a skipped session marks its notification as read", () => {
+  test("wrapping up late a skipped session removes its notifications", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
     confirmSkipWorkSession.execute(session.id);
-    // Confirming skip already marks the notification read; simulate a fresh unread one to prove wrap-up-late also marks it read.
+    // Confirming skip already marks the notification read; add a fresh unread one to prove wrap-up-late removes it too, bypassing the REMOVABLE guard.
     notificationRepository.create(makeNotification({ id: "notification-skip-2", entityType: "WORK_SESSION", entityId: session.id, type: "WORK_SESSION_SKIPPED" }));
 
     wrapUpLateWorkSession.execute(session.id);
 
-    const items = listNotifications.execute({ limit: 20, offset: 0 }).items;
-    expect(items.every((n) => n.isRead)).toBe(true);
-    expect(items.every((n) => n.actionTaken)).toBe(true);
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 });
 
@@ -608,6 +617,56 @@ describe("DeleteWorkSessionUseCase / WrapUpLateWorkSessionUseCase guards", () =>
   });
 });
 
+describe("notification cleanup on delete", () => {
+  test("deleting an assignment removes its due-soon notification, even while unread", () => {
+    const assignment = assignmentRepository.create(
+      makeAssignment({
+        id: "assignment-due-soon",
+        dueDate: new Date(NOW.getTime() + ONE_DAY_MS),
+        assignmentStateId: stateIdFor(db, "UNCOMPLETED"),
+      }),
+    );
+    checkUpcomingAssignments.execute();
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
+
+    deleteAssignment.execute(assignment.id);
+
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+  });
+
+  test("deleting a work session removes its notifications, even while unread", () => {
+    const session = createMissedWorkSession();
+    notificationRepository.create(
+      makeNotification({
+        id: "notification-inprogress",
+        entityType: "WORK_SESSION",
+        entityId: session.id,
+        type: "WORK_SESSION_SKIPPED",
+      }),
+    );
+
+    deleteWorkSession.execute(session.id);
+
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+  });
+
+  test("deleting a course removes the notifications of every assignment it cascades to", () => {
+    const assignment = assignmentRepository.create(
+      makeAssignment({
+        id: "assignment-due-soon",
+        dueDate: new Date(NOW.getTime() + ONE_DAY_MS),
+        assignmentStateId: stateIdFor(db, "UNCOMPLETED"),
+      }),
+    );
+    checkUpcomingAssignments.execute();
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(1);
+
+    deleteCourse.execute(assignment.courseId);
+
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
+  });
+});
+
 describe("CreateWorkSessionUseCase", () => {
   test("always creates a session in the INPROGRESS state", () => {
     const result = createWorkSession.execute({ startTime: FUTURE, endTime: new Date(FUTURE.getTime() + 60 * 60 * 1000) });
@@ -642,7 +701,7 @@ describe("AutoSkipStaleWorkSessionsUseCase", () => {
 });
 
 describe("AutoWrapUpLateStaleWorkSessionsUseCase", () => {
-  test("wraps up a SKIPPED session stale for more than a week", () => {
+  test("wraps up a SKIPPED session stale for more than a week and removes its notification", () => {
     const session = createMissedWorkSession();
     checkMissedWorkSessions.execute();
     confirmSkipWorkSession.execute(session.id);
@@ -652,6 +711,7 @@ describe("AutoWrapUpLateStaleWorkSessionsUseCase", () => {
 
     expect(count).toBe(1);
     expect(workSessionRepository.getById(session.id)).toBeNull();
+    expect(listNotifications.execute({ limit: 20, offset: 0 }).items).toHaveLength(0);
   });
 
   test("leaves a SKIPPED session under a week old untouched", () => {

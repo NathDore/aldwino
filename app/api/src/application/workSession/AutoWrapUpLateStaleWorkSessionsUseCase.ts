@@ -63,7 +63,7 @@ export class AutoWrapUpLateStaleWorkSessionsUseCase {
         );
       }
 
-      this.notificationRepository.markResolvedForEntity("WORK_SESSION", workSession.id);
+      this.notificationRepository.softDeleteAllForEntity("WORK_SESSION", workSession.id, now);
       wrappedUp++;
     }
     return wrappedUp;

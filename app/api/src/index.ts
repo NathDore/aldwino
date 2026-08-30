@@ -239,7 +239,7 @@ const app = createServer({
   getCourseByIdUseCase: new GetCourseByIdUseCase(courseRepository),
   listCoursesUseCase: new ListCoursesUseCase(courseRepository),
   updateCourseUseCase: new UpdateCourseUseCase(courseRepository),
-  deleteCourseUseCase: new DeleteCourseUseCase(courseRepository, assignmentRepository, clock, db),
+  deleteCourseUseCase: new DeleteCourseUseCase(courseRepository, assignmentRepository, notificationRepository, clock, db),
   createAssignmentUseCase: new CreateAssignmentUseCase(
     assignmentRepository,
     courseRepository,
@@ -250,7 +250,13 @@ const app = createServer({
   getAssignmentByIdUseCase: new GetAssignmentByIdUseCase(assignmentRepository),
   listAssignmentsUseCase: new ListAssignmentsUseCase(assignmentRepository),
   updateAssignmentUseCase: new UpdateAssignmentUseCase(assignmentRepository, courseRepository, clock, db),
-  deleteAssignmentUseCase: new DeleteAssignmentUseCase(assignmentRepository, assignmentWorkSessionRepository, clock, db),
+  deleteAssignmentUseCase: new DeleteAssignmentUseCase(
+    assignmentRepository,
+    assignmentWorkSessionRepository,
+    notificationRepository,
+    clock,
+    db,
+  ),
   completeAssignmentUseCase: new CompleteAssignmentUseCase(
     assignmentRepository,
     assignmentStateRepository,
