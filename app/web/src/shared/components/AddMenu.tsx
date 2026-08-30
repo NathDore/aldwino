@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./Button";
 import { Popover } from "./Popover";
@@ -9,51 +9,22 @@ import { InlineCourseForm } from "@/features/courses/components/InlineCourseForm
 import { CreateWorkSessionPopover } from "@/features/workSessions/components/CreateWorkSessionPopover";
 import { MODAL_HEIGHT, MODAL_WIDTH } from "@/shared/lib/formConstants";
 import { toISODate } from "@/features/calendar/hooks/useWeekDays";
+import { useAnchoredMenu } from "@/shared/hooks/useAnchoredMenu";
 
 type ActiveForm = "assignment" | "course" | "workSession" | null;
 
 export function AddMenu() {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<ActiveForm>(null);
-  const [position, setPosition] = useState({ top: 0, right: 0 });
-  const triggerRef = useRef<HTMLSpanElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function updatePosition() {
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setPosition({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-    }
-
-    updatePosition();
-
-    function handlePointerDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      setIsOpen(false);
-    }
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setIsOpen(false);
-    }
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [isOpen]);
+  const { isOpen, position, triggerRef, panelRef, toggle, close } = useAnchoredMenu<
+    { top: number; right: number },
+    HTMLSpanElement,
+    HTMLDivElement
+  >({
+    computePosition: (rect) => ({ top: rect.bottom + 4, right: window.innerWidth - rect.right }),
+  });
 
   const openForm = (form: ActiveForm) => {
-    setIsOpen(false);
+    close();
     setActiveForm(form);
   };
 
@@ -62,12 +33,7 @@ export function AddMenu() {
   return (
     <>
       <span ref={triggerRef} className="inline-block shrink-0">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setIsOpen((v) => !v)}
-          className="flex items-center gap-1.5"
-        >
+        <Button variant="primary" size="sm" onClick={toggle} className="flex items-center gap-1.5">
           <PlusIcon className="w-3.5 h-3.5" />
           Add
           <ChevronDownIcon className="w-3 h-3" />

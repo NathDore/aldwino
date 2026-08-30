@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CourseDto } from "@/features/courses";
 import { formatCourseLabel } from "@/features/courses";
 import { Button } from "@/shared/components/Button";
 import { ChevronDownIcon } from "@/features/calendar/components/icons";
+import { useAnchoredMenu } from "@/shared/hooks/useAnchoredMenu";
 
 interface CourseFilterDropdownProps {
   courses: CourseDto[];
@@ -20,45 +20,15 @@ export function CourseFilterDropdown({
   onClear,
   disabled = false,
 }: CourseFilterDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
-  const triggerRef = useRef<HTMLSpanElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const { isOpen, position, triggerRef, panelRef, toggle } = useAnchoredMenu<
+    { top: number; left: number; width: number },
+    HTMLSpanElement,
+    HTMLDivElement
+  >({
+    computePosition: (rect) => ({ top: rect.bottom + 4, left: rect.right, width: rect.width }),
+  });
 
   const selectedCount = selectedCourseIds.size;
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function updatePosition() {
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setPosition({ top: rect.bottom + 4, left: rect.right, width: rect.width });
-    }
-
-    updatePosition();
-
-    function handlePointerDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      setIsOpen(false);
-    }
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setIsOpen(false);
-    }
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [isOpen]);
 
   return (
     <>
@@ -67,7 +37,7 @@ export function CourseFilterDropdown({
           variant="secondary"
           size="sm"
           disabled={disabled}
-          onClick={() => setIsOpen((v) => !v)}
+          onClick={toggle}
           className="flex items-center gap-1.5"
         >
           Course{selectedCount > 0 ? ` (${selectedCount})` : ""}

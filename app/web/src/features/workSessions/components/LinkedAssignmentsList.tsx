@@ -24,7 +24,7 @@ interface Entry {
 }
 
 export function LinkedAssignmentsList({ workSessionId, canEdit }: LinkedAssignmentsListProps) {
-  const { data: links = [] } = useWorkSessionAssignmentLinksQuery(workSessionId);
+  const { data: links = [], isLoading: isLinksLoading } = useWorkSessionAssignmentLinksQuery(workSessionId);
   const { data: assignments = [] } = useAssignmentsQuery();
   const { data: courses = [] } = useCoursesQuery();
   const unlinkMutation = useUnlinkAssignmentMutation();
@@ -42,6 +42,15 @@ export function LinkedAssignmentsList({ workSessionId, canEdit }: LinkedAssignme
     })
     .filter((entry): entry is Entry => entry !== null)
     .sort((a, b) => new Date(a.assignment.dueDate).getTime() - new Date(b.assignment.dueDate).getTime());
+
+  if (isLinksLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="h-8 rounded-md bg-slate-100 animate-pulse" />
+        <div className="h-8 rounded-md bg-slate-100 animate-pulse" />
+      </div>
+    );
+  }
 
   if (entries.length === 0) {
     return <p className="text-xs text-slate-500">No assignments linked to this session.</p>;

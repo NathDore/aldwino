@@ -19,7 +19,8 @@
         "title": "Aldwino",
         "width": 1000,
         "height": 700,
-        "url": "/calendar"
+        "url": "/calendar",
+        "maximized": true
       }
     ]
   },
