@@ -64,7 +64,7 @@ export class RescheduleWorkSessionUseCase {
       });
 
       const result = this.repository.update(updated);
-      this.notificationRepository.markResolvedForEntity("WORK_SESSION", existing.id);
+      this.notificationRepository.softDeleteAllForEntity("WORK_SESSION", existing.id, now);
       return { session: result, mergedFrom: [] };
     })();
   }

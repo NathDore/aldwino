@@ -3,12 +3,14 @@ import { Course } from "../../domain/course/Course";
 import { Assignment } from "../../domain/assignment/Assignment";
 import type { ICourseRepository } from "../../infrastructure/database/repositories/CourseRepository";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class DeleteCourseUseCase {
   constructor(
     private readonly repository: ICourseRepository,
     private readonly assignmentRepository: IAssignmentRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -49,6 +51,7 @@ export class DeleteCourseUseCase {
             createdAt: assignment.createdAt,
           }),
         );
+        this.notificationRepository.softDeleteAllForEntity("ASSIGNMENT", assignment.id, now);
       }
 
       return updated;

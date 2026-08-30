@@ -101,7 +101,7 @@ beforeEach(() => {
     db,
   );
   wrapUp = new WrapUpAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
-  deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, clock, db);
+  deleteAssignment = new DeleteAssignmentUseCase(assignmentRepository, linkRepository, notificationRepository, clock, db);
   deleteWorkSession = new DeleteWorkSessionUseCase(
     workSessionRepository,
     workSessionStateRepository,

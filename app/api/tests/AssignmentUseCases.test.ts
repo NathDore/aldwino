@@ -52,7 +52,7 @@ beforeEach(() => {
 
   create = new CreateAssignmentUseCase(repository, courseRepository, stateRepository, clock, db);
   update = new UpdateAssignmentUseCase(repository, courseRepository, clock, db);
-  remove = new DeleteAssignmentUseCase(repository, linkRepository, clock, db);
+  remove = new DeleteAssignmentUseCase(repository, linkRepository, notificationRepository, clock, db);
   complete = new CompleteAssignmentUseCase(
     repository,
     stateRepository,

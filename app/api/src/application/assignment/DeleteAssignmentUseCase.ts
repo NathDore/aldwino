@@ -4,12 +4,14 @@ import { AssignmentWorkSession } from "../../domain/assignmentWorkSession/Assign
 import { assertCanDelete } from "../../domain/assignment/AssignmentLifecycle";
 import type { IAssignmentRepository } from "../../infrastructure/database/repositories/AssignmentRepository";
 import type { IAssignmentWorkSessionRepository } from "../../infrastructure/database/repositories/AssignmentWorkSessionRepository";
+import type { INotificationRepository } from "../../infrastructure/database/repositories/NotificationRepository";
 import type { Clock } from "../health/ports/Clock";
 
 export class DeleteAssignmentUseCase {
   constructor(
     private readonly repository: IAssignmentRepository,
     private readonly assignmentWorkSessionRepository: IAssignmentWorkSessionRepository,
+    private readonly notificationRepository: INotificationRepository,
     private readonly clock: Clock,
     private readonly db: Database,
   ) {}
@@ -38,6 +40,7 @@ export class DeleteAssignmentUseCase {
         createdAt: existing.createdAt,
       });
       const updated = this.repository.update(deleted);
+      this.notificationRepository.softDeleteAllForEntity("ASSIGNMENT", id, now);
 
       for (const link of this.assignmentWorkSessionRepository.getByAssignmentId(id)) {
         this.assignmentWorkSessionRepository.update(
