@@ -392,7 +392,12 @@ const app = createServer({
   markNotificationReadUseCase: new MarkNotificationReadUseCase(notificationRepository),
   getNotificationByIdUseCase: new GetNotificationByIdUseCase(notificationRepository),
   removeNotificationUseCase: new RemoveNotificationUseCase(notificationRepository, clock),
-  allowedOrigins: ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"],
+  allowedOrigins: [
+    "http://localhost:1420",
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "https://tauri.localhost",
+  ],
 });
 
 console.log(`[app-api] listening on http://127.0.0.1:${PORT}`);
